@@ -51,9 +51,9 @@ def escanear_mercado_y_comprar():
                 sl = precio * 0.985  # Stop Loss al -1.5%
                 tp = precio * 1.03   # Take Profit al +3.0%
                 
-                # Riesgo del 1% sobre $10,000 = $100 USD
+                # Riesgo del 5% sobre $10,000 = $500 USD
                 riesgo_por_accion = precio - sl
-                shares = int(100 / riesgo_por_accion) if riesgo_por_accion > 0 else 10
+                shares = int(500 / riesgo_por_accion) if riesgo_por_accion > 0 else 50
 
                 nueva_op = {
                     "ticker": ticker,
