@@ -33,6 +33,7 @@ def guardar_bitacora(data):
 
 data_bitacora = cargar_bitacora()
 
+# MOSTRAR ESTRUCTURA EXACTA DEL JSON PARA DIAGNÓSTICO
 st.sidebar.header("⚙️ Configuración del Bot")
 meta_diaria_pct = st.sidebar.slider("Meta Diaria Objetivo (%)", min_value=0.5, max_value=10.0, value=2.0, step=0.5)
 trailing_tolerance_pct = st.sidebar.slider("Tolerancia de Retroceso desde el Peak (%)", min_value=0.5, max_value=5.0, value=2.0, step=0.5)
@@ -40,17 +41,29 @@ trailing_tolerance_pct = st.sidebar.slider("Tolerancia de Retroceso desde el Pea
 st.title("📈 Terminal de Inversión y Trading Algorítmico")
 
 posiciones = data_bitacora.get("posiciones", [])
+
+# MOSTRAR EL PRIMER ELEMENTO DE LA BITÁCORA EN PANTALLA
+if posiciones:
+    st.info("🔍 **Diagnóstico de estructura JSON:**")
+    st.json(posiciones[0])
+
 total_flotante = 0.0
 posiciones_procesadas = []
 
 for pos in posiciones:
     ticker = pos.get("activo") or pos.get("ticker") or pos.get("symbol") or "N/A"
     
-    # Búsqueda exhaustiva del precio de entrada según la clave usada en la bitácora
-    precio_entrada = float(
-        pos.get("entrada") or pos.get("precio_entrada") or pos.get("buy_price") or 
-        pos.get("precio") or pos.get("price") or pos.get("precio_compra") or 0.0
-    )
+    # Intento de extracción de precio de entrada leyendo todas los nombres posibles
+    precio_entrada = 0.0
+    for k, v in pos.items():
+        if any(palabra in k.lower() for palabra in ["entrada", "compra", "entry", "buy", "price", "precio"]):
+            try:
+                val = float(v)
+                if val > 0:
+                    precio_entrada = val
+                    break
+            except (ValueError, TypeError):
+                pass
     
     acciones = float(pos.get("acciones") or pos.get("cantidad") or pos.get("shares") or 0.0)
     stop_loss = float(pos.get("stop_loss") or pos.get("sl") or 0.0)
