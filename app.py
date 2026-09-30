@@ -14,7 +14,7 @@ def cargar_bitacora():
             with open(BITACORA_FILE, "r", encoding="utf-8") as f:
                 contenido = json.load(f)
                 if isinstance(contenido, list):
-                    return {"capital_inicial": 10000.0, "posiciones": contenido, "peak_flotante": 0.0}
+                    return {"capital_inicial": 10000.0, "posiciones": contenido, "peak_flotante": 0.0, "ganancia_cerrada": 0.0}
                 elif isinstance(contenido, dict):
                     if "posiciones" not in contenido:
                         contenido["posiciones"] = []
@@ -22,10 +22,12 @@ def cargar_bitacora():
                         contenido["capital_inicial"] = 10000.0
                     if "peak_flotante" not in contenido:
                         contenido["peak_flotante"] = 0.0
+                    if "ganancia_cerrada" not in contenido:
+                        contenido["ganancia_cerrada"] = 0.0
                     return contenido
         except Exception:
             pass
-    return {"capital_inicial": 10000.0, "posiciones": [], "peak_flotante": 0.0}
+    return {"capital_inicial": 10000.0, "posiciones": [], "peak_flotante": 0.0, "ganancia_cerrada": 0.0}
 
 def guardar_bitacora(data):
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
@@ -81,7 +83,11 @@ for pos in posiciones:
     })
 
 capital_base = data_bitacora.get("capital_inicial", 10000.0)
+ganancia_cerrada = data_bitacora.get("ganancia_cerrada", 0.0)
+
 flotante_pct = (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
+ganancia_total_dia = ganancia_cerrada + total_flotante
+ganancia_total_pct = (ganancia_total_dia / capital_base) * 100 if capital_base > 0 else 0.0
 
 peak_previo = data_bitacora.get("peak_flotante", 0.0)
 if flotante_pct > peak_previo:
@@ -93,20 +99,42 @@ else:
 
 umbral_salida = peak_actual - trailing_tolerance_pct
 
+# --- 4 TARJETAS DE MÉTRICAS SEPARADAS ---
 col1, col2, col3, col4 = st.columns(4)
 
-# Muestra el Capital total y en verde la ganancia/pérdida exacta en USD (+ $134.11 USD (+1.34%))
-signo_usd = "+" if total_flotante >= 0 else ""
-col1.metric("Capital de la Cuenta", f"${capital_base + total_flotante:,.2f} USD", f"{signo_usd}${total_flotante:,.2f} USD ({flotante_pct:.2f}%)")
-col2.metric("Posiciones Activas", len(posiciones_procesadas))
-col3.metric("Flotante Actual", f"${total_flotante:,.2f} USD", f"Peak del Día: +{peak_actual:.2f}%")
-col4.metric("Meta Diaria Defendida", f"{meta_diaria_pct:.1f}%", f"Umbral Salida: +{umbral_salida:.2f}%")
+signo_flotante = "+" if total_flotante >= 0 else ""
+signo_ganancia = "+" if ganancia_total_dia >= 0 else ""
+
+col1.metric(
+    "Capital de la Cuenta", 
+    f"${capital_base + total_flotante:,.2f} USD", 
+    f"Base: ${capital_base:,.2f}"
+)
+
+col2.metric(
+    "Ganancia Total Realizada", 
+    f"{signo_ganancia}${ganancia_total_dia:,.2f} USD", 
+    f"{ganancia_total_pct:.2f}% del Capital"
+)
+
+col3.metric(
+    "Flotante Actual", 
+    f"{signo_flotante}${total_flotante:,.2f} USD", 
+    f"Peak del Día: +{peak_actual:.2f}%"
+)
+
+col4.metric(
+    "Meta / Trailing Stop", 
+    f"Meta: {meta_diaria_pct:.1f}%", 
+    f"Umbral Salida: +{umbral_salida:.2f}%"
+)
 
 st.markdown("---")
 
 if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posiciones_procesadas) > 0:
     st.error(f"🚨 **¡ALERTA DE TRAILING STOP ACTIVADA!** La cuenta alcanzó un peak de **+{peak_actual:.2f}%** y ha retrocedido más del **{trailing_tolerance_pct}%**. Es momento de tomar utilidades.")
     if st.button("🔒 CERRAR TODAS LAS POSICIONES Y ASEGURAR GANANCIAS"):
+        data_bitacora["ganancia_cerrada"] += total_flotante
         data_bitacora["capital_inicial"] += total_flotante
         data_bitacora["posiciones"] = []
         data_bitacora["peak_flotante"] = 0.0
@@ -117,6 +145,7 @@ if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posi
 elif flotante_pct >= meta_diaria_pct and len(posiciones_procesadas) > 0:
     st.success(f"🎯 **¡META DIARIA CUMPLIDA!** Estás ganando un **+{flotante_pct:.2f}%** (Meta: {meta_diaria_pct}%). Puedes cerrar la jornada o dejar correr con el Trailing Stop activado.")
     if st.button("💰 Asegurar Ganancia Diaria Ahora"):
+        data_bitacora["ganancia_cerrada"] += total_flotante
         data_bitacora["capital_inicial"] += total_flotante
         data_bitacora["posiciones"] = []
         data_bitacora["peak_flotante"] = 0.0
@@ -124,10 +153,11 @@ elif flotante_pct >= meta_diaria_pct and len(posiciones_procesadas) > 0:
         st.success("✅ Ganancias aseguradas.")
         st.rerun()
 
-if st.sidebar.button("🔄 Reiniciar Peak para Nuevo Día"):
+if st.sidebar.button("🔄 Reiniciar Día / Nueva Jornada"):
     data_bitacora["peak_flotante"] = 0.0
+    data_bitacora["ganancia_cerrada"] = 0.0
     guardar_bitacora(data_bitacora)
-    st.sidebar.success("Peak reseteado.")
+    st.sidebar.success("Jornada reseteada.")
     st.rerun()
 
 st.subheader("🟢 Posiciones en Curso")
