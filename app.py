@@ -47,7 +47,6 @@ posiciones_procesadas = []
 for pos in posiciones:
     ticker = pos.get("ticker") or pos.get("activo") or pos.get("symbol") or "N/A"
     
-    # Clave exacta detectada: 'entry'
     precio_entrada = float(pos.get("entry") or pos.get("precio_entrada") or pos.get("price") or 0.0)
     acciones = float(pos.get("shares") or pos.get("acciones") or pos.get("cantidad") or 0.0)
     stop_loss = float(pos.get("sl") or pos.get("stop_loss") or 0.0)
@@ -95,7 +94,10 @@ else:
 umbral_salida = peak_actual - trailing_tolerance_pct
 
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Capital de la Cuenta", f"${capital_base + total_flotante:,.2f} USD", f"{flotante_pct:.2f}%")
+
+# Muestra el Capital total y en verde la ganancia/pérdida exacta en USD (+ $134.11 USD (+1.34%))
+signo_usd = "+" if total_flotante >= 0 else ""
+col1.metric("Capital de la Cuenta", f"${capital_base + total_flotante:,.2f} USD", f"{signo_usd}${total_flotante:,.2f} USD ({flotante_pct:.2f}%)")
 col2.metric("Posiciones Activas", len(posiciones_procesadas))
 col3.metric("Flotante Actual", f"${total_flotante:,.2f} USD", f"Peak del Día: +{peak_actual:.2f}%")
 col4.metric("Meta Diaria Defendida", f"{meta_diaria_pct:.1f}%", f"Umbral Salida: +{umbral_salida:.2f}%")
