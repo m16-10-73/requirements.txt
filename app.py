@@ -3,22 +3,36 @@ import pandas as pd
 import yfinance as yf
 import json
 import os
-from datetime import datetime
 
 # Configuración de la página
 st.set_page_config(page_title="Terminal de Trading Algorítmico", layout="wide")
 
 BITACORA_FILE = "bitacora_operaciones.json"
 
-# --- FUNCIONES DE MEMORIA Y PERSISTENCIA ---
+# --- FUNCIONES DE MEMORIA Y PERSISTENCIA (SOPORTE COMPATIBLE) ---
 def cargar_bitacora():
     if os.path.exists(BITACORA_FILE):
-        with open(BITACORA_FILE, "r") as f:
-            return json.load(f)
+        try:
+            with open(BITACORA_FILE, "r", encoding="utf-8") as f:
+                contenido = json.load(f)
+                # Si el JSON es una lista directa de posiciones
+                if isinstance(contenido, list):
+                    return {"capital_inicial": 10000.0, "posiciones": contenido, "peak_flotante": 0.0}
+                # Si es un diccionario
+                elif isinstance(contenido, dict):
+                    if "posiciones" not in contenido:
+                        contenido["posiciones"] = []
+                    if "capital_inicial" not in contenido:
+                        contenido["capital_inicial"] = 10000.0
+                    if "peak_flotante" not in contenido:
+                        contenido["peak_flotante"] = 0.0
+                    return contenido
+        except Exception:
+            pass
     return {"capital_inicial": 10000.0, "posiciones": [], "peak_flotante": 0.0}
 
 def guardar_bitacora(data):
-    with open(BITACORA_FILE, "w") as f:
+    with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
 
 data_bitacora = cargar_bitacora()
@@ -36,19 +50,25 @@ total_flotante = 0.0
 posiciones_procesadas = []
 
 for pos in posiciones:
-    ticker = pos["activo"]
-    precio_entrada = pos["entrada"]
-    acciones = pos["acciones"]
+    ticker = pos.get("activo", pos.get("ticker", ""))
+    precio_entrada = pos.get("entrada", pos.get("precio_entrada", 0.0))
+    acciones = pos.get("acciones", pos.get("cantidad", 0))
     
+    if not ticker:
+        continue
+
     # Obtener precio actual
-    df = yf.Ticker(ticker).history(period="1d")
-    if not df.empty:
-        precio_actual = df["Close"].iloc[-1]
-    else:
-        precio_actual = precio_entrada
+    try:
+        df = yf.Ticker(ticker).history(period="1d")
+        if not df.empty:
+            precio_actual = float(df["Close"].iloc[-1])
+        else:
+            precio_actual = float(precio_entrada)
+    except Exception:
+        precio_actual = float(precio_entrada)
         
     pnl_usd = (precio_actual - precio_entrada) * acciones
-    pnl_pct = ((precio_actual - precio_entrada) / precio_entrada) * 100
+    pnl_pct = ((precio_actual - precio_entrada) / precio_entrada) * 100 if precio_entrada > 0 else 0.0
     
     total_flotante += pnl_usd
     
@@ -60,7 +80,7 @@ for pos in posiciones:
 
 # --- LÓGICA DE CONTROL DE PEAKS Y TRAILING STOP GLOBAL ---
 capital_base = data_bitacora.get("capital_inicial", 10000.0)
-flotante_pct = (total_flotante / capital_base) * 100
+flotante_pct = (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
 
 # Actualizar el pico más alto registrado en la sesión
 peak_previo = data_bitacora.get("peak_flotante", 0.0)
@@ -84,10 +104,9 @@ col4.metric("Meta Diaria Defendida", f"{meta_diaria_pct:.1f}%", f"Umbral Salida:
 st.markdown("---")
 
 # --- ALERTAS INTELIGENTES DE EJECUCIÓN ---
-if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posiciones) > 0:
+if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posiciones_procesadas) > 0:
     st.error(f"🚨 **¡ALERTA DE TRAILING STOP ACTIVADA!** La cuenta alcanzó un peak de **+{peak_actual:.2f}%** y ha retrocedido más del **{trailing_tolerance_pct}%**. Es momento de tomar utilidades.")
     if st.button("🔒 CERRAR TODAS LAS POSICIONES Y ASEGURAR GANANCIAS"):
-        # Lógica para liquidar y actualizar bitácora
         data_bitacora["capital_inicial"] += total_flotante
         data_bitacora["posiciones"] = []
         data_bitacora["peak_flotante"] = 0.0
@@ -95,7 +114,7 @@ if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posi
         st.success("✅ ¡Operaciones cerradas exitosamente! Ganancias consolidadas en caja.")
         st.rerun()
 
-elif flotante_pct >= meta_diaria_pct:
+elif flotante_pct >= meta_diaria_pct and len(posiciones_procesadas) > 0:
     st.success(f"🎯 **¡META DIARIA CUMPLIDA!** Estás ganando un **+{flotante_pct:.2f}%** (Meta: {meta_diaria_pct}%). Puedes cerrar la jornada o dejar correr con el Trailing Stop activado.")
     if st.button("💰 Asegurar Ganancia Diaria Ahora"):
         data_bitacora["capital_inicial"] += total_flotante
@@ -116,6 +135,7 @@ if st.sidebar.button("🔄 Reiniciar Peak para Nuevo Día"):
 st.subheader("🟢 Posiciones en Curso")
 if posiciones_procesadas:
     df_pos = pd.DataFrame(posiciones_procesadas)
-    st.dataframe(df_pos[["activo", "entrada", "precio_actual", "stop_loss", "take_profit", "acciones", "pnl_usd", "pnl_pct"]], use_container_width=True)
+    columnas_mostrar = [c for c in ["activo", "entrada", "precio_actual", "stop_loss", "take_profit", "acciones", "pnl_usd", "pnl_pct"] if c in df_pos.columns]
+    st.dataframe(df_pos[columnas_mostrar], use_container_width=True)
 else:
     st.info("No hay posiciones abiertas actualmente. El escáner buscará nuevas entradas.")
