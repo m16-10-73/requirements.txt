@@ -4,12 +4,10 @@ import yfinance as yf
 import json
 import os
 
-# Configuración de la página
 st.set_page_config(page_title="Terminal de Trading Algorítmico", layout="wide")
 
 BITACORA_FILE = "bitacora_operaciones.json"
 
-# --- FUNCIONES DE MEMORIA Y PERSISTENCIA ---
 def cargar_bitacora():
     if os.path.exists(BITACORA_FILE):
         try:
@@ -35,22 +33,25 @@ def guardar_bitacora(data):
 
 data_bitacora = cargar_bitacora()
 
-# Configuración en la Barra Lateral (Sidebar)
 st.sidebar.header("⚙️ Configuración del Bot")
 meta_diaria_pct = st.sidebar.slider("Meta Diaria Objetivo (%)", min_value=0.5, max_value=10.0, value=2.0, step=0.5)
 trailing_tolerance_pct = st.sidebar.slider("Tolerancia de Retroceso desde el Peak (%)", min_value=0.5, max_value=5.0, value=2.0, step=0.5)
 
 st.title("📈 Terminal de Inversión y Trading Algorítmico")
 
-# --- OBTENCIÓN DE PRECIOS EN TIEMPO REAL ---
 posiciones = data_bitacora.get("posiciones", [])
 total_flotante = 0.0
 posiciones_procesadas = []
 
 for pos in posiciones:
-    # Soporte para múltiples nombres de claves en el JSON
     ticker = pos.get("activo") or pos.get("ticker") or pos.get("symbol") or "N/A"
-    precio_entrada = float(pos.get("entrada") or pos.get("precio_entrada") or pos.get("buy_price") or 0.0)
+    
+    # Búsqueda exhaustiva del precio de entrada según la clave usada en la bitácora
+    precio_entrada = float(
+        pos.get("entrada") or pos.get("precio_entrada") or pos.get("buy_price") or 
+        pos.get("precio") or pos.get("price") or pos.get("precio_compra") or 0.0
+    )
+    
     acciones = float(pos.get("acciones") or pos.get("cantidad") or pos.get("shares") or 0.0)
     stop_loss = float(pos.get("stop_loss") or pos.get("sl") or 0.0)
     take_profit = float(pos.get("take_profit") or pos.get("tp") or 0.0)
@@ -58,7 +59,6 @@ for pos in posiciones:
     if ticker == "N/A":
         continue
 
-    # Obtener precio actual desde yfinance
     try:
         df = yf.Ticker(ticker).history(period="1d")
         if not df.empty:
@@ -84,11 +84,9 @@ for pos in posiciones:
         "PnL (%)": round(pnl_pct, 2)
     })
 
-# --- LÓGICA DE CONTROL DE PEAKS Y TRAILING STOP GLOBAL ---
 capital_base = data_bitacora.get("capital_inicial", 10000.0)
 flotante_pct = (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
 
-# Actualizar el pico más alto registrado en la sesión
 peak_previo = data_bitacora.get("peak_flotante", 0.0)
 if flotante_pct > peak_previo:
     data_bitacora["peak_flotante"] = flotante_pct
@@ -97,10 +95,8 @@ if flotante_pct > peak_previo:
 else:
     peak_actual = peak_previo
 
-# Calcular el umbral de disparo del Trailing Stop
 umbral_salida = peak_actual - trailing_tolerance_pct
 
-# --- TARJETAS DE MÉTRICAS PRINCIPALES ---
 col1, col2, col3, col4 = st.columns(4)
 col1.metric("Capital de la Cuenta", f"${capital_base + total_flotante:,.2f} USD", f"{flotante_pct:.2f}%")
 col2.metric("Posiciones Activas", len(posiciones_procesadas))
@@ -109,7 +105,6 @@ col4.metric("Meta Diaria Defendida", f"{meta_diaria_pct:.1f}%", f"Umbral Salida:
 
 st.markdown("---")
 
-# --- ALERTAS INTELIGENTES DE EJECUCIÓN ---
 if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posiciones_procesadas) > 0:
     st.error(f"🚨 **¡ALERTA DE TRAILING STOP ACTIVADA!** La cuenta alcanzó un peak de **+{peak_actual:.2f}%** y ha retrocedido más del **{trailing_tolerance_pct}%**. Es momento de tomar utilidades.")
     if st.button("🔒 CERRAR TODAS LAS POSICIONES Y ASEGURAR GANANCIAS"):
@@ -130,14 +125,12 @@ elif flotante_pct >= meta_diaria_pct and len(posiciones_procesadas) > 0:
         st.success("✅ Ganancias aseguradas.")
         st.rerun()
 
-# Botón manual de reinicio de Peak al inicio del día
 if st.sidebar.button("🔄 Reiniciar Peak para Nuevo Día"):
     data_bitacora["peak_flotante"] = 0.0
     guardar_bitacora(data_bitacora)
     st.sidebar.success("Peak reseteado.")
     st.rerun()
 
-# --- TABLA DE POSICIONES EN CURSO ---
 st.subheader("🟢 Posiciones en Curso")
 if posiciones_procesadas:
     df_pos = pd.DataFrame(posiciones_procesadas)
