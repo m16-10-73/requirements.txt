@@ -9,16 +9,14 @@ st.set_page_config(page_title="Terminal de Trading Algorítmico", layout="wide")
 
 BITACORA_FILE = "bitacora_operaciones.json"
 
-# --- FUNCIONES DE MEMORIA Y PERSISTENCIA (SOPORTE COMPATIBLE) ---
+# --- FUNCIONES DE MEMORIA Y PERSISTENCIA ---
 def cargar_bitacora():
     if os.path.exists(BITACORA_FILE):
         try:
             with open(BITACORA_FILE, "r", encoding="utf-8") as f:
                 contenido = json.load(f)
-                # Si el JSON es una lista directa de posiciones
                 if isinstance(contenido, list):
                     return {"capital_inicial": 10000.0, "posiciones": contenido, "peak_flotante": 0.0}
-                # Si es un diccionario
                 elif isinstance(contenido, dict):
                     if "posiciones" not in contenido:
                         contenido["posiciones"] = []
@@ -50,33 +48,41 @@ total_flotante = 0.0
 posiciones_procesadas = []
 
 for pos in posiciones:
-    ticker = pos.get("activo", pos.get("ticker", ""))
-    precio_entrada = pos.get("entrada", pos.get("precio_entrada", 0.0))
-    acciones = pos.get("acciones", pos.get("cantidad", 0))
-    
-    if not ticker:
+    # Soporte para múltiples nombres de claves en el JSON
+    ticker = pos.get("activo") or pos.get("ticker") or pos.get("symbol") or "N/A"
+    precio_entrada = float(pos.get("entrada") or pos.get("precio_entrada") or pos.get("buy_price") or 0.0)
+    acciones = float(pos.get("acciones") or pos.get("cantidad") or pos.get("shares") or 0.0)
+    stop_loss = float(pos.get("stop_loss") or pos.get("sl") or 0.0)
+    take_profit = float(pos.get("take_profit") or pos.get("tp") or 0.0)
+
+    if ticker == "N/A":
         continue
 
-    # Obtener precio actual
+    # Obtener precio actual desde yfinance
     try:
         df = yf.Ticker(ticker).history(period="1d")
         if not df.empty:
             precio_actual = float(df["Close"].iloc[-1])
         else:
-            precio_actual = float(precio_entrada)
+            precio_actual = precio_entrada
     except Exception:
-        precio_actual = float(precio_entrada)
+        precio_actual = precio_entrada
         
-    pnl_usd = (precio_actual - precio_entrada) * acciones
+    pnl_usd = (precio_actual - precio_entrada) * acciones if precio_entrada > 0 else 0.0
     pnl_pct = ((precio_actual - precio_entrada) / precio_entrada) * 100 if precio_entrada > 0 else 0.0
     
     total_flotante += pnl_usd
     
-    pos_copy = pos.copy()
-    pos_copy["precio_actual"] = round(precio_actual, 2)
-    pos_copy["pnl_usd"] = round(pnl_usd, 2)
-    pos_copy["pnl_pct"] = round(pnl_pct, 2)
-    posiciones_procesadas.append(pos_copy)
+    posiciones_procesadas.append({
+        "Activo": ticker,
+        "Precio Entrada": round(precio_entrada, 2),
+        "Precio Actual": round(precio_actual, 2),
+        "Acciones": acciones,
+        "Stop Loss": round(stop_loss, 2),
+        "Take Profit": round(take_profit, 2),
+        "PnL (USD)": round(pnl_usd, 2),
+        "PnL (%)": round(pnl_pct, 2)
+    })
 
 # --- LÓGICA DE CONTROL DE PEAKS Y TRAILING STOP GLOBAL ---
 capital_base = data_bitacora.get("capital_inicial", 10000.0)
@@ -135,7 +141,6 @@ if st.sidebar.button("🔄 Reiniciar Peak para Nuevo Día"):
 st.subheader("🟢 Posiciones en Curso")
 if posiciones_procesadas:
     df_pos = pd.DataFrame(posiciones_procesadas)
-    columnas_mostrar = [c for c in ["activo", "entrada", "precio_actual", "stop_loss", "take_profit", "acciones", "pnl_usd", "pnl_pct"] if c in df_pos.columns]
-    st.dataframe(df_pos[columnas_mostrar], use_container_width=True)
+    st.dataframe(df_pos, use_container_width=True)
 else:
     st.info("No hay posiciones abiertas actualmente. El escáner buscará nuevas entradas.")
