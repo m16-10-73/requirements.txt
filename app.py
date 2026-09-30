@@ -41,32 +41,17 @@ st.title("📈 Terminal de Inversión y Trading Algorítmico")
 
 posiciones = data_bitacora.get("posiciones", [])
 
-# RECUDRO DE DIAGNÓSTICO PARA DETECTAR NOMBRES DE CLAVES
-if posiciones:
-    st.info("🔍 **Diagnóstico de estructura JSON:**")
-    st.json(posiciones[0])
-
 total_flotante = 0.0
 posiciones_procesadas = []
 
 for pos in posiciones:
-    ticker = pos.get("activo") or pos.get("ticker") or pos.get("symbol") or "N/A"
+    ticker = pos.get("ticker") or pos.get("activo") or pos.get("symbol") or "N/A"
     
-    # Intento de extracción de precio de entrada leyendo todas los nombres posibles
-    precio_entrada = 0.0
-    for k, v in pos.items():
-        if any(palabra in k.lower() for palabra in ["entrada", "compra", "entry", "buy", "price", "precio"]):
-            try:
-                val = float(v)
-                if val > 0:
-                    precio_entrada = val
-                    break
-            except (ValueError, TypeError):
-                pass
-    
-    acciones = float(pos.get("acciones") or pos.get("cantidad") or pos.get("shares") or 0.0)
-    stop_loss = float(pos.get("stop_loss") or pos.get("sl") or 0.0)
-    take_profit = float(pos.get("take_profit") or pos.get("tp") or 0.0)
+    # Clave exacta detectada: 'entry'
+    precio_entrada = float(pos.get("entry") or pos.get("precio_entrada") or pos.get("price") or 0.0)
+    acciones = float(pos.get("shares") or pos.get("acciones") or pos.get("cantidad") or 0.0)
+    stop_loss = float(pos.get("sl") or pos.get("stop_loss") or 0.0)
+    take_profit = float(pos.get("tp") or pos.get("take_profit") or 0.0)
 
     if ticker == "N/A":
         continue
@@ -89,7 +74,7 @@ for pos in posiciones:
         "Activo": ticker,
         "Precio Entrada": round(precio_entrada, 2),
         "Precio Actual": round(precio_actual, 2),
-        "Acciones": acciones,
+        "Acciones": int(acciones),
         "Stop Loss": round(stop_loss, 2),
         "Take Profit": round(take_profit, 2),
         "PnL (USD)": round(pnl_usd, 2),
