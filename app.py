@@ -33,7 +33,6 @@ def guardar_bitacora(data):
 
 data_bitacora = cargar_bitacora()
 
-# MOSTRAR ESTRUCTURA EXACTA DEL JSON PARA DIAGNÓSTICO
 st.sidebar.header("⚙️ Configuración del Bot")
 meta_diaria_pct = st.sidebar.slider("Meta Diaria Objetivo (%)", min_value=0.5, max_value=10.0, value=2.0, step=0.5)
 trailing_tolerance_pct = st.sidebar.slider("Tolerancia de Retroceso desde el Peak (%)", min_value=0.5, max_value=5.0, value=2.0, step=0.5)
@@ -42,7 +41,7 @@ st.title("📈 Terminal de Inversión y Trading Algorítmico")
 
 posiciones = data_bitacora.get("posiciones", [])
 
-# MOSTRAR EL PRIMER ELEMENTO DE LA BITÁCORA EN PANTALLA
+# RECUDRO DE DIAGNÓSTICO PARA DETECTAR NOMBRES DE CLAVES
 if posiciones:
     st.info("🔍 **Diagnóstico de estructura JSON:**")
     st.json(posiciones[0])
