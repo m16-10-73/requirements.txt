@@ -104,14 +104,17 @@ if flotante_pct > peak_previo:
 else:
     peak_actual = peak_previo
 
-umbral_salida = peak_actual - trailing_tolerance_pct
+# --- PISO MÍNIMO GARANTIZADO ---
+# El umbral dinámico respeta el piso de la Meta Diaria (2.0%)
+umbral_calculado = peak_actual - trailing_tolerance_pct
+umbral_salida = max(umbral_calculado, meta_diaria_pct)
 
-# Cierre automático Trailing Stop
+# Cierre automático Trailing Stop con Piso Blindado
 if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posiciones_procesadas) > 0:
     data_bitacora["ganancia_cerrada"] += total_flotante
     data_bitacora["capital_inicial"] += total_flotante
     data_bitacora["posiciones"] = []
-    mensaje = f"[{time.strftime('%H:%M:%S')}] TRAILING STOP AUTOMÁTICO: Cierre ejecutado al {flotante_pct:.2f}%. Ganancia: ${total_flotante:,.2f} USD."
+    mensaje = f"[{time.strftime('%H:%M:%S')}] TRAILING STOP AUTOMÁTICO (PISO PROTEGIDO): Cierre ejecutado al {flotante_pct:.2f}%. Ganancia: ${total_flotante:,.2f} USD."
     data_bitacora["historial_alertas"].append(mensaje)
     data_bitacora["peak_flotante"] = 0.0
     guardar_bitacora(data_bitacora)
@@ -121,7 +124,7 @@ col1, col2, col3, col4 = st.columns(4)
 col1.metric("Capital Cuenta", f"${capital_base + total_flotante:,.2f} USD", f"Base: ${capital_base:,.2f}")
 col2.metric("Ganancia Realizada", f"+${ganancia_total_dia:,.2f} USD", f"{ganancia_total_pct:.2f}% del Capital")
 col3.metric("Flotante Actual", f"+${total_flotante:,.2f} USD", f"Peak: +{peak_actual:.2f}%")
-col4.metric("Meta / Trailing", f"Meta: {meta_diaria_pct:.1f}%", f"Umbral: +{umbral_salida:.2f}%")
+col4.metric("Meta / Trailing (Piso Mín.)", f"Meta: {meta_diaria_pct:.1f}%", f"Umbral: +{umbral_salida:.2f}%")
 
 st.markdown("---")
 
