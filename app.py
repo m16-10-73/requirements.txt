@@ -4,11 +4,11 @@ import yfinance as yf
 import json
 import os
 import time
+from datetime import datetime
 
 st.set_page_config(page_title="Terminal de Trading Algorítmico", layout="wide")
 
 # --- AUTOREFRESCO AUTOMÁTICO CADA 30 SEGUNDOS (SISTEMA AUTÓNOMO) ---
-# Intenta usar la librería de autorefresco; si no está en requirements, no rompe el código
 try:
     from streamlit_autorefresh import st_autorefresh
     st_autorefresh(interval=30000, limit=10000, key="bot_auto_execution_loop")
@@ -16,6 +16,7 @@ except ImportError:
     pass
 
 BITACORA_FILE = "bitacora_operaciones.json"
+BITACORA_POST_FILE = "bitacora_post_mercado.json"
 
 def cargar_bitacora():
     if os.path.exists(BITACORA_FILE):
@@ -23,7 +24,7 @@ def cargar_bitacora():
             with open(BITACORA_FILE, "r", encoding="utf-8") as f:
                 contenido = json.load(f)
                 if isinstance(contenido, list):
-                    return {"capital_inicial": 10000.0, "posiciones": contenido, "peak_flotante": 0.0, "ganancia_cerrada": 0.0, "historial_alertas": []}
+                    return {"capital_inicial": 10000.0, "posiciones": contenido, "peak_flotante": 0.0, "ganancia_cerrada": 0.0, "historial_alertas": [], "registro_cierre_bot": None}
                 elif isinstance(contenido, dict):
                     if "posiciones" not in contenido:
                         contenido["posiciones"] = []
@@ -35,14 +36,55 @@ def cargar_bitacora():
                         contenido["ganancia_cerrada"] = 0.0
                     if "historial_alertas" not in contenido:
                         contenido["historial_alertas"] = []
+                    if "registro_cierre_bot" not in contenido:
+                        contenido["registro_cierre_bot"] = None
                     return contenido
         except Exception:
             pass
-    return {"capital_inicial": 10000.0, "posiciones": [], "peak_flotante": 0.0, "ganancia_cerrada": 0.0, "historial_alertas": []}
+    return {"capital_inicial": 10000.0, "posiciones": [], "peak_flotante": 0.0, "ganancia_cerrada": 0.0, "historial_alertas": [], "registro_cierre_bot": None}
 
 def guardar_bitacora(data):
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
+
+def registrar_auditoria_post_cierre(lista_tickers, retorno_bot_pct):
+    """
+    Registra en un JSON secundario qué hizo el portafolio después de que el bot se fue a caja.
+    """
+    if not lista_tickers:
+        return
+
+    try:
+        # Descarga la variación acumulada del portafolio al cierre de la sesión
+        precios_cierre = []
+        for t in lista_tickers:
+            df = yf.Ticker(t).history(period="1d")
+            if not df.empty:
+                precios_cierre.append(float(df["Close"].iloc[-1]))
+
+        # Si se pudo obtener precios, guardamos la entrada
+        log_post = []
+        if os.path.exists(BITACORA_POST_FILE):
+            with open(BITACORA_POST_FILE, "r", encoding="utf-8") as f:
+                try:
+                    log_post = json.load(f)
+                except Exception:
+                    log_post = []
+
+        # Evita duplicar registros del mismo día
+        hoy_str = datetime.now().strftime("%Y-%m-%d")
+        if not any(item.get("fecha") == hoy_str for item in log_post):
+            registro = {
+                "fecha": hoy_str,
+                "hora_auditoria": time.strftime("%H:%M:%S"),
+                "retorno_bot_pct": round(retorno_bot_pct, 2),
+                "tickers_monitoreados": lista_tickers
+            }
+            log_post.append(registro)
+            with open(BITACORA_POST_FILE, "w", encoding="utf-8") as f:
+                json.dump(log_post, f, indent=4)
+    except Exception:
+        pass
 
 data_bitacora = cargar_bitacora()
 
@@ -56,6 +98,7 @@ posiciones = data_bitacora.get("posiciones", [])
 
 total_flotante = 0.0
 posiciones_procesadas = []
+tickers_activos = []
 
 for pos in posiciones:
     ticker = pos.get("ticker") or pos.get("activo") or pos.get("symbol") or "N/A"
@@ -67,6 +110,8 @@ for pos in posiciones:
 
     if ticker == "N/A":
         continue
+
+    tickers_activos.append(ticker)
 
     try:
         df = yf.Ticker(ticker).history(period="1d")
@@ -112,11 +157,19 @@ else:
 umbral_salida = peak_actual - trailing_tolerance_pct
 
 # --- EJECUCIÓN 100% AUTOMÁTICA EN EL SIMULADOR ---
-# Si alcanzó la meta diaria y retrocedió más allá de la tolerancia, CIERRA SOLO
 if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posiciones_procesadas) > 0:
-    # 1. Registrar ganancia y liquidar posiciones en la bitácora
+    # 1. Guardar referencia previa antes de liquidar
+    retorno_asegurado_pct = flotante_pct
+    
+    # 2. Registrar ganancia y liquidar posiciones en la bitácora
     data_bitacora["ganancia_cerrada"] += total_flotante
     data_bitacora["capital_inicial"] += total_flotante
+    data_bitacora["registro_cierre_bot"] = {
+        "hora_salida": time.strftime("%H:%M:%S"),
+        "retorno_asegurado_pct": round(retorno_asegurado_pct, 2),
+        "ganancia_usd": round(total_flotante, 2),
+        "tickers": tickers_activos
+    }
     data_bitacora["posiciones"] = []
     
     # Mensaje de auditoría
@@ -126,7 +179,15 @@ if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posi
     data_bitacora["peak_flotante"] = 0.0
     
     guardar_bitacora(data_bitacora)
+    
+    # Auditoría inicial post-cierre
+    registrar_auditoria_post_cierre(tickers_activos, retorno_asegurado_pct)
     st.rerun()
+
+# Si el bot ya cerró hoy, mantener la auditoría post-mercado en cada refresco de fondo
+if not posiciones_procesadas and data_bitacora.get("registro_cierre_bot"):
+    info_cierre = data_bitacora["registro_cierre_bot"]
+    registrar_auditoria_post_cierre(info_cierre.get("tickers", []), info_cierre.get("retorno_asegurado_pct", 0.0))
 
 # --- INTERFAZ Y MÉTRICAS ---
 col1, col2, col3, col4 = st.columns(4)
@@ -145,10 +206,16 @@ st.markdown("---")
 if data_bitacora.get("historial_alertas"):
     st.info("📜 **Última Acción Automática del Bot:** " + data_bitacora["historial_alertas"][-1])
 
+# Panel informativo cuando el bot está en caja
+if not posiciones_procesadas and data_bitacora.get("registro_cierre_bot"):
+    c = data_bitacora["registro_cierre_bot"]
+    st.warning(f"👁️ **Modo Monitoreo Post-Mercado Activo:** El bot cerró a las {c['hora_salida']} en +{c['retorno_asegurado_pct']}%. Guardando tendencia de activos para el análisis del 2 al 9 de Octubre.")
+
 if st.sidebar.button("🔄 Reiniciar Día / Nueva Jornada"):
     data_bitacora["peak_flotante"] = 0.0
     data_bitacora["ganancia_cerrada"] = 0.0
     data_bitacora["historial_alertas"] = []
+    data_bitacora["registro_cierre_bot"] = None
     guardar_bitacora(data_bitacora)
     st.sidebar.success("Jornada reseteada.")
     st.rerun()
