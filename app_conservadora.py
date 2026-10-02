@@ -5,17 +5,58 @@ import json
 import os
 import time
 
-st.set_page_config(page_title="App Conservadora - Portafolio Fijo", layout="wide")
+st.set_page_config(
+    page_title="VALORIS — Crecimiento Patrimonial", 
+    page_icon="🏛️",
+    layout="wide"
+)
+
+# Estilos CSS personalizados para la identidad de marca VALORIS
+st.markdown("""
+    <style>
+    /* Estilo del contenedor principal */
+    .stApp {
+        background-color: #f8f9fa;
+    }
+    /* Header principal de VALORIS */
+    .valoris-header {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        padding: 20px;
+        border-radius: 12px;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+    }
+    .valoris-header h1 {
+        color: #f1c40f;
+        font-family: 'Helvetica Neue', sans-serif;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: 1px;
+    }
+    .valoris-header p {
+        color: #e0e0e0;
+        margin-top: 5px;
+        margin-bottom: 0;
+        font-size: 0.95rem;
+    }
+    /* Estilizado de métricas */
+    [data-testid="stMetricValue"] {
+        font-size: 1.8rem !important;
+        font-weight: bold;
+        color: #1e3d59;
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # Autorefresco cada 30 segundos
 try:
     from streamlit_autorefresh import st_autorefresh
-    st_autorefresh(interval=30000, limit=10000, key="auto_conservadora")
+    st_autorefresh(interval=30000, limit=10000, key="auto_valoris")
 except ImportError:
     pass
 
 BITACORA_FILE = "bitacora_conservadora.json"
-
 TICKERS_FIJOS = ["DIS", "PFE", "XOM", "MSFT", "NVDA", "GOOGL"]
 
 def cargar_bitacora():
@@ -54,12 +95,21 @@ def guardar_bitacora(data):
 
 data_bitacora = cargar_bitacora()
 
-st.sidebar.header("⚙️ App Conservadora (Portafolio Fijo)")
+# Sidebar personalizada
+st.sidebar.markdown("### 🏛️ **VALORIS**")
+st.sidebar.markdown("*Gestión Patrimonial Institucional*")
+st.sidebar.markdown("---")
+
 meta_diaria_pct = st.sidebar.slider("Meta Diaria (%)", min_value=0.5, max_value=10.0, value=2.0, step=0.5)
 trailing_tolerance_pct = st.sidebar.slider("Tolerancia Retroceso (%)", min_value=0.5, max_value=5.0, value=2.0, step=0.5)
 
-st.title("🛡️ Terminal de Inversión — Edición Conservadora")
-st.caption("📌 **Estrategia:** Portafolio Fijo Blue Chips (DIS, PFE, XOM, MSFT, NVDA, GOOGL)")
+# Banner superior visual exclusivo para VALORIS
+st.markdown("""
+    <div class="valoris-header">
+        <h1>🏛️ VALORIS</h1>
+        <p>Estrategia Patrimonial Blue Chips | Piso Blindado & Trailing Stop Protegido</p>
+    </div>
+""", unsafe_allow_html=True)
 
 posiciones = data_bitacora.get("posiciones", [])
 total_flotante = 0.0
@@ -105,7 +155,6 @@ else:
     peak_actual = peak_previo
 
 # --- PISO MÍNIMO GARANTIZADO ---
-# El umbral dinámico respeta el piso de la Meta Diaria (2.0%)
 umbral_calculado = peak_actual - trailing_tolerance_pct
 umbral_salida = max(umbral_calculado, meta_diaria_pct)
 
@@ -114,7 +163,7 @@ if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posi
     data_bitacora["ganancia_cerrada"] += total_flotante
     data_bitacora["capital_inicial"] += total_flotante
     data_bitacora["posiciones"] = []
-    mensaje = f"[{time.strftime('%H:%M:%S')}] TRAILING STOP AUTOMÁTICO (PISO PROTEGIDO): Cierre ejecutado al {flotante_pct:.2f}%. Ganancia: ${total_flotante:,.2f} USD."
+    mensaje = f"[{time.strftime('%H:%M:%S')}] VALORIS PROTECT: Cierre ejecutado al {flotante_pct:.2f}%. Ganancia: ${total_flotante:,.2f} USD."
     data_bitacora["historial_alertas"].append(mensaje)
     data_bitacora["peak_flotante"] = 0.0
     guardar_bitacora(data_bitacora)
@@ -124,14 +173,14 @@ col1, col2, col3, col4 = st.columns(4)
 col1.metric("Capital Cuenta", f"${capital_base + total_flotante:,.2f} USD", f"Base: ${capital_base:,.2f}")
 col2.metric("Ganancia Realizada", f"+${ganancia_total_dia:,.2f} USD", f"{ganancia_total_pct:.2f}% del Capital")
 col3.metric("Flotante Actual", f"+${total_flotante:,.2f} USD", f"Peak: +{peak_actual:.2f}%")
-col4.metric("Meta / Trailing (Piso Mín.)", f"Meta: {meta_diaria_pct:.1f}%", f"Umbral: +{umbral_salida:.2f}%")
+col4.metric("Meta / Trailing (Piso)", f"Meta: {meta_diaria_pct:.1f}%", f"Umbral: +{umbral_salida:.2f}%")
 
 st.markdown("---")
 
 if data_bitacora.get("historial_alertas"):
-    st.info("📜 **Última Acción:** " + data_bitacora["historial_alertas"][-1])
+    st.info("📜 **Última Acción VALORIS:** " + data_bitacora["historial_alertas"][-1])
 
-if st.sidebar.button("🚀 Abrir Jornada Conservadora"):
+if st.sidebar.button("🚀 Abrir Jornada VALORIS"):
     monto_por_accion = capital_base / len(TICKERS_FIJOS)
     nuevas_pos = []
     for t in TICKERS_FIJOS:
@@ -149,8 +198,8 @@ if st.sidebar.button("🚀 Abrir Jornada Conservadora"):
     guardar_bitacora(data_bitacora)
     st.rerun()
 
-st.subheader("🟢 Posiciones en Curso (Portafolio Fijo)")
+st.subheader("🟢 Posiciones en Curso — Estrategia VALORIS")
 if posiciones_procesadas:
     st.dataframe(pd.DataFrame(posiciones_procesadas), use_container_width=True)
 else:
-    st.success("✅ **Sin posiciones abiertas.** Caja líquida.")
+    st.success("✅ **Sin posiciones abiertas.** Caja líquida bajo custodia.")
