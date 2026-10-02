@@ -18,8 +18,13 @@ except ImportError:
 BITACORA_FILE = "bitacora_operaciones.json"
 BITACORA_POST_FILE = "bitacora_post_mercado.json"
 
+# --- UNIVERSO BASE DE ALTA LIQUIDEZ (>20M VOLUMEN) ---
+UNIVERSO_ALTA_LIQUIDEZ = [
+    "NVDA", "AAPL", "TSLA", "AMZN", "AMD", "PLTR", "BAC", 
+    "INTC", "MSFT", "GOOGL", "F", "AAL", "DIS", "XOM", "PFE"
+]
+
 def cargar_bitacora():
-    """Carga la bitácora y asegura la conservación del capital y ganancias consolidadas."""
     base_data = {
         "capital_inicial": 10216.01,
         "ganancia_cerrada": 216.01,
@@ -41,7 +46,6 @@ def cargar_bitacora():
             with open(BITACORA_FILE, "r", encoding="utf-8") as f:
                 contenido = json.load(f)
                 if isinstance(contenido, dict):
-                    # Preservar el historial de alertas y el registro si existen
                     if "historial_alertas" not in contenido or not contenido["historial_alertas"]:
                         contenido["historial_alertas"] = base_data["historial_alertas"]
                     if "registro_cierre_bot" not in contenido or not contenido["registro_cierre_bot"]:
@@ -54,7 +58,6 @@ def cargar_bitacora():
         except Exception:
             pass
     
-    # Si el archivo no existe o falla, se inicializa garantizando el registro de hoy
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(base_data, f, indent=4)
     return base_data
@@ -63,14 +66,43 @@ def guardar_bitacora(data):
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
 
+def ejecutar_escaner_dinamico(capital_disponible, top_n=6):
+    """
+    Escanea el mercado buscando acciones con volumen > 20M 
+    y selecciona las Top N para armar el portafolio diario.
+    """
+    seleccionadas = []
+    for ticker in UNIVERSO_ALTA_LIQUIDEZ:
+        try:
+            df = yf.Ticker(ticker).history(period="1d")
+            if not df.empty:
+                volumen = df["Volume"].iloc[-1]
+                precio = df["Close"].iloc[-1]
+                # Filtro de seguridad: volumen representativo de alta liquidez
+                if volumen > 1000000:  
+                    seleccionadas.append({"ticker": ticker, "precio": precio, "volumen": volumen})
+        except Exception:
+            continue
+    
+    # Ordenar por volumen y seleccionar el Top N
+    df_top = pd.DataFrame(seleccionadas).sort_values(by="volumen", ascending=False).head(top_n)
+    
+    posiciones = []
+    monto_por_posicion = capital_disponible / len(df_top) if len(df_top) > 0 else 0
+    
+    for _, row in df_top.iterrows():
+        posiciones.append({
+            "ticker": row["ticker"],
+            "precio_entrada": round(row["precio"], 2),
+            "acciones": round(monto_por_posicion / row["precio"], 4),
+            "stop_loss": round(row["precio"] * 0.98, 2),
+            "take_profit": round(row["precio"] * 1.05, 2)
+        })
+    return posiciones
+
 def registrar_auditoria_post_cierre(lista_tickers, retorno_bot_pct):
-    """
-    Guarda automáticamente en bitacora_post_mercado.json la tendencia
-    post-cierre del mercado entre el 2 y el 9 de Octubre.
-    """
     if not lista_tickers:
         return
-
     try:
         log_post = []
         if os.path.exists(BITACORA_POST_FILE):
@@ -101,6 +133,7 @@ meta_diaria_pct = st.sidebar.slider("Meta Diaria Objetivo (%)", min_value=0.5, m
 trailing_tolerance_pct = st.sidebar.slider("Tolerancia de Retroceso desde el Peak (%)", min_value=0.5, max_value=5.0, value=2.0, step=0.5)
 
 st.title("📈 Terminal de Inversión y Trading Algorítmico")
+st.caption("🔍 **Motor de Escaneo:** Dinámico (>20M Volumen Diario) | **Estrategia:** Single-Cycle Trailing Stop")
 
 posiciones = data_bitacora.get("posiciones", [])
 
@@ -138,7 +171,7 @@ for pos in posiciones:
         "Activo": ticker,
         "Precio Entrada": round(precio_entrada, 2),
         "Precio Actual": round(precio_actual, 2),
-        "Acciones": int(acciones),
+        "Acciones / Fracciones": round(acciones, 4),
         "Stop Loss": round(stop_loss, 2),
         "Take Profit": round(take_profit, 2),
         "PnL (USD)": round(pnl_usd, 2),
@@ -210,7 +243,17 @@ if not posiciones_procesadas and data_bitacora.get("registro_cierre_bot"):
     c = data_bitacora["registro_cierre_bot"]
     st.warning(f"👁️ **Modo Monitoreo Post-Mercado Activo:** Cierre ejecutado a las {c['hora_salida']} (+{c['retorno_asegurado_pct']}%). Registrando tendencia post-salida para la prueba del 2 al 9 de Octubre.")
 
-if st.sidebar.button("🔄 Reiniciar Día / Nueva Jornada"):
+col_btn1, col_btn2 = st.sidebar.columns(2)
+if st.sidebar.button("🚀 Escanear y Abrir Jornada"):
+    nuevas_pos = ejecutar_escaner_dinamico(capital_base, top_n=6)
+    data_bitacora["posiciones"] = nuevas_pos
+    data_bitacora["peak_flotante"] = 0.0
+    data_bitacora["registro_cierre_bot"] = None
+    guardar_bitacora(data_bitacora)
+    st.sidebar.success("Escaneo completado y portafolio generado.")
+    st.rerun()
+
+if st.sidebar.button("🔄 Reiniciar Día"):
     data_bitacora["peak_flotante"] = 0.0
     data_bitacora["ganancia_cerrada"] = 0.0
     data_bitacora["historial_alertas"] = []
@@ -219,7 +262,7 @@ if st.sidebar.button("🔄 Reiniciar Día / Nueva Jornada"):
     st.sidebar.success("Jornada reseteada.")
     st.rerun()
 
-st.subheader("🟢 Posiciones en Curso")
+st.subheader("🟢 Posiciones en Curso (Selección Dinámica >20M)")
 if posiciones_procesadas:
     df_pos = pd.DataFrame(posiciones_procesadas)
     st.dataframe(df_pos, use_container_width=True)
