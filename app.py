@@ -78,13 +78,11 @@ def ejecutar_escaner_dinamico(capital_disponible, top_n=6):
             if not df.empty:
                 volumen = df["Volume"].iloc[-1]
                 precio = df["Close"].iloc[-1]
-                # Filtro de seguridad: volumen representativo de alta liquidez
                 if volumen > 1000000:  
                     seleccionadas.append({"ticker": ticker, "precio": precio, "volumen": volumen})
         except Exception:
             continue
     
-    # Ordenar por volumen y seleccionar el Top N
     df_top = pd.DataFrame(seleccionadas).sort_values(by="volumen", ascending=False).head(top_n)
     
     posiciones = []
@@ -243,31 +241,13 @@ if not posiciones_procesadas and data_bitacora.get("registro_cierre_bot"):
     c = data_bitacora["registro_cierre_bot"]
     st.warning(f"👁️ **Modo Monitoreo Post-Mercado Activo:** Cierre ejecutado a las {c['hora_salida']} (+{c['retorno_asegurado_pct']}%). Registrando tendencia post-salida para la prueba del 2 al 9 de Octubre.")
 
-col_btn1, col_btn2 = st.sidebar.columns(2)
+# --- BOTONES EN PANEL LATERAL (UNICOS Y SIN DUPLICADOS) ---
 if st.sidebar.button("🚀 Escanear y Abrir Jornada"):
     nuevas_pos = ejecutar_escaner_dinamico(capital_base, top_n=6)
     data_bitacora["posiciones"] = nuevas_pos
     data_bitacora["peak_flotante"] = 0.0
     data_bitacora["registro_cierre_bot"] = None
-if st.sidebar.button("🚀 Escanear y Abrir Jornada"):
-    nuevas_pos = ejecutar_escaner_dinamico(capital_base, top_n=6)
-    data_bitacora["posiciones"] = nuevas_pos
-    data_bitacora["peak_flotante"] = 0.0
-    data_bitacora["registro_cierre_bot"] = None
-    # --- LÍNEA AÑADIDA: Limpia los mensajes del día anterior ---
     data_bitacora["historial_alertas"] = [f"[{time.strftime('%H:%M:%S')}] Jornada iniciada. Monitoreando posiciones..."]
-    guardar_bitacora(data_bitacora)
-    st.sidebar.success("Escaneo completado y portafolio generado.")
-    st.rerun()
-
-if st.sidebar.button("🔄 Reiniciar Día"):
-    data_bitacora["peak_flotante"] = 0.0
-    data_bitacora["ganancia_cerrada"] = 0.0
-    data_bitacora["historial_alertas"] = []
-    data_bitacora["registro_cierre_bot"] = None
-    guardar_bitacora(data_bitacora)
-    st.sidebar.success("Jornada reseteada.")
-    st.rerun()
     guardar_bitacora(data_bitacora)
     st.sidebar.success("Escaneo completado y portafolio generado.")
     st.rerun()
