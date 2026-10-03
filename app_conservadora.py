@@ -56,7 +56,7 @@ try:
 except ImportError:
     pass
 
-BITACORA_FILE = "bitacora_conservadora.json"
+BITACORA_FILE = "bitacora_valoris.json"
 TICKERS_FIJOS = ["DIS", "PFE", "XOM", "MSFT", "NVDA", "GOOGL"]
 
 def cargar_bitacora():
