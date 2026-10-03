@@ -1,8 +1,10 @@
 {
-    "capital_inicial": 10000.0,
-    "ganancia_cerrada": 0.0,
+    "capital_inicial": 10199.0,
+    "ganancia_cerrada": 199.0,
     "posiciones": [],
     "peak_flotante": 0.0,
-    "historial_alertas": [],
+    "historial_alertas": [
+        "[02/10/2026] Cierre de jornada: Ganancia acumulada de 3 días registrada en $199.00 USD."
+    ],
     "registro_cierre_bot": null
 }
