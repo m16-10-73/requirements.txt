@@ -249,6 +249,25 @@ if st.sidebar.button("🚀 Escanear y Abrir Jornada"):
     data_bitacora["posiciones"] = nuevas_pos
     data_bitacora["peak_flotante"] = 0.0
     data_bitacora["registro_cierre_bot"] = None
+    if st.sidebar.button("🚀 Escanear y Abrir Jornada"):
+    nuevas_pos = ejecutar_escaner_dinamico(capital_base, top_n=6)
+    data_bitacora["posiciones"] = nuevas_pos
+    data_bitacora["peak_flotante"] = 0.0
+    data_bitacora["registro_cierre_bot"] = None
+    # --- LÍNEA AÑADIDA: Limpia los mensajes del día anterior ---
+    data_bitacora["historial_alertas"] = [f"[{time.strftime('%H:%M:%S')}] Jornada iniciada. Monitoreando posiciones..."]
+    guardar_bitacora(data_bitacora)
+    st.sidebar.success("Escaneo completado y portafolio generado.")
+    st.rerun()
+
+if st.sidebar.button("🔄 Reiniciar Día"):
+    data_bitacora["peak_flotante"] = 0.0
+    data_bitacora["ganancia_cerrada"] = 0.0
+    data_bitacora["historial_alertas"] = []
+    data_bitacora["registro_cierre_bot"] = None
+    guardar_bitacora(data_bitacora)
+    st.sidebar.success("Jornada reseteada.")
+    st.rerun()
     guardar_bitacora(data_bitacora)
     st.sidebar.success("Escaneo completado y portafolio generado.")
     st.rerun()
