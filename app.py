@@ -249,7 +249,7 @@ if st.sidebar.button("🚀 Escanear y Abrir Jornada"):
     data_bitacora["posiciones"] = nuevas_pos
     data_bitacora["peak_flotante"] = 0.0
     data_bitacora["registro_cierre_bot"] = None
-    if st.sidebar.button("🚀 Escanear y Abrir Jornada"):
+if st.sidebar.button("🚀 Escanear y Abrir Jornada"):
     nuevas_pos = ejecutar_escaner_dinamico(capital_base, top_n=6)
     data_bitacora["posiciones"] = nuevas_pos
     data_bitacora["peak_flotante"] = 0.0
