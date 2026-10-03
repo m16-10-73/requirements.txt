@@ -195,6 +195,10 @@ if st.sidebar.button("🚀 Abrir Jornada VALORIS"):
         })
     data_bitacora["posiciones"] = nuevas_pos
     data_bitacora["peak_flotante"] = 0.0
+    # Limpia las alertas del día anterior para evitar falsos positivos
+    data_bitacora["historial_alertas"] = [
+        f"[{time.strftime('%H:%M:%S')}] Jornada VALORIS iniciada. Monitoreando mercado..."
+    ]
     guardar_bitacora(data_bitacora)
     st.rerun()
 
