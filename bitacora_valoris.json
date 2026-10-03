@@ -1,0 +1,10 @@
+{
+    "capital_inicial": 10216.01,
+    "ganancia_cerrada": 278.03,
+    "posiciones": [],
+    "peak_flotante": 0.88,
+    "historial_alertas": [
+        "[02/10/2026] Cierre de jornada VALORIS guardado correctamente."
+    ],
+    "registro_cierre_bot": null
+}
