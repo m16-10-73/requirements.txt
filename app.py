@@ -26,11 +26,13 @@ UNIVERSO_ALTA_LIQUIDEZ = [
 
 def cargar_bitacora():
     base_data = {
-        "capital_inicial": 10000.0,
-        "ganancia_cerrada": 0.0,
+        "capital_inicial": 10199.00,
+        "ganancia_cerrada": 199.00,
         "posiciones": [],
         "peak_flotante": 0.0,
-        "historial_alertas": [],
+        "historial_alertas": [
+            "[02/10/2026] Cierre de jornada: Ganancia acumulada de 3 días registrada en $199.00 USD."
+        ],
         "registro_cierre_bot": None
     }
     
@@ -45,11 +47,8 @@ def cargar_bitacora():
     
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(base_data, f, indent=4)
-    return base_data    
-    with open(BITACORA_FILE, "w", encoding="utf-8") as f:
-        json.dump(base_data, f, indent=4)
     return base_data
-
+    
 def guardar_bitacora(data):
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
