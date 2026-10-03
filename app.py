@@ -26,19 +26,12 @@ UNIVERSO_ALTA_LIQUIDEZ = [
 
 def cargar_bitacora():
     base_data = {
-        "capital_inicial": 10216.01,
-        "ganancia_cerrada": 216.01,
+        "capital_inicial": 10000.0,
+        "ganancia_cerrada": 0.0,
         "posiciones": [],
         "peak_flotante": 0.0,
-        "historial_alertas": [
-            "[14:38:16] TRAILING STOP AUTOMÁTICO: Cierre ejecutado al 2.16% (Peak: +4.54%). Ganancia asegurada: $216.01 USD."
-        ],
-        "registro_cierre_bot": {
-            "hora_salida": "14:38:16",
-            "retorno_asegurado_pct": 2.16,
-            "ganancia_usd": 216.01,
-            "tickers": ["DIS", "PFE", "XOM", "MSFT", "NVDA", "GOOGL"]
-        }
+        "historial_alertas": [],
+        "registro_cierre_bot": None
     }
     
     if os.path.exists(BITACORA_FILE):
@@ -46,18 +39,13 @@ def cargar_bitacora():
             with open(BITACORA_FILE, "r", encoding="utf-8") as f:
                 contenido = json.load(f)
                 if isinstance(contenido, dict):
-                    if "historial_alertas" not in contenido or not contenido["historial_alertas"]:
-                        contenido["historial_alertas"] = base_data["historial_alertas"]
-                    if "registro_cierre_bot" not in contenido or not contenido["registro_cierre_bot"]:
-                        contenido["registro_cierre_bot"] = base_data["registro_cierre_bot"]
-                    if "ganancia_cerrada" not in contenido or contenido["ganancia_cerrada"] == 0:
-                        contenido["ganancia_cerrada"] = base_data["ganancia_cerrada"]
-                    if "capital_inicial" not in contenido or contenido["capital_inicial"] == 10000.0:
-                        contenido["capital_inicial"] = base_data["capital_inicial"]
                     return contenido
         except Exception:
             pass
     
+    with open(BITACORA_FILE, "w", encoding="utf-8") as f:
+        json.dump(base_data, f, indent=4)
+    return base_data    
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(base_data, f, indent=4)
     return base_data
