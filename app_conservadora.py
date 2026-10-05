@@ -4,6 +4,7 @@ import yfinance as yf
 import json
 import os
 import time
+from datetime import datetime
 
 st.set_page_config(
     page_title="VALORIS — Crecimiento Patrimonial", 
@@ -96,7 +97,7 @@ def guardar_bitacora(data):
 data_bitacora = cargar_bitacora()
 
 # Sidebar personalizada
-st.sidebar.markdown("### 🏛️ **VALORIS**")
+st.sidebar.markdown("### 🏛️️ **VALORIS**")
 st.sidebar.markdown("*Gestión Patrimonial Institucional*")
 st.sidebar.markdown("---")
 
@@ -180,6 +181,8 @@ st.markdown("---")
 if data_bitacora.get("historial_alertas"):
     st.info("📜 **Última Acción VALORIS:** " + data_bitacora["historial_alertas"][-1])
 
+# --- CONTROLES DE LA BARRA LATERAL ---
+
 if st.sidebar.button("🚀 Abrir Jornada VALORIS"):
     monto_por_accion = capital_base / len(TICKERS_FIJOS)
     nuevas_pos = []
@@ -195,31 +198,31 @@ if st.sidebar.button("🚀 Abrir Jornada VALORIS"):
         })
     data_bitacora["posiciones"] = nuevas_pos
     data_bitacora["peak_flotante"] = 0.0
-    # Limpia las alertas del día anterior para evitar falsos positivos
-    data_bitacora["historial_alertas"] = [
+    data_bitacora["registro_cierre_bot"] = None
+    data_bitacora["historial_alertas"].append(
         f"[{time.strftime('%H:%M:%S')}] Jornada VALORIS iniciada. Monitoreando mercado..."
-    ]
+    )
     guardar_bitacora(data_bitacora)
+    st.sidebar.success("Jornada VALORIS iniciada con éxito.")
     st.rerun()
 
+# CORRECCIÓN DE VARIABLES: Reemplazo de 'bitacora' por 'data_bitacora' y cálculo de 'total_flotante'
 if st.sidebar.button("🔴 Cierre Manual de Jornada"):
-    if bitacora.get("posiciones"):
-        # Calculamos el flotante actual
-        ganancia_del_dia = bitacora.get("flotante_actual_usd", 0.0)
-        nuevo_capital = bitacora["capital_inicial"] + ganancia_del_dia
+    if data_bitacora.get("posiciones"):
+        ganancia_del_dia = total_flotante
+        nuevo_capital = data_bitacora["capital_inicial"] + ganancia_del_dia
         
-        # Actualizamos la bitácora a caja líquida
-        bitacora["capital_inicial"] = round(nuevo_capital, 2)
-        bitacora["ganancia_cerrada"] = round(bitacora.get("ganancia_cerrada", 0.0) + ganancia_del_dia, 2)
-        bitacora["posiciones"] = [] # Vacía la tabla
-        bitacora["registro_cierre_bot"] = None
+        data_bitacora["capital_inicial"] = round(nuevo_capital, 2)
+        data_bitacora["ganancia_cerrada"] = round(data_bitacora.get("ganancia_cerrada", 0.0) + ganancia_del_dia, 2)
+        data_bitacora["posiciones"] = [] 
+        data_bitacora["registro_cierre_bot"] = None
+        data_bitacora["peak_flotante"] = 0.0
         
-        # Guardamos en la lista de alertas
         hora_actual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         alerta = f"[{hora_actual}] CIERRE MANUAL: Ganancia asegurada de ${ganancia_del_dia:.2f} USD."
-        bitacora["historial_alertas"].append(alerta)
+        data_bitacora["historial_alertas"].append(alerta)
         
-        guardar_bitacora(bitacora)
+        guardar_bitacora(data_bitacora)
         st.sidebar.success("¡Utilidades aseguradas a caja líquida!")
         st.rerun()
     else:
