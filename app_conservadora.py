@@ -202,6 +202,29 @@ if st.sidebar.button("🚀 Abrir Jornada VALORIS"):
     guardar_bitacora(data_bitacora)
     st.rerun()
 
+if st.sidebar.button("🔴 Cierre Manual de Jornada"):
+    if bitacora.get("posiciones"):
+        # Calculamos el flotante actual
+        ganancia_del_dia = bitacora.get("flotante_actual_usd", 0.0)
+        nuevo_capital = bitacora["capital_inicial"] + ganancia_del_dia
+        
+        # Actualizamos la bitácora a caja líquida
+        bitacora["capital_inicial"] = round(nuevo_capital, 2)
+        bitacora["ganancia_cerrada"] = round(bitacora.get("ganancia_cerrada", 0.0) + ganancia_del_dia, 2)
+        bitacora["posiciones"] = [] # Vacía la tabla
+        bitacora["registro_cierre_bot"] = None
+        
+        # Guardamos en la lista de alertas
+        hora_actual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+        alerta = f"[{hora_actual}] CIERRE MANUAL: Ganancia asegurada de ${ganancia_del_dia:.2f} USD."
+        bitacora["historial_alertas"].append(alerta)
+        
+        guardar_bitacora(bitacora)
+        st.sidebar.success("¡Utilidades aseguradas a caja líquida!")
+        st.rerun()
+    else:
+        st.sidebar.warning("No hay posiciones abiertas para cerrar.")
+
 st.subheader("🟢 Posiciones en Curso — Estrategia VALORIS")
 if posiciones_procesadas:
     st.dataframe(pd.DataFrame(posiciones_procesadas), use_container_width=True)
