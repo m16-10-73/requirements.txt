@@ -8,7 +8,7 @@ from datetime import datetime
 
 st.set_page_config(page_title="Terminal de Trading Algorítmico", layout="wide")
 
-# --- AUTOREFRESCO AUTOMÁTICO CADA 30 SEGUNDOS (SISTEMA AUTÓNOMO) ---
+# --- AUTOREFRESCO AUTOMÁTICO CADA 30 SEGUNDOS ---
 try:
     from streamlit_autorefresh import st_autorefresh
     st_autorefresh(interval=30000, limit=10000, key="bot_auto_execution_loop")
@@ -48,16 +48,12 @@ def cargar_bitacora():
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(base_data, f, indent=4)
     return base_data
-    
+
 def guardar_bitacora(data):
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
 
 def ejecutar_escaner_dinamico(capital_disponible, top_n=6):
-    """
-    Escanea el mercado buscando acciones con volumen > 20M 
-    y selecciona las Top N para armar el portafolio diario.
-    """
     seleccionadas = []
     for ticker in UNIVERSO_ALTA_LIQUIDEZ:
         try:
@@ -71,7 +67,6 @@ def ejecutar_escaner_dinamico(capital_disponible, top_n=6):
             continue
     
     df_top = pd.DataFrame(seleccionadas).sort_values(by="volumen", ascending=False).head(top_n)
-    
     posiciones = []
     monto_por_posicion = capital_disponible / len(df_top) if len(df_top) > 0 else 0
     
@@ -121,7 +116,6 @@ st.title("📈 Terminal de Inversión y Trading Algorítmico")
 st.caption("🔍 **Motor de Escaneo:** Dinámico (>20M Volumen Diario) | **Estrategia:** Single-Cycle Trailing Stop")
 
 posiciones = data_bitacora.get("posiciones", [])
-
 total_flotante = 0.0
 posiciones_procesadas = []
 tickers_activos = []
@@ -163,14 +157,14 @@ for pos in posiciones:
         "PnL (%)": round(pnl_pct, 2)
     })
 
-capital_base = data_bitacora.get("capital_inicial", 10216.01)
-ganancia_cerrada = data_bitacora.get("ganancia_cerrada", 216.01)
+capital_base = data_bitacora.get("capital_inicial", 10199.00)
+ganancia_cerrada = data_bitacora.get("ganancia_cerrada", 199.00)
 
 flotante_pct = (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
 ganancia_total_dia = ganancia_cerrada + total_flotante
 ganancia_total_pct = (ganancia_total_dia / capital_base) * 100 if capital_base > 0 else 0.0
 
-# --- LÓGICA DE REGISTRO DE HIGH-WATER MARK (PEAK) ---
+# --- LÓGICA DE REGISTRO DE PEAK ---
 peak_previo = data_bitacora.get("peak_flotante", 0.0)
 if flotante_pct > peak_previo:
     data_bitacora["peak_flotante"] = flotante_pct
@@ -203,11 +197,6 @@ if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posi
     registrar_auditoria_post_cierre(tickers_activos, retorno_asegurado_pct)
     st.rerun()
 
-# --- REGISTRO SILENCIOSO POST-MERCADO ---
-if not posiciones_procesadas and data_bitacora.get("registro_cierre_bot"):
-    info_cierre = data_bitacora["registro_cierre_bot"]
-    registrar_auditoria_post_cierre(info_cierre.get("tickers", []), info_cierre.get("retorno_asegurado_pct", 0.0))
-
 # --- INTERFAZ Y MÉTRICAS ---
 col1, col2, col3, col4 = st.columns(4)
 
@@ -224,48 +213,42 @@ st.markdown("---")
 if data_bitacora.get("historial_alertas"):
     st.info("📜 **Última Acción Automática del Bot:** " + data_bitacora["historial_alertas"][-1])
 
-if not posiciones_procesadas and data_bitacora.get("registro_cierre_bot"):
-    c = data_bitacora["registro_cierre_bot"]
-    st.warning(f"👁️ **Modo Monitoreo Post-Mercado Activo:** Cierre ejecutado a las {c['hora_salida']} (+{c['retorno_asegurado_pct']}%). Registrando tendencia post-salida para la prueba del 2 al 9 de Octubre.")
-
-# --- BOTONES EN PANEL LATERAL (UNICOS Y SIN DUPLICADOS) ---
+# --- CONTROLES EN SIDEBAR CORREGIDOS ---
 if st.sidebar.button("🚀 Escanear y Abrir Jornada"):
     nuevas_pos = ejecutar_escaner_dinamico(capital_base, top_n=6)
     data_bitacora["posiciones"] = nuevas_pos
     data_bitacora["peak_flotante"] = 0.0
     data_bitacora["registro_cierre_bot"] = None
-    data_bitacora["historial_alertas"] = [f"[{time.strftime('%H:%M:%S')}] Jornada iniciada. Monitoreando posiciones..."]
+    data_bitacora["historial_alertas"].append(f"[{time.strftime('%H:%M:%S')}] Jornada iniciada. Monitoreando posiciones...")
     guardar_bitacora(data_bitacora)
     st.sidebar.success("Escaneo completado y portafolio generado.")
     st.rerun()
 
+# CORRECCIÓN AQUÍ: Uso de data_bitacora y total_flotante
 if st.sidebar.button("🔴 Cierre Manual de Jornada"):
-    if bitacora.get("posiciones"):
-        # Calculamos el flotante actual
-        ganancia_del_dia = bitacora.get("flotante_actual_usd", 0.0)
-        nuevo_capital = bitacora["capital_inicial"] + ganancia_del_dia
+    if data_bitacora.get("posiciones"):
+        ganancia_del_dia = total_flotante
+        nuevo_capital = data_bitacora["capital_inicial"] + ganancia_del_dia
         
-        # Actualizamos la bitácora a caja líquida
-        bitacora["capital_inicial"] = round(nuevo_capital, 2)
-        bitacora["ganancia_cerrada"] = round(bitacora.get("ganancia_cerrada", 0.0) + ganancia_del_dia, 2)
-        bitacora["posiciones"] = [] # Vacía la tabla
-        bitacora["registro_cierre_bot"] = None
+        data_bitacora["capital_inicial"] = round(nuevo_capital, 2)
+        data_bitacora["ganancia_cerrada"] = round(data_bitacora.get("ganancia_cerrada", 0.0) + ganancia_del_dia, 2)
+        data_bitacora["posiciones"] = [] 
+        data_bitacora["registro_cierre_bot"] = None
+        data_bitacora["peak_flotante"] = 0.0
         
-        # Guardamos en la lista de alertas
         hora_actual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         alerta = f"[{hora_actual}] CIERRE MANUAL: Ganancia asegurada de ${ganancia_del_dia:.2f} USD."
-        bitacora["historial_alertas"].append(alerta)
+        data_bitacora["historial_alertas"].append(alerta)
         
-        guardar_bitacora(bitacora)
+        guardar_bitacora(data_bitacora)
         st.sidebar.success("¡Utilidades aseguradas a caja líquida!")
         st.rerun()
     else:
         st.sidebar.warning("No hay posiciones abiertas para cerrar.")
 
+# CORRECCIÓN AQUÍ: No borra ganancia_cerrada
 if st.sidebar.button("🔄 Reiniciar Día"):
     data_bitacora["peak_flotante"] = 0.0
-    data_bitacora["ganancia_cerrada"] = 0.0
-    data_bitacora["historial_alertas"] = []
     data_bitacora["registro_cierre_bot"] = None
     guardar_bitacora(data_bitacora)
     st.sidebar.success("Jornada reseteada.")
