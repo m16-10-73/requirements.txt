@@ -2,7 +2,6 @@ import streamlit as st
 import yfinance as yf
 import json
 import os
-from datetime import datetime
 
 # ==========================================
 # CONFIGURACIÓN GENERAL Y PARÁMETROS BÁSICOS
@@ -51,29 +50,18 @@ def guardar_bitacora(data):
 # ALGORITMO DE SELECCIÓN Y ESCANEO
 # ==========================================
 def seleccionar_top_emergentes(n=5):
-    """
-    Escanea el pool emergente y filtra estrictamente por:
-    1. Market Cap entre $500M y $10B USD.
-    2. Volumen promedio o diario >= 1,000,000 de acciones.
-    3. Mayor variación porcentual (Momentum).
-    """
     resultados = []
-    
     for ticker in CANDIDATAS_EMERGING:
         try:
             yt = yf.Ticker(ticker)
-            
-            # 1. Validación de Capitalización Bursátil
             mcap = yt.fast_info.get('marketCap', 0)
             if not (MARKET_CAP_MIN_USD <= mcap <= MARKET_CAP_MAX_USD):
                 continue
                 
-            # 2. Validación de Volumen Mínimo
             vol = yt.fast_info.get('lastVolume', 0)
             if vol < VOLUMEN_MINIMO_DIARIO:
                 continue
                 
-            # 3. Cálculo de Momentum
             df = yt.history(period="2d")
             if len(df) >= 2:
                 c_prev = df["Close"].iloc[-2]
@@ -87,7 +75,7 @@ def seleccionar_top_emergentes(n=5):
     return resultados[:n]
 
 # ==========================================
-# INTERFAZ STREAMLIT
+# INTERFAZ STREAMLIT (ESTRUCTURA IDÉNTICA)
 # ==========================================
 st.set_page_config(page_title="Emerging Growth Bot", layout="wide")
 st.title("🌱 Emerging Growth Bot - High Momentum")
@@ -128,7 +116,6 @@ with col1:
 with col2:
     if st.button("🔴 Cierre Manual", use_container_width=True):
         if data["jornada_activa"]:
-            # Procesar cierre al precio actual
             ganancia_jornada = 0.0
             for pos in data["posiciones"]:
                 yt = yf.Ticker(pos["ticker"])
@@ -147,7 +134,6 @@ with col2:
 
 st.divider()
 
-# Mostrar Portafolio Activo
 if data["jornada_activa"] and data["posiciones"]:
     st.subheader("📊 Portafolio Emerging Activo")
     for pos in data["posiciones"]:
