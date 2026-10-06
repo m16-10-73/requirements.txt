@@ -55,11 +55,15 @@ except ImportError:
 
 BITACORA_FILE = "bitacora.json"
 
-# Universo de 25 acciones de alta liquidez
-UNIVERSO_TICKERS = [
-    "NVDA", "MSFT", "AAPL", "AMZN", "GOOGL", "META", "TSLA", "AMD", "NFLX", "INTC",
-    "JPM", "BAC", "V", "MA", "DIS", "PFE", "XOM", "CVX", "KO", "PEP",
-    "COST", "WMT", "NKE", "BA", "UNH"
+# Umbral mínimo de capitalización bursátil: $20,000,000,000 USD ($20B)
+MARKET_CAP_MINIMO_USD = 20_000_000_000 
+
+# Pool ampliado de escaneo de grandes empresas
+CANDIDATAS_GRANDES_CAPS = [
+    "NVDA", "MSFT", "AAPL", "AMZN", "GOOGL", "META", "TSLA", "AVGO", "COST", "NFLX",
+    "AMD", "ORCL", "TMUS", "PEP", "KO", "LLY", "UNH", "JPM", "V", "MA",
+    "BAC", "XOM", "CVX", "WMT", "NKE", "DIS", "HD", "PG", "MRK", "ABBV",
+    "CRM", "ACN", "LIN", "ABT", "TMO", "CSCO", "MCD", "GE", "TXN", "PM"
 ]
 
 NUM_EMPRESAS_OBJETIVO = 5
@@ -90,25 +94,39 @@ def guardar_bitacora(data):
         json.dump(data, f, indent=4)
 
 def seleccionar_top_empresas(n=5):
-    """Evalúa el momentum de las 25 empresas y selecciona el Top N."""
-    rendimientos = []
-    for ticker in UNIVERSO_TICKERS:
+    """
+    Escanea dinámicamente y filtra SOLO empresas que superen
+    el rango de capitalización bursátil ($20B+ USD),
+    ordenándolas por mayor momentum/variación porcentual.
+    """
+    resultados = []
+    
+    for ticker in CANDIDATAS_GRANDES_CAPS:
         try:
-            df = yf.Ticker(ticker).history(period="2d")
+            yt = yf.Ticker(ticker)
+            
+            # 1. Validación en tiempo real del Rango de Capitalización ($20B+ USD)
+            mcap = yt.fast_info.get('marketCap', 0)
+            
+            # Si NO cumple el piso de $20B USD, se descarta automáticamente
+            if mcap < MARKET_CAP_MINIMO_USD:
+                continue
+                
+            # 2. Cálculo de Momentum
+            df = yt.history(period="2d")
             if len(df) >= 2:
                 c_prev = df["Close"].iloc[-2]
                 c_act = df["Close"].iloc[-1]
                 var_pct = ((c_act - c_prev) / c_prev) * 100.0
-            else:
-                var_pct = 0.0
+                resultados.append((ticker, var_pct))
         except Exception:
-            var_pct = 0.0
-        rendimientos.append((ticker, var_pct))
+            continue
     
-    # Ordenar de mayor a menor variacion
-    rendimientos.sort(key=lambda x: x[1], reverse=True)
-    top_seleccion = [item[0] for item in rendimientos[:n]]
-    return top_seleccion
+    # Ordenar por el mayor porcentaje de variación (Momentum)
+    resultados.sort(key=lambda x: x[1], reverse=True)
+    
+    # Retorna el Top N que pasaron la validación de Market Cap
+    return [item[0] for item in resultados[:n]]
 
 data_bitacora = cargar_bitacora()
 
