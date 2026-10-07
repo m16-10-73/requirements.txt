@@ -236,7 +236,7 @@ if data_bitacora.get("historial_alertas"):
 # --- CONTROLES DE LA BARRA LATERAL ---
 
 if st.sidebar.button("🚀 Abrir Jornada (Top 5)"):
-    st.sidebar.info("Analizando momentum en 25 activos...")
+    st.sidebar.info("Analizando momentum en 250 activos...")
     top_5 = seleccionar_top_empresas(n=NUM_EMPRESAS_OBJETIVO)
     monto_por_accion = capital_base / len(top_5)
     nuevas_pos = []
