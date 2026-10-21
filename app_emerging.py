@@ -1,19 +1,20 @@
-import streamlit as st
-import pandas as pd
-import yfinance as yf
 import json
 import os
 import time
 from datetime import datetime
+import pandas as pd
+import streamlit as st
+import yfinance as yf
 
 st.set_page_config(
-    page_title="Emerging Growth Bot — High Momentum", 
+    page_title="Emerging Growth Bot — High Momentum",
     page_icon="🌱",
-    layout="wide"
+    layout="wide",
 )
 
-# Estilos CSS (idénticos a la versión base)
-st.markdown("""
+# Estilos CSS
+st.markdown(
+    """
     <style>
     .stApp {
         background-color: #f8f9fa;
@@ -44,40 +45,73 @@ st.markdown("""
         color: #11998e;
     }
     </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # Autorefresco cada 30 segundos
 try:
     from streamlit_autorefresh import st_autorefresh
+
     st_autorefresh(interval=30000, limit=10000, key="auto_emerging")
 except ImportError:
     pass
 
-BITACORA_FILE = "bitacora_emergentes.json"
+BITACORA_FILE = "bitácora_emerging.json"
 
 # --- RESTRICCIONES MERCADOS EMERGENTES / MID-SMALL CAPS ---
-MARKET_CAP_MIN_USD = 500_000_000      # $500M USD
-MARKET_CAP_MAX_USD = 10_000_000_000   # $10,000M USD ($10B)
-VOLUMEN_MINIMO_DIARIO = 1_000_000     # 1,000,000 acciones/día
-STOP_LOSS_INDIVIDUAL_PCT = -3.5       # Umbral de corte individual (-3.5%)
+MARKET_CAP_MIN_USD = 500_000_000  # $500M USD
+MARKET_CAP_MAX_USD = 10_000_000_000  # $10,000M USD ($10B)
+VOLUMEN_MINIMO_DIARIO = 1_000_000  # 1,000,000 acciones/día
+STOP_LOSS_INDIVIDUAL_PCT = -3.5  # Umbral de corte individual (-3.5%)
 NUM_EMPRESAS_OBJETIVO = 5
 
 # Pool de escaneo de empresas emergentes / alto crecimiento
 CANDIDATAS_EMERGENTES = [
-    "PLTR", "SOFI", "PATH", "RBLX", "AFRM", "UPST", "DKNG", "HOOD", "IONQ", "RGTI",
-    "RKLB", "JOBY", "ACHR", "CELH", "SYM", "BBAI", "SOUN", "AUR", "LCID", "RIVN",
-    "OPEN", "MARA", "RIOT", "CLSK", "BITF", "CRWD", "NET", "SNOW", "DDOG", "ZS",
-    "MDB", "S", "DOCN", "GTLB", "IOT", "CFLT", "U", "PINS", "ROKU", "SE"
+    "PLTR",
+    "SOFI",
+    "PATH",
+    "RBLX",
+    "AFRM",
+    "UPST",
+    "DKNG",
+    "HOOD",
+    "IONQ",
+    "RGTI",
+    "RKLB",
+    "JOBY",
+    "ACHR",
+    "CELH",
+    "SYM",
+    "BBAI",
+    "SOUN",
+    "AUR",
+    "LCID",
+    "RIVN",
+    "OPEN",
+    "MARA",
+    "RIOT",
+    "CLSK",
+    "BITF",
+    "CRWD",
+    "NET",
+    "SNOW",
+    "DDOG",
+    "ZS",
+    "MDB",
+    "S",
+    "DOCN",
+    "GTLB",
+    "IOT",
+    "CFLT",
+    "U",
+    "PINS",
+    "ROKU",
+    "SE",
 ]
 
+
 def cargar_bitacora():
-    base_data = {
-        "capital_inicial": 10000.0,
-        "ganancia_cerrada": 0.0,
-        "posiciones": [],
-        "peak_flotante": 0.0,
-        "historial_alertas": []
-    }
     if os.path.exists(BITACORA_FILE):
         try:
             with open(BITACORA_FILE, "r", encoding="utf-8") as f:
@@ -86,56 +120,58 @@ def cargar_bitacora():
                     return contenido
         except Exception:
             pass
+
+    # Resguardo en caso de que el archivo no exista
+    base_data = {
+        "capital_inicial": 10183.89,
+        "ganancia_cerrada": 0.0,
+        "posiciones": [],
+        "peak_flotante": 0.0,
+        "historial_alertas": [],
+    }
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(base_data, f, indent=4)
     return base_data
+
 
 def guardar_bitacora(data):
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
 
+
 def seleccionar_top_empresas(n=5):
-    """
-    Escanea dinámicamente y filtra SOLO empresas que cumplan:
-    1. Capitalización bursátil entre $500M y $10,000M USD.
-    2. Volumen promedio o diario >= 1,000,000 acciones.
-    Ordenadas por mayor momentum / variación porcentual.
-    """
     resultados = []
-    
     for ticker in CANDIDATAS_EMERGENTES:
         try:
             yt = yf.Ticker(ticker)
             fast_info = yt.fast_info
-            
+
             # 1. Validación de Market Cap ($500M - $10B)
-            mcap = fast_info.get('marketCap', 0)
+            mcap = fast_info.get("marketCap", 0)
             if not (MARKET_CAP_MIN_USD <= mcap <= MARKET_CAP_MAX_USD):
                 continue
-                
+
             # 2. Validación de Volumen (Mínimo 1,000,000)
             df = yt.history(period="2d")
             if len(df) < 2:
                 continue
-                
+
             volumen_actual = df["Volume"].iloc[-1]
             if volumen_actual < VOLUMEN_MINIMO_DIARIO:
                 continue
-                
+
             # 3. Cálculo de Momentum
             c_prev = df["Close"].iloc[-2]
             c_act = df["Close"].iloc[-1]
             var_pct = ((c_act - c_prev) / c_prev) * 100.0
             resultados.append((ticker, var_pct))
-            
+
         except Exception:
             continue
-    
-    # Ordenar por mayor porcentaje de variación (Momentum)
+
     resultados.sort(key=lambda x: x[1], reverse=True)
-    
-    # Retorna el Top N que superaron todos los filtros de filtro emergente
     return [item[0] for item in resultados[:n]]
+
 
 data_bitacora = cargar_bitacora()
 
@@ -144,15 +180,31 @@ st.sidebar.markdown("### 🌱 **BOT EMERGENTE**")
 st.sidebar.markdown("*High Momentum Mid/Small-Cap & Stop Loss*")
 st.sidebar.markdown("---")
 
-meta_diaria_pct = st.sidebar.slider("Meta Diaria (%)", min_value=0.5, max_value=10.0, value=2.0, step=0.5)
-trailing_tolerance_pct = st.sidebar.slider("Tolerancia Retroceso (%)", min_value=0.5, max_value=5.0, value=2.0, step=0.5)
+# Sliders operativos con nuevos valores por defecto
+meta_diaria_pct = st.sidebar.slider(
+    "Meta Diaria (%)",
+    min_value=0.5,
+    max_value=10.0,
+    value=1.35,
+    step=0.05,
+)
+trailing_tolerance_pct = st.sidebar.slider(
+    "Tolerancia Retroceso (%)",
+    min_value=0.05,
+    max_value=5.0,
+    value=0.25,
+    step=0.05,
+)
 
-st.markdown("""
+st.markdown(
+    """
     <div class="dynamic-header">
         <h1>🌱 BOT MERCADOS EMERGENTES — HIGH MOMENTUM</h1>
         <p>Estrategia de Impulso Mid/Small-Cap ($500M-$10B) | Stop Loss Individual (-3.5%) & Trailing Stop Protegido</p>
     </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 posiciones = data_bitacora.get("posiciones", [])
 total_flotante = 0.0
@@ -164,23 +216,27 @@ for pos in posiciones:
     ticker = pos.get("ticker")
     precio_entrada = float(pos.get("precio_entrada", 0.0))
     acciones = float(pos.get("acciones", 0.0))
-    
+
     try:
         df = yf.Ticker(ticker).history(period="1d")
-        precio_actual = float(df["Close"].iloc[-1]) if not df.empty else precio_entrada
+        precio_actual = (
+            float(df["Close"].iloc[-1]) if not df.empty else precio_entrada
+        )
     except Exception:
         precio_actual = precio_entrada
-        
+
     pnl_usd = (precio_actual - precio_entrada) * acciones
-    pnl_pct = ((precio_actual - precio_entrada) / precio_entrada) * 100.0 if precio_entrada > 0 else 0.0
-    
+    pnl_pct = (
+        ((precio_actual - precio_entrada) / precio_entrada) * 100.0
+        if precio_entrada > 0
+        else 0.0
+    )
+
     # --- VERIFICACIÓN DE STOP LOSS INDIVIDUAL (-3.5%) ---
     if pnl_pct <= STOP_LOSS_INDIVIDUAL_PCT:
-        # Se liquida esta posición individual inmediatamente
         data_bitacora["ganancia_cerrada"] += pnl_usd
-        data_bitacora["capital_inicial"] += pnl_usd
-        
-        hora_act = time.strftime('%H:%M:%S')
+
+        hora_act = time.strftime("%H:%M:%S")
         msg = f"[{hora_act}] 🛡️ STOP LOSS INDIVIDUAL: Cierre en {ticker} a {pnl_pct:.2f}% (${pnl_usd:.2f} USD). Posición liquidada a caja."
         data_bitacora["historial_alertas"].append(msg)
         hubo_cierre_individual = True
@@ -193,21 +249,24 @@ for pos in posiciones:
             "Precio Actual": round(precio_actual, 2),
             "Acciones": round(acciones, 4),
             "PnL (USD)": round(pnl_usd, 2),
-            "PnL (%)": round(pnl_pct, 2)
+            "PnL (%)": round(pnl_pct, 2),
         })
 
-# Si se ejecutó algún Stop Loss individual, guardamos la bitácora limpia y refrescamos
 if hubo_cierre_individual:
     data_bitacora["posiciones"] = posiciones_restantes
     guardar_bitacora(data_bitacora)
     st.rerun()
 
-capital_base = data_bitacora.get("capital_inicial", 10000.0)
+capital_base = data_bitacora.get("capital_inicial", 10183.89)
 ganancia_cerrada = data_bitacora.get("ganancia_cerrada", 0.0)
 
-flotante_pct = (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
+flotante_pct = (
+    (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
+)
 ganancia_total_dia = ganancia_cerrada + total_flotante
-ganancia_total_pct = (ganancia_total_dia / capital_base) * 100 if capital_base > 0 else 0.0
+ganancia_total_pct = (
+    (ganancia_total_dia / capital_base) * 100 if capital_base > 0 else 0.0
+)
 
 peak_previo = data_bitacora.get("peak_flotante", 0.0)
 if flotante_pct > peak_previo:
@@ -221,21 +280,42 @@ else:
 umbral_calculado = peak_actual - trailing_tolerance_pct
 umbral_salida = max(umbral_calculado, meta_diaria_pct)
 
-if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posiciones_procesadas) > 0:
-    data_bitacora["ganancia_cerrada"] += total_flotante
-    data_bitacora["capital_inicial"] += total_flotante
+if (
+    peak_actual >= meta_diaria_pct
+    and flotante_pct <= umbral_salida
+    and len(posiciones_procesadas) > 0
+):
+    nuevo_capital = round(capital_base + total_flotante + ganancia_cerrada, 2)
+    data_bitacora["capital_inicial"] = nuevo_capital
+    data_bitacora["ganancia_cerrada"] = 0.0
     data_bitacora["posiciones"] = []
-    mensaje = f"[{time.strftime('%H:%M:%S')}] 🎯 TRAILING STOP GLOBAL: Cierre ejecutado al {flotante_pct:.2f}%. Ganancia: ${total_flotante:,.2f} USD."
+    mensaje = f"[{time.strftime('%H:%M:%S')}] 🎯 TRAILING STOP GLOBAL: Cierre ejecutado al {flotante_pct:.2f}%. Nuevo Capital Base: ${nuevo_capital:,.2f} USD."
     data_bitacora["historial_alertas"].append(mensaje)
     data_bitacora["peak_flotante"] = 0.0
     guardar_bitacora(data_bitacora)
     st.rerun()
 
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Capital Cuenta", f"${capital_base + total_flotante:,.2f} USD", f"Base: ${capital_base:,.2f}")
-col2.metric("Ganancia Realizada", f"+${ganancia_total_dia:,.2f} USD", f"{ganancia_total_pct:.2f}% del Capital")
-col3.metric("Flotante Actual", f"+${total_flotante:,.2f} USD", f"Peak: +{peak_actual:.2f}%")
-col4.metric("Meta / Trailing (Piso)", f"Meta: {meta_diaria_pct:.1f}%", f"Umbral: +{umbral_salida:.2f}%")
+col1.metric(
+    "Capital Cuenta",
+    f"${capital_base + total_flotante:,.2f} USD",
+    f"Base: ${capital_base:,.2f}",
+)
+col2.metric(
+    "Ganancia Realizada",
+    f"+${ganancia_total_dia:,.2f} USD",
+    f"{ganancia_total_pct:.2f}% del Capital",
+)
+col3.metric(
+    "Flotante Actual",
+    f"+${total_flotante:,.2f} USD",
+    f"Peak: +{peak_actual:.2f}%",
+)
+col4.metric(
+    "Meta / Trailing (Piso)",
+    f"Meta: {meta_diaria_pct:.2f}%",
+    f"Umbral: +{umbral_salida:.2f}%",
+)
 
 st.markdown("---")
 
@@ -247,7 +327,7 @@ if data_bitacora.get("historial_alertas"):
 if st.sidebar.button("🚀 Abrir Jornada (Emergentes Top 5)"):
     st.sidebar.info("Escaneando volumen y Market Cap en mercado emergente...")
     top_5 = seleccionar_top_empresas(n=NUM_EMPRESAS_OBJETIVO)
-    
+
     if len(top_5) > 0:
         monto_por_accion = capital_base / len(top_5)
         nuevas_pos = []
@@ -259,7 +339,7 @@ if st.sidebar.button("🚀 Abrir Jornada (Emergentes Top 5)"):
             nuevas_pos.append({
                 "ticker": t,
                 "precio_entrada": round(px, 2),
-                "acciones": round(monto_por_accion / px, 4)
+                "acciones": round(monto_por_accion / px, 4),
             })
         data_bitacora["posiciones"] = nuevas_pos
         data_bitacora["peak_flotante"] = 0.0
@@ -270,24 +350,28 @@ if st.sidebar.button("🚀 Abrir Jornada (Emergentes Top 5)"):
         st.sidebar.success(f"Posiciones abiertas: {', '.join(top_5)}")
         st.rerun()
     else:
-        st.sidebar.error("No se encontraron activos que cumplan con los criterios de volumen y Market Cap en este momento.")
+        st.sidebar.error(
+            "No se encontraron activos que cumplan con los criterios de volumen y Market Cap en este momento."
+        )
 
 if st.sidebar.button("🔴 Cierre Manual de Jornada"):
     if data_bitacora.get("posiciones"):
-        ganancia_del_dia = total_flotante
-        nuevo_capital = data_bitacora["capital_inicial"] + ganancia_del_dia
-        
-        data_bitacora["capital_inicial"] = round(nuevo_capital, 2)
-        data_bitacora["ganancia_cerrada"] = round(data_bitacora.get("ganancia_cerrada", 0.0) + ganancia_del_dia, 2)
+        ganancia_del_dia = total_flotante + ganancia_cerrada
+        nuevo_capital = round(capital_base + ganancia_del_dia, 2)
+
+        data_bitacora["capital_inicial"] = nuevo_capital
+        data_bitacora["ganancia_cerrada"] = 0.0
         data_bitacora["posiciones"] = []
         data_bitacora["peak_flotante"] = 0.0
-        
+
         hora_actual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        alerta = f"[{hora_actual}] CIERRE MANUAL: Utilidades aseguradas de ${ganancia_del_dia:.2f} USD."
+        alerta = f"[{hora_actual}] CIERRE MANUAL: Cierre de jornada. Nuevo Capital Base para mañana: ${nuevo_capital:,.2f} USD."
         data_bitacora["historial_alertas"].append(alerta)
-        
+
         guardar_bitacora(data_bitacora)
-        st.sidebar.success("¡Utilidades aseguradas a caja líquida!")
+        st.sidebar.success(
+            f"¡Jornada cerrada! Saldo base actualizado a ${nuevo_capital:,.2f} USD"
+        )
         st.rerun()
     else:
         st.sidebar.warning("No hay posiciones abiertas para cerrar.")
@@ -296,4 +380,6 @@ st.subheader("🟢 Posiciones en Curso — Emergentes High Momentum")
 if posiciones_procesadas:
     st.dataframe(pd.DataFrame(posiciones_procesadas), use_container_width=True)
 else:
-    st.success("✅ **Sin posiciones abiertas.** Esperando inicio de jornada o liquidadas a caja.")
+    st.success(
+        "✅ **Sin posiciones abiertas.** Esperando inicio de jornada o liquidadas a caja."
+    )
