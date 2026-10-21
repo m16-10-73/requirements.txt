@@ -1,8 +1,7 @@
 {
-    "capital_inicial": 10000.0,
+    "capital_inicial": 10183.89,
     "ganancia_cerrada": 0.0,
     "posiciones": [],
     "peak_flotante": 0.0,
-    "jornada_activa": false,
-    "historial": []
+    "historial_alertas": []
 }
