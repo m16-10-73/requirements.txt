@@ -20,7 +20,7 @@ st.markdown(
         background-color: #f8f9fa;
     }
     .dynamic-header {
-        background: linear-gradient(135deg, #11998e, #38ef7d);
+        background: linear-gradient(135deg, #8E2DE2, #4A00E0);
         padding: 20px;
         border-radius: 12px;
         color: white;
