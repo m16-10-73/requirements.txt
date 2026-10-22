@@ -1,19 +1,20 @@
-import streamlit as st
-import pandas as pd
-import yfinance as yf
 import json
 import os
 import time
 from datetime import datetime
+import pandas as pd
+import streamlit as st
+import yfinance as yf
 
 st.set_page_config(
-    page_title="App Valoris — Estrategia Conservadora Top 5", 
+    page_title="App Valoris — Estrategia Conservadora Top 5",
     page_icon="🛡️",
-    layout="wide"
+    layout="wide",
 )
 
 # Estilos CSS
-st.markdown("""
+st.markdown(
+    """
     <style>
     .stApp {
         background-color: #f8f9fa;
@@ -44,35 +45,55 @@ st.markdown("""
         color: #1e3c72;
     }
     </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # Autorefresco cada 30 segundos
 try:
     from streamlit_autorefresh import st_autorefresh
+
     st_autorefresh(interval=30000, limit=10000, key="auto_valoris")
 except ImportError:
     pass
 
-BITACORA_FILE = "bitacora_conservadora.json"
+# Nombre de bitácora para App Valoris
+BITACORA_FILE = "bitácora_valoris.json"
 
 # Universo Fijo de 25 acciones consolidadas y de alta liquidez
 UNIVERSO_VALORIS = [
-    "NVDA", "MSFT", "AAPL", "AMZN", "GOOGL", "META", "TSLA", "AMD", "NFLX", "INTC",
-    "JPM", "BAC", "V", "MA", "DIS", "PFE", "XOM", "CVX", "KO", "PEP",
-    "COST", "WMT", "NKE", "BA", "UNH"
+    "NVDA",
+    "MSFT",
+    "AAPL",
+    "AMZN",
+    "GOOGL",
+    "META",
+    "TSLA",
+    "AMD",
+    "NFLX",
+    "INTC",
+    "JPM",
+    "BAC",
+    "V",
+    "MA",
+    "DIS",
+    "PFE",
+    "XOM",
+    "CVX",
+    "KO",
+    "PEP",
+    "COST",
+    "WMT",
+    "NKE",
+    "BA",
+    "UNH",
 ]
 
 NUM_EMPRESAS_VALORIS = 5
 STOP_LOSS_INDIVIDUAL_PCT = -2.0  # Corte individual por seguridad al -2.0%
 
+
 def cargar_bitacora():
-    base_data = {
-        "capital_inicial": 10000.0,
-        "ganancia_cerrada": 0.0,
-        "posiciones": [],
-        "peak_flotante": 0.0,
-        "historial_alertas": []
-    }
     if os.path.exists(BITACORA_FILE):
         try:
             with open(BITACORA_FILE, "r", encoding="utf-8") as f:
@@ -81,13 +102,24 @@ def cargar_bitacora():
                     return contenido
         except Exception:
             pass
+
+    # Resguardo de seguridad si no existe el archivo JSON
+    base_data = {
+        "capital_inicial": 10000.0,
+        "ganancia_cerrada": 0.0,
+        "posiciones": [],
+        "peak_flotante": 0.0,
+        "historial_alertas": [],
+    }
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(base_data, f, indent=4)
     return base_data
 
+
 def guardar_bitacora(data):
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4)
+
 
 def seleccionar_top_valoris(n=5):
     """Evalúa la variación del universo de 25 empresas conservadoras y toma el Top N."""
@@ -104,9 +136,10 @@ def seleccionar_top_valoris(n=5):
         except Exception:
             var_pct = 0.0
         rendimientos.append((ticker, var_pct))
-    
+
     rendimientos.sort(key=lambda x: x[1], reverse=True)
     return [item[0] for item in rendimientos[:n]]
+
 
 data_bitacora = cargar_bitacora()
 
@@ -115,15 +148,30 @@ st.sidebar.markdown("### 🛡️ **APP VALORIS**")
 st.sidebar.markdown("*Estrategia Conservadora Top 5 & Piso Blindado*")
 st.sidebar.markdown("---")
 
-meta_diaria_pct = st.sidebar.slider("Meta Diaria (%)", min_value=0.5, max_value=10.0, value=2.0, step=0.5)
-trailing_tolerance_pct = st.sidebar.slider("Tolerancia Retroceso (%)", min_value=0.5, max_value=5.0, value=2.0, step=0.5)
+meta_diaria_pct = st.sidebar.slider(
+    "Meta Diaria (%)",
+    min_value=0.5,
+    max_value=10.0,
+    value=1.35,
+    step=0.05,
+)
+trailing_tolerance_pct = st.sidebar.slider(
+    "Tolerancia Retroceso (%)",
+    min_value=0.05,
+    max_value=5.0,
+    value=0.25,
+    step=0.05,
+)
 
-st.markdown("""
+st.markdown(
+    """
     <div class="valoris-header">
         <h1>🛡️ APP VALORIS — TOP 5 CONSERVADORA</h1>
         <p>Estrategia Sobresegura | Stop Loss Individual (-2.0%) & Piso Blindado</p>
     </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 posiciones = data_bitacora.get("posiciones", [])
 total_flotante = 0.0
@@ -135,22 +183,27 @@ for pos in posiciones:
     ticker = pos.get("ticker")
     precio_entrada = float(pos.get("precio_entrada", 0.0))
     acciones = float(pos.get("acciones", 0.0))
-    
+
     try:
         df = yf.Ticker(ticker).history(period="1d")
-        precio_actual = float(df["Close"].iloc[-1]) if not df.empty else precio_entrada
+        precio_actual = (
+            float(df["Close"].iloc[-1]) if not df.empty else precio_entrada
+        )
     except Exception:
         precio_actual = precio_entrada
-        
+
     pnl_usd = (precio_actual - precio_entrada) * acciones
-    pnl_pct = ((precio_actual - precio_entrada) / precio_entrada) * 100.0 if precio_entrada > 0 else 0.0
-    
+    pnl_pct = (
+        ((precio_actual - precio_entrada) / precio_entrada) * 100.0
+        if precio_entrada > 0
+        else 0.0
+    )
+
     # --- STOP LOSS INDIVIDUAL (-2.0%) ---
     if pnl_pct <= STOP_LOSS_INDIVIDUAL_PCT:
         data_bitacora["ganancia_cerrada"] += pnl_usd
-        data_bitacora["capital_inicial"] += pnl_usd
-        
-        hora_act = time.strftime('%H:%M:%S')
+
+        hora_act = time.strftime("%H:%M:%S")
         msg = f"[{hora_act}] 🛡️ VALORIS STOP LOSS: Cierre en {ticker} a {pnl_pct:.2f}% (${pnl_usd:.2f} USD). Posición liquidada a caja."
         data_bitacora["historial_alertas"].append(msg)
         hubo_cierre_individual = True
@@ -163,7 +216,7 @@ for pos in posiciones:
             "Precio Actual": round(precio_actual, 2),
             "Acciones": round(acciones, 4),
             "PnL (USD)": round(pnl_usd, 2),
-            "PnL (%)": round(pnl_pct, 2)
+            "PnL (%)": round(pnl_pct, 2),
         })
 
 if hubo_cierre_individual:
@@ -171,14 +224,18 @@ if hubo_cierre_individual:
     guardar_bitacora(data_bitacora)
     st.rerun()
 
-capital_base = data_bitacora.get("capital_inicial", 10000.0)
-ganancia_cerrada = data_bitacora.get("ganancia_cerrada", 0.0)
+capital_base = float(data_bitacora.get("capital_inicial", 10000.0))
+ganancia_cerrada = float(data_bitacora.get("ganancia_cerrada", 0.0))
 
-flotante_pct = (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
+flotante_pct = (
+    (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
+)
 ganancia_total_dia = ganancia_cerrada + total_flotante
-ganancia_total_pct = (ganancia_total_dia / capital_base) * 100 if capital_base > 0 else 0.0
+ganancia_total_pct = (
+    (ganancia_total_dia / capital_base) * 100 if capital_base > 0 else 0.0
+)
 
-peak_previo = data_bitacora.get("peak_flotante", 0.0)
+peak_previo = float(data_bitacora.get("peak_flotante", 0.0))
 if flotante_pct > peak_previo:
     data_bitacora["peak_flotante"] = flotante_pct
     guardar_bitacora(data_bitacora)
@@ -190,21 +247,42 @@ else:
 umbral_calculado = peak_actual - trailing_tolerance_pct
 umbral_salida = max(umbral_calculado, meta_diaria_pct)
 
-if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posiciones_procesadas) > 0:
-    data_bitacora["ganancia_cerrada"] += total_flotante
-    data_bitacora["capital_inicial"] += total_flotante
+if (
+    peak_actual >= meta_diaria_pct
+    and flotante_pct <= umbral_salida
+    and len(posiciones_procesadas) > 0
+):
+    nuevo_capital = round(capital_base + total_flotante + ganancia_cerrada, 2)
+    data_bitacora["capital_inicial"] = nuevo_capital
+    data_bitacora["ganancia_cerrada"] = 0.0
     data_bitacora["posiciones"] = []
-    mensaje = f"[{time.strftime('%H:%M:%S')}] 🎯 VALORIS TRAILING STOP: Cierre ejecutado al {flotante_pct:.2f}%. Ganancia: ${total_flotante:,.2f} USD."
+    mensaje = f"[{time.strftime('%H:%M:%S')}] 🎯 VALORIS TRAILING STOP: Cierre ejecutado al {flotante_pct:.2f}%. Nuevo Capital Base: ${nuevo_capital:,.2f} USD."
     data_bitacora["historial_alertas"].append(mensaje)
     data_bitacora["peak_flotante"] = 0.0
     guardar_bitacora(data_bitacora)
     st.rerun()
 
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Capital Cuenta", f"${capital_base + total_flotante:,.2f} USD", f"Base: ${capital_base:,.2f}")
-col2.metric("Ganancia Realizada", f"+${ganancia_total_dia:,.2f} USD", f"{ganancia_total_pct:.2f}% del Capital")
-col3.metric("Flotante Actual", f"+${total_flotante:,.2f} USD", f"Peak: +{peak_actual:.2f}%")
-col4.metric("Meta / Trailing (Piso)", f"Meta: {meta_diaria_pct:.1f}%", f"Umbral: +{umbral_salida:.2f}%")
+col1.metric(
+    "Capital Cuenta",
+    f"${capital_base + total_flotante:,.2f} USD",
+    f"Base: ${capital_base:,.2f}",
+)
+col2.metric(
+    "Ganancia Realizada",
+    f"+${ganancia_total_dia:,.2f} USD",
+    f"{ganancia_total_pct:.2f}% del Capital",
+)
+col3.metric(
+    "Flotante Actual",
+    f"+${total_flotante:,.2f} USD",
+    f"Peak: +{peak_actual:.2f}%",
+)
+col4.metric(
+    "Meta / Trailing (Piso)",
+    f"Meta: {meta_diaria_pct:.2f}%",
+    f"Umbral: +{umbral_salida:.2f}%",
+)
 
 st.markdown("---")
 
@@ -216,43 +294,47 @@ if data_bitacora.get("historial_alertas"):
 if st.sidebar.button("🚀 Abrir Jornada Valoris (Top 5)"):
     st.sidebar.info("Analizando el universo conservador de 25 empresas...")
     top_5 = seleccionar_top_valoris(n=NUM_EMPRESAS_VALORIS)
-    monto_por_accion = capital_base / len(top_5)
-    nuevas_pos = []
-    for t in top_5:
-        try:
-            px = yf.Ticker(t).history(period="1d")["Close"].iloc[-1]
-        except Exception:
-            px = 100.0
-        nuevas_pos.append({
-            "ticker": t,
-            "precio_entrada": round(px, 2),
-            "acciones": round(monto_por_accion / px, 4)
-        })
-    data_bitacora["posiciones"] = nuevas_pos
-    data_bitacora["peak_flotante"] = 0.0
-    data_bitacora["historial_alertas"].append(
-        f"[{time.strftime('%H:%M:%S')}] Jornada Valoris iniciada con Top 5: {', '.join(top_5)} ($2,000 USD/posición)."
-    )
-    guardar_bitacora(data_bitacora)
-    st.sidebar.success(f"Posiciones abiertas: {', '.join(top_5)}")
-    st.rerun()
+
+    if len(top_5) > 0:
+        monto_por_accion = capital_base / len(top_5)
+        nuevas_pos = []
+        for t in top_5:
+            try:
+                px = yf.Ticker(t).history(period="1d")["Close"].iloc[-1]
+            except Exception:
+                px = 100.0
+            nuevas_pos.append({
+                "ticker": t,
+                "precio_entrada": round(px, 2),
+                "acciones": round(monto_por_accion / px, 4),
+            })
+        data_bitacora["posiciones"] = nuevas_pos
+        data_bitacora["peak_flotante"] = 0.0
+        data_bitacora["historial_alertas"].append(
+            f"[{time.strftime('%H:%M:%S')}] Jornada Valoris iniciada con Top 5: {', '.join(top_5)} (${monto_por_accion:,.2f} USD/posición)."
+        )
+        guardar_bitacora(data_bitacora)
+        st.sidebar.success(f"Posiciones abiertas: {', '.join(top_5)}")
+        st.rerun()
 
 if st.sidebar.button("🔴 Cierre Manual Valoris"):
     if data_bitacora.get("posiciones"):
-        ganancia_del_dia = total_flotante
-        nuevo_capital = data_bitacora["capital_inicial"] + ganancia_del_dia
-        
-        data_bitacora["capital_inicial"] = round(nuevo_capital, 2)
-        data_bitacora["ganancia_cerrada"] = round(data_bitacora.get("ganancia_cerrada", 0.0) + ganancia_del_dia, 2)
+        ganancia_del_dia = total_flotante + ganancia_cerrada
+        nuevo_capital = round(capital_base + ganancia_del_dia, 2)
+
+        data_bitacora["capital_inicial"] = nuevo_capital
+        data_bitacora["ganancia_cerrada"] = 0.0
         data_bitacora["posiciones"] = []
         data_bitacora["peak_flotante"] = 0.0
-        
+
         hora_actual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        alerta = f"[{hora_actual}] VALORIS CIERRE MANUAL: Utilidades aseguradas de ${ganancia_del_dia:.2f} USD."
+        alerta = f"[{hora_actual}] VALORIS CIERRE MANUAL: Cierre de jornada. Nuevo Capital Base para mañana: ${nuevo_capital:,.2f} USD."
         data_bitacora["historial_alertas"].append(alerta)
-        
+
         guardar_bitacora(data_bitacora)
-        st.sidebar.success("¡Utilidades aseguradas a caja líquida!")
+        st.sidebar.success(
+            f"¡Jornada cerrada! Saldo base actualizado a ${nuevo_capital:,.2f} USD"
+        )
         st.rerun()
     else:
         st.sidebar.warning("No hay posiciones abiertas para cerrar.")
@@ -261,4 +343,6 @@ st.subheader("🟢 Posiciones en Curso — Valoris Top 5")
 if posiciones_procesadas:
     st.dataframe(pd.DataFrame(posiciones_procesadas), use_container_width=True)
 else:
-    st.success("✅ **Sin posiciones abiertas.** Esperando inicio de jornada o liquidadas a caja.")
+    st.success(
+        "✅ **Sin posiciones abiertas.** Esperando inicio de jornada o liquidadas a caja."
+    )
