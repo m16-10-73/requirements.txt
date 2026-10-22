@@ -3,7 +3,7 @@ import os
 import time
 from datetime import datetime
 import pandas as pd
-import Streamlit as st
+import streamlit as st
 import yfinance as yf
 
 # Importamos el motor de sentimiento
