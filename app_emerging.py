@@ -63,7 +63,7 @@ BITACORA_FILE = "bitácora_emerging.json"
 MARKET_CAP_MIN_USD = 500_000_000  # $500M USD
 MARKET_CAP_MAX_USD = 10_000_000_000  # $10,000M USD ($10B)
 VOLUMEN_MINIMO_DIARIO = 1_000_000  # 1,000,000 acciones/día
-STOP_LOSS_INDIVIDUAL_PCT = -3.5  # Umbral de corte individual (-3.5%)
+STOP_LOSS_INDIVIDUAL_PCT = -1.5  # Umbral de corte individual (-1.5%)
 NUM_EMPRESAS_OBJETIVO = 5
 
 # Pool de escaneo de empresas emergentes / alto crecimiento
@@ -185,14 +185,14 @@ meta_diaria_pct = st.sidebar.slider(
     "Meta Diaria (%)",
     min_value=0.5,
     max_value=10.0,
-    value=1.35,
+    value=6.00,
     step=0.05,
 )
 trailing_tolerance_pct = st.sidebar.slider(
     "Tolerancia Retroceso (%)",
     min_value=0.05,
     max_value=5.0,
-    value=0.25,
+    value=1.5,
     step=0.05,
 )
 
@@ -200,7 +200,7 @@ st.markdown(
     """
     <div class="dynamic-header">
         <h1>🌱 BOT MERCADOS EMERGENTES — HIGH MOMENTUM</h1>
-        <p>Estrategia de Impulso Mid/Small-Cap ($500M-$10B) | Stop Loss Individual (-3.5%) & Trailing Stop Protegido</p>
+        <p>Estrategia de Impulso Mid/Small-Cap ($500M-$10B) | Stop Loss Individual (-1.5%) & Trailing Stop Protegido</p>
     </div>
 """,
     unsafe_allow_html=True,
