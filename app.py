@@ -108,7 +108,7 @@ CANDIDATAS_GRANDES_CAPS = [
 ]
 
 NUM_EMPRESAS_OBJETIVO = 5
-STOP_LOSS_INDIVIDUAL_PCT = -2.0  # Umbral de corte individual (-2.0%)
+STOP_LOSS_INDIVIDUAL_PCT = -0.75  # Umbral de corte individual (-0.75%)
 
 
 def cargar_bitacora():
@@ -176,14 +176,14 @@ meta_diaria_pct = st.sidebar.slider(
     "Meta Diaria (%)",
     min_value=0.5,
     max_value=10.0,
-    value=1.35,
+    value=4.35,
     step=0.05,
 )
 trailing_tolerance_pct = st.sidebar.slider(
     "Tolerancia Retroceso (%)",
     min_value=0.05,
     max_value=5.0,
-    value=0.25,
+    value=0.75,
     step=0.05,
 )
 
