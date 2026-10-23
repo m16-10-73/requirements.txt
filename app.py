@@ -191,7 +191,7 @@ st.markdown(
     """
     <div class="dynamic-header">
         <h1>⚡ BOT DINÁMICO — TOP 5 MOMENTUM</h1>
-        <p>Estrategia de Impulso | Stop Loss Individual (-2.0%) & Trailing Stop Protegido</p>
+        <p>Estrategia de Impulso | Stop Loss Individual (-0.75%) & Trailing Stop Protegido</p>
     </div>
 """,
     unsafe_allow_html=True,
