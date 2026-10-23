@@ -90,7 +90,7 @@ UNIVERSO_VALORIS = [
 ]
 
 NUM_EMPRESAS_VALORIS = 5
-STOP_LOSS_INDIVIDUAL_PCT = -2.0  # Corte individual por seguridad al -2.0%
+STOP_LOSS_INDIVIDUAL_PCT = -0.75  # Corte individual por seguridad al -0.75%
 
 
 def cargar_bitacora():
@@ -152,14 +152,14 @@ meta_diaria_pct = st.sidebar.slider(
     "Meta Diaria (%)",
     min_value=0.5,
     max_value=10.0,
-    value=1.35,
+    value=5.00,
     step=0.05,
 )
 trailing_tolerance_pct = st.sidebar.slider(
     "Tolerancia Retroceso (%)",
     min_value=0.05,
     max_value=5.0,
-    value=0.25,
+    value=0.75,
     step=0.05,
 )
 
@@ -167,7 +167,7 @@ st.markdown(
     """
     <div class="valoris-header">
         <h1>🛡️ APP VALORIS — TOP 5 CONSERVADORA</h1>
-        <p>Estrategia Sobresegura | Stop Loss Individual (-2.0%) & Piso Blindado</p>
+        <p>Estrategia Sobresegura | Stop Loss Individual (-0.75%) & Piso Blindado</p>
     </div>
 """,
     unsafe_allow_html=True,
@@ -199,7 +199,7 @@ for pos in posiciones:
         else 0.0
     )
 
-    # --- STOP LOSS INDIVIDUAL (-2.0%) ---
+    # --- STOP LOSS INDIVIDUAL (-0.75%) ---
     if pnl_pct <= STOP_LOSS_INDIVIDUAL_PCT:
         data_bitacora["ganancia_cerrada"] += pnl_usd
 
