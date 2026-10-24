@@ -12,7 +12,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# Estilos CSS
+# Estilos CSS con Encabezado Compacto para Celular
 st.markdown(
     """
     <style>
@@ -21,26 +21,27 @@ st.markdown(
     }
     .valoris-header {
         background: linear-gradient(135deg, #1e3c72, #2a5298);
-        padding: 20px;
-        border-radius: 12px;
+        padding: 10px 15px;
+        border-radius: 10px;
         color: white;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        margin-bottom: 25px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        margin-bottom: 15px;
     }
     .valoris-header h1 {
         color: #ffffff;
         font-family: 'Helvetica Neue', sans-serif;
         font-weight: 700;
+        font-size: 1.25rem;
         margin: 0;
     }
     .valoris-header p {
         color: #e0e0e0;
-        margin-top: 5px;
+        margin-top: 3px;
         margin-bottom: 0;
-        font-size: 0.95rem;
+        font-size: 0.82rem;
     }
     [data-testid="stMetricValue"] {
-        font-size: 1.8rem !important;
+        font-size: 1.6rem !important;
         font-weight: bold;
         color: #1e3c72;
     }
@@ -99,17 +100,31 @@ def cargar_bitacora():
             with open(BITACORA_FILE, "r", encoding="utf-8") as f:
                 contenido = json.load(f)
                 if isinstance(contenido, dict):
+                    if "capital_inicial" not in contenido:
+                        contenido["capital_inicial"] = 10000.0
+                    if "historial_capital" not in contenido:
+                        contenido["historial_capital"] = [{
+                            "Fecha": datetime.now().strftime(
+                                "%d/%m/%Y %H:%M"
+                            ),
+                            "Capital": contenido["capital_inicial"],
+                        }]
                     return contenido
         except Exception:
             pass
 
     # Resguardo de seguridad si no existe el archivo JSON
+    base_capital = 10000.0
     base_data = {
-        "capital_inicial": 10000.0,
+        "capital_inicial": base_capital,
         "ganancia_cerrada": 0.0,
         "posiciones": [],
         "peak_flotante": 0.0,
         "historial_alertas": [],
+        "historial_capital": [{
+            "Fecha": datetime.now().strftime("%d/%m/%Y %H:%M"),
+            "Capital": base_capital,
+        }],
     }
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(base_data, f, indent=4)
@@ -167,7 +182,7 @@ st.markdown(
     """
     <div class="valoris-header">
         <h1>🛡️ APP VALORIS — TOP 5 CONSERVADORA</h1>
-        <p>Estrategia Sobresegura | Stop Loss Individual (-0.75%) & Piso Blindado</p>
+        <p>Estrategia Sobresegura | Stop Loss & Piso Blindado</p>
     </div>
 """,
     unsafe_allow_html=True,
@@ -256,6 +271,14 @@ if (
     data_bitacora["capital_inicial"] = nuevo_capital
     data_bitacora["ganancia_cerrada"] = 0.0
     data_bitacora["posiciones"] = []
+
+    if "historial_capital" not in data_bitacora:
+        data_bitacora["historial_capital"] = []
+    data_bitacora["historial_capital"].append({
+        "Fecha": datetime.now().strftime("%d/%m/%Y %H:%M"),
+        "Capital": nuevo_capital,
+    })
+
     mensaje = f"[{time.strftime('%H:%M:%S')}] 🎯 VALORIS TRAILING STOP: Cierre ejecutado al {flotante_pct:.2f}%. Nuevo Capital Base: ${nuevo_capital:,.2f} USD."
     data_bitacora["historial_alertas"].append(mensaje)
     data_bitacora["peak_flotante"] = 0.0
@@ -327,6 +350,13 @@ if st.sidebar.button("🔴 Cierre Manual Valoris"):
         data_bitacora["posiciones"] = []
         data_bitacora["peak_flotante"] = 0.0
 
+        if "historial_capital" not in data_bitacora:
+            data_bitacora["historial_capital"] = []
+        data_bitacora["historial_capital"].append({
+            "Fecha": datetime.now().strftime("%d/%m/%Y %H:%M"),
+            "Capital": nuevo_capital,
+        })
+
         hora_actual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         alerta = f"[{hora_actual}] VALORIS CIERRE MANUAL: Cierre de jornada. Nuevo Capital Base para mañana: ${nuevo_capital:,.2f} USD."
         data_bitacora["historial_alertas"].append(alerta)
@@ -345,4 +375,18 @@ if posiciones_procesadas:
 else:
     st.success(
         "✅ **Sin posiciones abiertas.** Esperando inicio de jornada o liquidadas a caja."
+    )
+
+# --- VISTA DE EVOLUCIÓN HISTÓRICA DIARIA ---
+st.markdown("---")
+st.subheader("📈 Evolución Diaria del Capital — Valoris")
+historial_cap = data_bitacora.get("historial_capital", [])
+if historial_cap:
+    df_historial = pd.DataFrame(historial_cap)
+    st.line_chart(df_historial.set_index("Fecha")["Capital"])
+    with st.expander("Ver registro detallado de capital histórico"):
+        st.dataframe(df_historial, use_container_width=True)
+else:
+    st.info(
+        "Aún no hay registros de cierres históricos para mostrar la evolución."
     )
