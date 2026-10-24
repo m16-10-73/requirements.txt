@@ -12,7 +12,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# Estilos CSS
+# Estilos CSS con Encabezado Compacto para Celular
 st.markdown(
     """
     <style>
@@ -21,26 +21,27 @@ st.markdown(
     }
     .dynamic-header {
         background: linear-gradient(135deg, #8E2DE2, #4A00E0);
-        padding: 20px;
-        border-radius: 12px;
+        padding: 10px 15px;
+        border-radius: 10px;
         color: white;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        margin-bottom: 25px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        margin-bottom: 15px;
     }
     .dynamic-header h1 {
         color: #ffffff;
         font-family: 'Helvetica Neue', sans-serif;
         font-weight: 700;
+        font-size: 1.25rem;
         margin: 0;
     }
     .dynamic-header p {
         color: #f0f0f0;
-        margin-top: 5px;
+        margin-top: 3px;
         margin-bottom: 0;
-        font-size: 0.95rem;
+        font-size: 0.82rem;
     }
     [data-testid="stMetricValue"] {
-        font-size: 1.8rem !important;
+        font-size: 1.6rem !important;
         font-weight: bold;
         color: #11998e;
     }
@@ -180,7 +181,7 @@ st.sidebar.markdown("### 🌱 **BOT EMERGENTE**")
 st.sidebar.markdown("*High Momentum Mid/Small-Cap & Stop Loss*")
 st.sidebar.markdown("---")
 
-# Sliders operativos con nuevos valores por defecto
+# Sliders operativos
 meta_diaria_pct = st.sidebar.slider(
     "Meta Diaria (%)",
     min_value=0.5,
@@ -200,7 +201,7 @@ st.markdown(
     """
     <div class="dynamic-header">
         <h1>🌱 BOT MERCADOS EMERGENTES — HIGH MOMENTUM</h1>
-        <p>Estrategia de Impulso Mid/Small-Cap ($500M-$10B) | Stop Loss Individual (-1.5%) & Trailing Stop Protegido</p>
+        <p>Estrategia Mid/Small-Cap ($500M-$10B) | Stop Loss & Trailing Protegido</p>
     </div>
 """,
     unsafe_allow_html=True,
@@ -232,7 +233,7 @@ for pos in posiciones:
         else 0.0
     )
 
-    # --- VERIFICACIÓN DE STOP LOSS INDIVIDUAL (-3.5%) ---
+    # --- VERIFICACIÓN DE STOP LOSS INDIVIDUAL ---
     if pnl_pct <= STOP_LOSS_INDIVIDUAL_PCT:
         data_bitacora["ganancia_cerrada"] += pnl_usd
 
