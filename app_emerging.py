@@ -118,17 +118,32 @@ def cargar_bitacora():
             with open(BITACORA_FILE, "r", encoding="utf-8") as f:
                 contenido = json.load(f)
                 if isinstance(contenido, dict):
+                    # Preservación estricta de capital e inicialización de historial si no existe
+                    if "capital_inicial" not in contenido:
+                        contenido["capital_inicial"] = 10183.89
+                    if "historial_capital" not in contenido:
+                        contenido["historial_capital"] = [{
+                            "Fecha": datetime.now().strftime(
+                                "%d/%m/%Y %H:%M"
+                            ),
+                            "Capital": contenido["capital_inicial"],
+                        }]
                     return contenido
         except Exception:
             pass
 
     # Resguardo en caso de que el archivo no exista
+    base_capital = 10183.89
     base_data = {
-        "capital_inicial": 10183.89,
+        "capital_inicial": base_capital,
         "ganancia_cerrada": 0.0,
         "posiciones": [],
         "peak_flotante": 0.0,
         "historial_alertas": [],
+        "historial_capital": [{
+            "Fecha": datetime.now().strftime("%d/%m/%Y %H:%M"),
+            "Capital": base_capital,
+        }],
     }
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(base_data, f, indent=4)
@@ -258,8 +273,8 @@ if hubo_cierre_individual:
     guardar_bitacora(data_bitacora)
     st.rerun()
 
-capital_base = data_bitacora.get("capital_inicial", 10183.89)
-ganancia_cerrada = data_bitacora.get("ganancia_cerrada", 0.0)
+capital_base = float(data_bitacora.get("capital_inicial", 10183.89))
+ganancia_cerrada = float(data_bitacora.get("ganancia_cerrada", 0.0))
 
 flotante_pct = (
     (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
@@ -269,7 +284,7 @@ ganancia_total_pct = (
     (ganancia_total_dia / capital_base) * 100 if capital_base > 0 else 0.0
 )
 
-peak_previo = data_bitacora.get("peak_flotante", 0.0)
+peak_previo = float(data_bitacora.get("peak_flotante", 0.0))
 if flotante_pct > peak_previo:
     data_bitacora["peak_flotante"] = flotante_pct
     guardar_bitacora(data_bitacora)
@@ -290,6 +305,15 @@ if (
     data_bitacora["capital_inicial"] = nuevo_capital
     data_bitacora["ganancia_cerrada"] = 0.0
     data_bitacora["posiciones"] = []
+
+    # Registrar en el historial de evolución diaria
+    if "historial_capital" not in data_bitacora:
+        data_bitacora["historial_capital"] = []
+    data_bitacora["historial_capital"].append({
+        "Fecha": datetime.now().strftime("%d/%m/%Y %H:%M"),
+        "Capital": nuevo_capital,
+    })
+
     mensaje = f"[{time.strftime('%H:%M:%S')}] 🎯 TRAILING STOP GLOBAL: Cierre ejecutado al {flotante_pct:.2f}%. Nuevo Capital Base: ${nuevo_capital:,.2f} USD."
     data_bitacora["historial_alertas"].append(mensaje)
     data_bitacora["peak_flotante"] = 0.0
@@ -365,6 +389,14 @@ if st.sidebar.button("🔴 Cierre Manual de Jornada"):
         data_bitacora["posiciones"] = []
         data_bitacora["peak_flotante"] = 0.0
 
+        # Registrar en el historial de evolución diaria
+        if "historial_capital" not in data_bitacora:
+            data_bitacora["historial_capital"] = []
+        data_bitacora["historial_capital"].append({
+            "Fecha": datetime.now().strftime("%d/%m/%Y %H:%M"),
+            "Capital": nuevo_capital,
+        })
+
         hora_actual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         alerta = f"[{hora_actual}] CIERRE MANUAL: Cierre de jornada. Nuevo Capital Base para mañana: ${nuevo_capital:,.2f} USD."
         data_bitacora["historial_alertas"].append(alerta)
@@ -383,4 +415,18 @@ if posiciones_procesadas:
 else:
     st.success(
         "✅ **Sin posiciones abiertas.** Esperando inicio de jornada o liquidadas a caja."
+    )
+
+# --- VISTA DE EVOLUCIÓN HISTÓRICA DIARIA ---
+st.markdown("---")
+st.subheader("📈 Evolución Diaria del Capital — Emergentes")
+historial_cap = data_bitacora.get("historial_capital", [])
+if historial_cap:
+    df_historial = pd.DataFrame(historial_cap)
+    st.line_chart(df_historial.set_index("Fecha")["Capital"])
+    with st.expander("Ver registro detallado de capital histórico"):
+        st.dataframe(df_historial, use_container_width=True)
+else:
+    st.info(
+        "Aún no hay registros de cierres históricos para mostrar la evolución."
     )
