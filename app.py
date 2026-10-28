@@ -1,411 +1,210 @@
-from datetime import datetime
-import json
 import os
+import json
 import time
-import pandas as pd
+from datetime import datetime
 import streamlit as st
 import yfinance as yf
 
 st.set_page_config(
-    page_title="Estrategia Dinámica — Rotación Top 5",
-    page_icon="⚡",
+    page_title="Estrategia Dinámica — Momentum & Tendencia",
+    page_icon="📈",
     layout="wide",
 )
 
-# --- PERSISTENCIA LOCAL EN JSON PARA EVITAR PÉRDIDA DE DATOS ---
-BITACORA_FILE = "bitacora_dinamica.json"
+# --- BITÁCORA DINÁMICA BLINDADA ---
+ARCHIVO_BITACORA = "bitacora_dinamica.json"
+CAPITAL_BASE_DEFECTO = 10507.24
 
-
-def cargar_datos_persistentes():
-    if os.path.exists(BITACORA_FILE):
+def cargar_o_crear_bitacora():
+    if os.path.exists(ARCHIVO_BITACORA):
         try:
-            with open(BITACORA_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+            with open(ARCHIVO_BITACORA, "r", encoding="utf-8") as f:
+                datos = json.load(f)
+                if "capital_inicial" in datos and datos["capital_inicial"] > 0:
+                    return datos
         except Exception:
             pass
-    return None
+    return {
+        "capital_inicial": CAPITAL_BASE_DEFECTO,
+        "ganancia_cerrada": 0.0,
+        "posiciones": [],
+        "peak_flotante": 0.0,
+        "historial_rendimiento": [
+            {
+                "Fecha": datetime.now().strftime("%d/%m/%Y"),
+                "Capital": CAPITAL_BASE_DEFECTO
+            }
+        ],
+    }
 
-
-def guardar_datos_persistentes():
-    data = {
-        "capital_inicial": st.session_state.capital_inicial,
-        "ganancia_cerrada": st.session_state.ganancia_cerrada,
-        "posiciones": st.session_state.posiciones,
-        "peak_flotante": st.session_state.peak_flotante,
-        "historial_alertas": st.session_state.historial_alertas,
-        "historial_rendimiento": st.session_state.historial_rendimiento,
+def guardar_bitacora(capital, ganancia, posiciones, peak, rendimiento):
+    estado = {
+        "capital_inicial": capital,
+        "ganancia_cerrada": ganancia,
+        "posiciones": posiciones,
+        "peak_flotante": peak,
+        "historial_rendimiento": rendimiento,
     }
     try:
-        with open(BITACORA_FILE, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=4)
-    except Exception:
-        pass
+        with open(ARCHIVO_BITACORA, "w", encoding="utf-8") as f:
+            json.dump(estado, f, ensure_ascii=False, indent=4)
+    except Exception as e:
+        print(f"Error al guardar la bitácora: {e}")
 
+estado_guardado = cargar_o_crear_bitacora()
 
-# Estilos CSS con Encabezado Compacto para Celular
+if "capital_inicial" not in st.session_state:
+    st.session_state.capital_inicial = estado_guardado["capital_inicial"]
+if "ganancia_cerrada" not in st.session_state:
+    st.session_state.ganancia_cerrada = estado_guardado["ganancia_cerrada"]
+if "posiciones" not in st.session_state:
+    st.session_state.posiciones = estado_guardado["posiciones"]
+if "peak_flotante" not in st.session_state:
+    st.session_state.peak_flotante = estado_guardado["peak_flotante"]
+if "historial_rendimiento" not in st.session_state:
+    st.session_state.historial_rendimiento = estado_guardado["historial_rendimiento"]
+
 st.markdown(
     """
     <style>
-    .stApp {
-        background-color: #f8f9fa;
-    }
-    .dynamic-header {
-        background: linear-gradient(135deg, #FF512F, #DD2476);
+    .stApp { background-color: #f8f9fa; }
+    .dinamico-header {
+        background: linear-gradient(135deg, #1f4068, #162447);
         padding: 10px 15px;
         border-radius: 10px;
         color: white;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
         margin-bottom: 15px;
     }
-    .dynamic-header h1 {
-        color: #ffffff;
-        font-family: 'Helvetica Neue', sans-serif;
-        font-weight: 700;
-        font-size: 1.25rem;
-        margin: 0;
-    }
-    .dynamic-header p {
-        color: #f0f0f0;
-        margin-top: 3px;
-        margin-bottom: 0;
-        font-size: 0.82rem;
-    }
-    [data-testid="stMetricValue"] {
-        font-size: 1.6rem !important;
-        font-weight: bold;
-        color: #11998e;
-    }
+    .dinamico-header h1 { color: white; font-size: 1.25rem; margin: 0; }
+    .dinamico-header p { color: #dcdcdc; font-size: 0.82rem; margin: 0; }
+    [data-testid="stMetricValue"] { font-size: 1.6rem !important; font-weight: bold; color: #1f4068; }
     </style>
 """,
     unsafe_allow_html=True,
 )
 
-# Autorefresco cada 30 segundos
 try:
     from streamlit_autorefresh import st_autorefresh
-
-    st_autorefresh(interval=30000, limit=10000, key="auto_dynamic")
+    st_autorefresh(interval=30000, limit=10000, key="auto_dinamico")
 except ImportError:
     pass
 
-# Umbral mínimo de capitalización bursátil: $20,000,000,000 USD ($20B)
-MARKET_CAP_MINIMO_USD = 20_000_000_000
+CANDIDATAS_DINAMICO = ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NFLX", "AMD", "INTC"]
+NUM_ACTIVOS = 3
+STOP_LOSS = -0.80
 
-# Pool ampliado de escaneo de grandes empresas
-CANDIDATAS_GRANDES_CAPS = [
-    "NVDA",
-    "MSFT",
-    "AAPL",
-    "AMZN",
-    "GOOGL",
-    "META",
-    "TSLA",
-    "AVGO",
-    "COST",
-    "NFLX",
-    "AMD",
-    "ORCL",
-    "TMUS",
-    "PEP",
-    "KO",
-    "LLY",
-    "UNH",
-    "JPM",
-    "V",
-    "MA",
-    "BAC",
-    "XOM",
-    "CVX",
-    "WMT",
-    "NKE",
-    "DIS",
-    "HD",
-    "PG",
-    "MRK",
-    "ABBV",
-    "CRM",
-    "ACN",
-    "LIN",
-    "ABT",
-    "TMO",
-    "CSCO",
-    "MCD",
-    "GE",
-    "TXN",
-    "PM",
-]
+meta_diaria = st.sidebar.slider("Meta Diaria (%)", 0.3, 8.0, 3.0, 0.05)
+tolerancia = st.sidebar.slider("Tolerancia Retroceso (%)", 0.05, 5.0, 0.5, 0.05)
 
-NUM_EMPRESAS_OBJETIVO = 5
-STOP_LOSS_INDIVIDUAL_PCT = -0.75  # Umbral de corte individual (-0.75%)
-
-# --- INICIALIZACIÓN DE ESTADO CON CARGA PERSISTENTE ---
-saved_data = cargar_datos_persistentes()
-
-if "capital_inicial" not in st.session_state:
-    st.session_state.capital_inicial = (
-        saved_data.get("capital_inicial", 10507.24)
-        if saved_data
-        else 10507.24
-    )
-if "ganancia_cerrada" not in st.session_state:
-    st.session_state.ganancia_cerrada = (
-        saved_data.get("ganancia_cerrada", 0.0) if saved_data else 0.0
-    )
-if "posiciones" not in st.session_state:
-    st.session_state.posiciones = (
-        saved_data.get("posiciones", []) if saved_data else []
-    )
-if "peak_flotante" not in st.session_state:
-    st.session_state.peak_flotante = (
-        saved_data.get("peak_flotante", 0.0) if saved_data else 0.0
-    )
-if "historial_alertas" not in st.session_state:
-    st.session_state.historial_alertas = (
-        saved_data.get("historial_alertas", []) if saved_data else []
-    )
-if "historial_rendimiento" not in st.session_state:
-    st.session_state.historial_rendimiento = (
-        saved_data.get("historial_rendimiento", [])
-        if saved_data
-        else [{"Fecha": datetime.now().strftime("%d/%m/%Y"), "Capital": 10507.24}]
-    )
-
-
-def seleccionar_top_empresas(n=5):
-    resultados = []
-    for ticker in CANDIDATAS_GRANDES_CAPS:
-        try:
-            yt = yf.Ticker(ticker)
-            mcap = yt.fast_info.get("marketCap", 0)
-            if mcap < MARKET_CAP_MINIMO_USD:
-                continue
-
-            df = yt.history(period="2d")
-            if len(df) >= 2:
-                c_prev = df["Close"].iloc[-2]
-                c_act = df["Close"].iloc[-1]
-                var_pct = ((c_act - c_prev) / c_prev) * 100.0
-                resultados.append((ticker, var_pct))
-        except Exception:
-            continue
-
-    resultados.sort(key=lambda x: x[1], reverse=True)
-    return [item[0] for item in resultados[:n]]
-
-
-# Sidebar
-st.sidebar.markdown("### ⚡ **BOT DINÁMICO**")
-st.sidebar.markdown("*Rotación Momentum Top 5 & Stop Loss*")
-st.sidebar.markdown("---")
-
-meta_diaria_pct = st.sidebar.slider(
-    "Meta Diaria (%)", min_value=0.5, max_value=10.0, value=4.35, step=0.05
-)
-trailing_tolerance_pct = st.sidebar.slider(
-    "Tolerancia Retroceso (%)", min_value=0.05, max_value=5.0, value=0.75, step=0.05
-)
-
-st.markdown(
-    """
-    <div class="dynamic-header">
-        <h1>⚡ BOT DINÁMICO — TOP 5 MOMENTUM</h1>
-        <p>Estrategia de Impulso | Stop Loss & Trailing Protegido</p>
+st.markdown("""
+    <div class="dinamico-header">
+        <h1>📈 BOT DINÁMICO — MOMENTUM & TENDENCIA</h1>
+        <p>Seguimiento de Activos Líquidos & Control de Riesgo</p>
     </div>
-""",
-    unsafe_allow_html=True,
-)
+""", unsafe_allow_html=True)
 
 posiciones = st.session_state.posiciones
 total_flotante = 0.0
-posiciones_procesadas = []
-posiciones_restantes = []
-hubo_cierre_individual = False
+pos_procesadas = []
+pos_restantes = []
+cierre_individual = False
 
 for pos in posiciones:
     ticker = pos.get("ticker")
-    precio_entrada = float(pos.get("precio_entrada", 0.0))
+    p_entrada = float(pos.get("precio_entrada", 0.0))
     acciones = float(pos.get("acciones", 0.0))
-
     try:
         df = yf.Ticker(ticker).history(period="1d")
-        precio_actual = float(df["Close"].iloc[-1]) if not df.empty else precio_entrada
+        p_actual = float(df["Close"].iloc[-1]) if not df.empty else p_entrada
     except Exception:
-        precio_actual = precio_entrada
+        p_actual = p_entrada
 
-    pnl_usd = (precio_actual - precio_entrada) * acciones
-    pnl_pct = (
-        ((precio_actual - precio_entrada) / precio_entrada) * 100.0
-        if precio_entrada > 0
-        else 0.0
-    )
+    pnl_usd = (p_actual - p_entrada) * acciones
+    pnl_pct = (((p_actual - p_entrada) / p_entrada) * 100.0) if p_entrada > 0 else 0.0
 
-    if pnl_pct <= STOP_LOSS_INDIVIDUAL_PCT:
+    if pnl_pct <= STOP_LOSS:
         st.session_state.ganancia_cerrada += pnl_usd
-        hora_act = time.strftime("%H:%M:%S")
-        msg = f"[{hora_act}] 🛡️ STOP LOSS INDIVIDUAL: Cierre en {ticker} a {pnl_pct:.2f}% (${pnl_usd:.2f} USD). Posición liquidada a caja."
-        st.session_state.historial_alertas.append(msg)
-        hubo_cierre_individual = True
+        cierre_individual = True
     else:
         total_flotante += pnl_usd
-        posiciones_restantes.append(pos)
-        posiciones_procesadas.append(
-            {
-                "Activo": ticker,
-                "Precio Entrada": round(precio_entrada, 2),
-                "Precio Actual": round(precio_actual, 2),
-                "Acciones": round(acciones, 4),
-                "PnL (USD)": round(pnl_usd, 2),
-                "PnL (%)": round(pnl_pct, 2),
-            }
-        )
+        pos_restantes.append(pos)
+        pos_procesadas.append({
+            "Activo": ticker, "Precio Entrada": round(p_entrada, 2),
+            "Precio Actual": round(p_actual, 2), "Acciones": round(acciones, 4),
+            "PnL (USD)": round(pnl_usd, 2), "PnL (%)": round(pnl_pct, 2)
+        })
 
-if hubo_cierre_individual:
-    st.session_state.posiciones = posiciones_restantes
-    guardar_datos_persistentes()
+if cierre_individual:
+    st.session_state.posiciones = pos_restantes
+    guardar_bitacora(
+        st.session_state.capital_inicial, st.session_state.ganancia_cerrada,
+        st.session_state.posiciones, st.session_state.peak_flotante,
+        st.session_state.historial_rendimiento
+    )
     st.rerun()
 
 capital_base = float(st.session_state.capital_inicial)
 ganancia_cerrada = float(st.session_state.ganancia_cerrada)
-
-flotante_pct = (
-    (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
-)
+flotante_pct = (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
 ganancia_total_dia = ganancia_cerrada + total_flotante
-ganancia_total_pct = (
-    (ganancia_total_dia / capital_base) * 100 if capital_base > 0 else 0.0
-)
+ganancia_total_pct = (ganancia_total_dia / capital_base) * 100 if capital_base > 0 else 0.0
 
-peak_previo = float(st.session_state.peak_flotante)
-if flotante_pct > peak_previo:
-    st.session_state.peak_flotante = flotante_pct
-    peak_actual = flotante_pct
-else:
-    peak_actual = peak_previo
+peak = max(float(st.session_state.peak_flotante), flotante_pct)
+st.session_state.peak_flotante = peak
+umbral_salida = max(peak - tolerancia, meta_diaria)
 
-umbral_calculado = peak_actual - trailing_tolerance_pct
-umbral_salida = max(umbral_calculado, meta_diaria_pct)
-
-if (
-    peak_actual >= meta_diaria_pct
-    and flotante_pct <= umbral_salida
-    and len(posiciones_procesadas) > 0
-):
-    nuevo_capital = round(
-        capital_base + total_flotante + ganancia_cerrada, 2
-    )
-    fecha_hoy = datetime.now().strftime("%d/%m/%Y %H:%M")
-
+if peak >= meta_diaria and flotante_pct <= umbral_salida and len(pos_procesadas) > 0:
+    nuevo_capital = round(capital_base + total_flotante + ganancia_cerrada, 2)
     st.session_state.capital_inicial = nuevo_capital
     st.session_state.ganancia_cerrada = 0.0
     st.session_state.posiciones = []
-
-    st.session_state.historial_rendimiento.append(
-        {"Fecha": fecha_hoy, "Capital": nuevo_capital}
-    )
-
-    mensaje = f"[{time.strftime('%H:%M:%S')}] 🎯 TRAILING STOP GLOBAL: Cierre ejecutado al {flotante_pct:.2f}%. Nuevo Capital Base: ${nuevo_capital:,.2f} USD."
-    st.session_state.historial_alertas.append(mensaje)
     st.session_state.peak_flotante = 0.0
-    guardar_datos_persistentes()
+    st.session_state.historial_rendimiento.append({"Fecha": datetime.now().strftime("%d/%m/%Y %H:%M"), "Capital": nuevo_capital})
+    guardar_bitacora(nuevo_capital, 0.0, [], 0.0, st.session_state.historial_rendimiento)
     st.rerun()
 
-col1, col2, col3, col4 = st.columns(4)
-col1.metric(
-    "Capital Cuenta",
-    f"${capital_base + total_flotante:,.2f} USD",
-    f"Base Acumulada: ${capital_base:,.2f}",
-)
-col2.metric(
-    "Ganancia Realizada",
-    f"+${ganancia_total_dia:,.2f} USD",
-    f"{ganancia_total_pct:.2f}% del Capital",
-)
-col3.metric(
-    "Flotante Actual", f"+${total_flotante:,.2f} USD", f"Peak: +{peak_actual:.2f}%"
-)
-col4.metric(
-    "Meta / Trailing (Piso)",
-    f"Meta: {meta_diaria_pct:.2f}%",
-    f"Umbral: +{umbral_salida:.2f}%",
-)
+c1, c2, c3, c4 = st.columns(4)
+c1.metric("Capital Cuenta", f"${capital_base + total_flotante:,.2f} USD", f"Base: ${capital_base:,.2f}")
+c2.metric("Ganancia Realizada", f"+${ganancia_total_dia:,.2f} USD", f"{ganancia_total_pct:.2f}%")
+c3.metric("Flotante Actual", f"+${total_flotante:,.2f} USD", f"Peak: +{peak:.2f}%")
+c4.metric("Meta / Umbral", f"Meta: {meta_diaria}%", f"Umbral: +{umbral_salida:.2f}%")
 
 st.markdown("---")
 
-if st.session_state.historial_alertas:
-    st.info("📜 **Última Alerta:** " + st.session_state.historial_alertas[-1])
+if st.sidebar.button("🚀 Abrir Jornada"):
+    seleccionados = CANDIDATAS_DINAMICO[:NUM_ACTIVOS]
+    monto_part = capital_base / len(seleccionados)
+    nuevas_pos = []
+    for t in seleccionados:
+        try:
+            px = yf.Ticker(t).history(period="1d")["Close"].iloc[-1]
+        except Exception:
+            px = 100.0
+        nuevas_pos.append({"ticker": t, "precio_entrada": round(px, 2), "acciones": round(monto_part / px, 4)})
+    st.session_state.posiciones = nuevas_pos
+    st.session_state.peak_flotante = 0.0
+    guardar_bitacora(capital_base, ganancia_cerrada, nuevas_pos, 0.0, st.session_state.historial_rendimiento)
+    st.rerun()
 
-if st.sidebar.button("🚀 Abrir Jornada (Top 5)"):
-    st.sidebar.info("Analizando momentum en grandes empresas ($20B+)...")
-    top_5 = seleccionar_top_empresas(n=NUM_EMPRESAS_OBJETIVO)
-
-    if len(top_5) > 0:
-        monto_por_accion = capital_base / len(top_5)
-        nuevas_pos = []
-        for t in top_5:
-            try:
-                px = yf.Ticker(t).history(period="1d")["Close"].iloc[-1]
-            except Exception:
-                px = 100.0
-            nuevas_pos.append(
-                {
-                    "ticker": t,
-                    "precio_entrada": round(px, 2),
-                    "acciones": round(monto_por_accion / px, 4),
-                }
-            )
-        st.session_state.posiciones = nuevas_pos
-        st.session_state.peak_flotante = 0.0
-        st.session_state.historial_alertas.append(
-            f"[{time.strftime('%H:%M:%S')}] Jornada iniciada con Top 5: {', '.join(top_5)} (${monto_por_accion:,.2f} USD/posición)."
-        )
-        guardar_datos_persistentes()
-        st.sidebar.success(f"Posiciones abiertas: {', '.join(top_5)}")
-        st.rerun()
-
-if st.sidebar.button("🔴 Cierre Manual de Jornada"):
+if st.sidebar.button("🔴 Cierre Manual"):
     if st.session_state.posiciones:
-        ganancia_del_dia = total_flotante + ganancia_cerrada
-        nuevo_capital = round(capital_base + ganancia_del_dia, 2)
-        fecha_hoy = datetime.now().strftime("%d/%m/%Y %H:%M")
-
+        nuevo_capital = round(capital_base + total_flotante + ganancia_cerrada, 2)
         st.session_state.capital_inicial = nuevo_capital
         st.session_state.ganancia_cerrada = 0.0
         st.session_state.posiciones = []
         st.session_state.peak_flotante = 0.0
-
-        st.session_state.historial_rendimiento.append(
-            {"Fecha": fecha_hoy, "Capital": nuevo_capital}
-        )
-
-        hora_actual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
-        alerta = f"[{hora_actual}] CIERRE MANUAL: Cierre de jornada. Nuevo Capital Base acumulado: ${nuevo_capital:,.2f} USD."
-        st.session_state.historial_alertas.append(alerta)
-
-        guardar_datos_persistentes()
-        st.sidebar.success(
-            f"¡Jornada cerrada! Saldo base acumulado actualizado a ${nuevo_capital:,.2f} USD"
-        )
+        st.session_state.historial_rendimiento.append({"Fecha": datetime.now().strftime("%d/%m/%Y %H:%M"), "Capital": nuevo_capital})
+        guardar_bitacora(nuevo_capital, 0.0, [], 0.0, st.session_state.historial_rendimiento)
         st.rerun()
-    else:
-        st.sidebar.warning("No hay posiciones abiertas para cerrar.")
 
-st.subheader("🟢 Posiciones en Curso — Top 5 Momentum")
-if posiciones_procesadas:
-    st.dataframe(pd.DataFrame(posiciones_procesadas), use_container_width=True)
+st.subheader("Posiciones en Curso")
+if pos_procesadas:
+    st.dataframe(pd.DataFrame(pos_procesadas), use_container_width=True)
 else:
-    st.success(
-        "✅ **Sin posiciones abiertas.** Esperando inicio de jornada o liquidadas a caja."
-    )
+    st.success("Sin posiciones abiertas.")
 
 st.markdown("---")
-st.subheader("📈 Evolución Histórica del Capital Cuenta")
-historial = st.session_state.historial_rendimiento
-if historial:
-    df_hist = pd.DataFrame(historial)
-    if "Fecha" in df_hist.columns and "Capital" in df_hist.columns:
-        df_hist = df_hist.set_index("Fecha")
-        st.line_chart(df_hist)
-    else:
-        st.dataframe(df_hist, use_container_width=True)
-else:
-    st.info("Aún no hay registros para mostrar la evolución.")
+st.subheader("Evolución del Capital")
+hist = st.session_state.historial_rendimiento
+if hist:
+    st.line_chart(pd.DataFrame(hist).set_index("Fecha"))
