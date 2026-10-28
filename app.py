@@ -1,5 +1,7 @@
-import time
 from datetime import datetime
+import json
+import os
+import time
 import pandas as pd
 import streamlit as st
 import yfinance as yf
@@ -9,6 +11,36 @@ st.set_page_config(
     page_icon="⚡",
     layout="wide",
 )
+
+# --- PERSISTENCIA LOCAL EN JSON PARA EVITAR PÉRDIDA DE DATOS ---
+BITACORA_FILE = "bitacora_dinamica.json"
+
+
+def cargar_datos_persistentes():
+    if os.path.exists(BITACORA_FILE):
+        try:
+            with open(BITACORA_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return None
+
+
+def guardar_datos_persistentes():
+    data = {
+        "capital_inicial": st.session_state.capital_inicial,
+        "ganancia_cerrada": st.session_state.ganancia_cerrada,
+        "posiciones": st.session_state.posiciones,
+        "peak_flotante": st.session_state.peak_flotante,
+        "historial_alertas": st.session_state.historial_alertas,
+        "historial_rendimiento": st.session_state.historial_rendimiento,
+    }
+    try:
+        with open(BITACORA_FILE, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=4)
+    except Exception:
+        pass
+
 
 # Estilos CSS con Encabezado Compacto para Celular
 st.markdown(
@@ -61,30 +93,82 @@ MARKET_CAP_MINIMO_USD = 20_000_000_000
 
 # Pool ampliado de escaneo de grandes empresas
 CANDIDATAS_GRANDES_CAPS = [
-    "NVDA", "MSFT", "AAPL", "AMZN", "GOOGL", "META", "TSLA", "AVGO", "COST", "NFLX",
-    "AMD", "ORCL", "TMUS", "PEP", "KO", "LLY", "UNH", "JPM", "V", "MA",
-    "BAC", "XOM", "CVX", "WMT", "NKE", "DIS", "HD", "PG", "MRK", "ABBV",
-    "CRM", "ACN", "LIN", "ABT", "TMO", "CSCO", "MCD", "GE", "TXN", "PM",
+    "NVDA",
+    "MSFT",
+    "AAPL",
+    "AMZN",
+    "GOOGL",
+    "META",
+    "TSLA",
+    "AVGO",
+    "COST",
+    "NFLX",
+    "AMD",
+    "ORCL",
+    "TMUS",
+    "PEP",
+    "KO",
+    "LLY",
+    "UNH",
+    "JPM",
+    "V",
+    "MA",
+    "BAC",
+    "XOM",
+    "CVX",
+    "WMT",
+    "NKE",
+    "DIS",
+    "HD",
+    "PG",
+    "MRK",
+    "ABBV",
+    "CRM",
+    "ACN",
+    "LIN",
+    "ABT",
+    "TMO",
+    "CSCO",
+    "MCD",
+    "GE",
+    "TXN",
+    "PM",
 ]
 
 NUM_EMPRESAS_OBJETIVO = 5
 STOP_LOSS_INDIVIDUAL_PCT = -0.75  # Umbral de corte individual (-0.75%)
 
-# --- INICIALIZACIÓN DE ESTADO INTERNO (SIN DEPENDENCIAS DE JSON) ---
+# --- INICIALIZACIÓN DE ESTADO CON CARGA PERSISTENTE ---
+saved_data = cargar_datos_persistentes()
+
 if "capital_inicial" not in st.session_state:
-    st.session_state.capital_inicial = 10507.24
+    st.session_state.capital_inicial = (
+        saved_data.get("capital_inicial", 10507.24)
+        if saved_data
+        else 10507.24
+    )
 if "ganancia_cerrada" not in st.session_state:
-    st.session_state.ganancia_cerrada = 0.0
+    st.session_state.ganancia_cerrada = (
+        saved_data.get("ganancia_cerrada", 0.0) if saved_data else 0.0
+    )
 if "posiciones" not in st.session_state:
-    st.session_state.posiciones = []
+    st.session_state.posiciones = (
+        saved_data.get("posiciones", []) if saved_data else []
+    )
 if "peak_flotante" not in st.session_state:
-    st.session_state.peak_flotante = 0.0
+    st.session_state.peak_flotante = (
+        saved_data.get("peak_flotante", 0.0) if saved_data else 0.0
+    )
 if "historial_alertas" not in st.session_state:
-    st.session_state.historial_alertas = []
+    st.session_state.historial_alertas = (
+        saved_data.get("historial_alertas", []) if saved_data else []
+    )
 if "historial_rendimiento" not in st.session_state:
-    st.session_state.historial_rendimiento = [
-        {"Fecha": datetime.now().strftime("%d/%m/%Y"), "Capital": 10507.24}
-    ]
+    st.session_state.historial_rendimiento = (
+        saved_data.get("historial_rendimiento", [])
+        if saved_data
+        else [{"Fecha": datetime.now().strftime("%d/%m/%Y"), "Capital": 10507.24}]
+    )
 
 
 def seleccionar_top_empresas(n=5):
@@ -149,7 +233,11 @@ for pos in posiciones:
         precio_actual = precio_entrada
 
     pnl_usd = (precio_actual - precio_entrada) * acciones
-    pnl_pct = ((precio_actual - precio_entrada) / precio_entrada) * 100.0 if precio_entrada > 0 else 0.0
+    pnl_pct = (
+        ((precio_actual - precio_entrada) / precio_entrada) * 100.0
+        if precio_entrada > 0
+        else 0.0
+    )
 
     if pnl_pct <= STOP_LOSS_INDIVIDUAL_PCT:
         st.session_state.ganancia_cerrada += pnl_usd
@@ -160,25 +248,32 @@ for pos in posiciones:
     else:
         total_flotante += pnl_usd
         posiciones_restantes.append(pos)
-        posiciones_procesadas.append({
-            "Activo": ticker,
-            "Precio Entrada": round(precio_entrada, 2),
-            "Precio Actual": round(precio_actual, 2),
-            "Acciones": round(acciones, 4),
-            "PnL (USD)": round(pnl_usd, 2),
-            "PnL (%)": round(pnl_pct, 2),
-        })
+        posiciones_procesadas.append(
+            {
+                "Activo": ticker,
+                "Precio Entrada": round(precio_entrada, 2),
+                "Precio Actual": round(precio_actual, 2),
+                "Acciones": round(acciones, 4),
+                "PnL (USD)": round(pnl_usd, 2),
+                "PnL (%)": round(pnl_pct, 2),
+            }
+        )
 
 if hubo_cierre_individual:
     st.session_state.posiciones = posiciones_restantes
+    guardar_datos_persistentes()
     st.rerun()
 
 capital_base = float(st.session_state.capital_inicial)
 ganancia_cerrada = float(st.session_state.ganancia_cerrada)
 
-flotante_pct = (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
+flotante_pct = (
+    (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
+)
 ganancia_total_dia = ganancia_cerrada + total_flotante
-ganancia_total_pct = (ganancia_total_dia / capital_base) * 100 if capital_base > 0 else 0.0
+ganancia_total_pct = (
+    (ganancia_total_dia / capital_base) * 100 if capital_base > 0 else 0.0
+)
 
 peak_previo = float(st.session_state.peak_flotante)
 if flotante_pct > peak_previo:
@@ -190,26 +285,49 @@ else:
 umbral_calculado = peak_actual - trailing_tolerance_pct
 umbral_salida = max(umbral_calculado, meta_diaria_pct)
 
-if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posiciones_procesadas) > 0:
-    nuevo_capital = round(capital_base + total_flotante + ganancia_cerrada, 2)
+if (
+    peak_actual >= meta_diaria_pct
+    and flotante_pct <= umbral_salida
+    and len(posiciones_procesadas) > 0
+):
+    nuevo_capital = round(
+        capital_base + total_flotante + ganancia_cerrada, 2
+    )
     fecha_hoy = datetime.now().strftime("%d/%m/%Y %H:%M")
-    
+
     st.session_state.capital_inicial = nuevo_capital
     st.session_state.ganancia_cerrada = 0.0
     st.session_state.posiciones = []
-    
-    st.session_state.historial_rendimiento.append({"Fecha": fecha_hoy, "Capital": nuevo_capital})
+
+    st.session_state.historial_rendimiento.append(
+        {"Fecha": fecha_hoy, "Capital": nuevo_capital}
+    )
 
     mensaje = f"[{time.strftime('%H:%M:%S')}] 🎯 TRAILING STOP GLOBAL: Cierre ejecutado al {flotante_pct:.2f}%. Nuevo Capital Base: ${nuevo_capital:,.2f} USD."
     st.session_state.historial_alertas.append(mensaje)
     st.session_state.peak_flotante = 0.0
+    guardar_datos_persistentes()
     st.rerun()
 
 col1, col2, col3, col4 = st.columns(4)
-col1.metric("Capital Cuenta", f"${capital_base + total_flotante:,.2f} USD", f"Base Acumulada: ${capital_base:,.2f}")
-col2.metric("Ganancia Realizada", f"+${ganancia_total_dia:,.2f} USD", f"{ganancia_total_pct:.2f}% del Capital")
-col3.metric("Flotante Actual", f"+${total_flotante:,.2f} USD", f"Peak: +{peak_actual:.2f}%")
-col4.metric("Meta / Trailing (Piso)", f"Meta: {meta_diaria_pct:.2f}%", f"Umbral: +{umbral_salida:.2f}%")
+col1.metric(
+    "Capital Cuenta",
+    f"${capital_base + total_flotante:,.2f} USD",
+    f"Base Acumulada: ${capital_base:,.2f}",
+)
+col2.metric(
+    "Ganancia Realizada",
+    f"+${ganancia_total_dia:,.2f} USD",
+    f"{ganancia_total_pct:.2f}% del Capital",
+)
+col3.metric(
+    "Flotante Actual", f"+${total_flotante:,.2f} USD", f"Peak: +{peak_actual:.2f}%"
+)
+col4.metric(
+    "Meta / Trailing (Piso)",
+    f"Meta: {meta_diaria_pct:.2f}%",
+    f"Umbral: +{umbral_salida:.2f}%",
+)
 
 st.markdown("---")
 
@@ -228,16 +346,19 @@ if st.sidebar.button("🚀 Abrir Jornada (Top 5)"):
                 px = yf.Ticker(t).history(period="1d")["Close"].iloc[-1]
             except Exception:
                 px = 100.0
-            nuevas_pos.append({
-                "ticker": t,
-                "precio_entrada": round(px, 2),
-                "acciones": round(monto_por_accion / px, 4),
-            })
+            nuevas_pos.append(
+                {
+                    "ticker": t,
+                    "precio_entrada": round(px, 2),
+                    "acciones": round(monto_por_accion / px, 4),
+                }
+            )
         st.session_state.posiciones = nuevas_pos
         st.session_state.peak_flotante = 0.0
         st.session_state.historial_alertas.append(
             f"[{time.strftime('%H:%M:%S')}] Jornada iniciada con Top 5: {', '.join(top_5)} (${monto_por_accion:,.2f} USD/posición)."
         )
+        guardar_datos_persistentes()
         st.sidebar.success(f"Posiciones abiertas: {', '.join(top_5)}")
         st.rerun()
 
@@ -252,13 +373,18 @@ if st.sidebar.button("🔴 Cierre Manual de Jornada"):
         st.session_state.posiciones = []
         st.session_state.peak_flotante = 0.0
 
-        st.session_state.historial_rendimiento.append({"Fecha": fecha_hoy, "Capital": nuevo_capital})
+        st.session_state.historial_rendimiento.append(
+            {"Fecha": fecha_hoy, "Capital": nuevo_capital}
+        )
 
         hora_actual = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
         alerta = f"[{hora_actual}] CIERRE MANUAL: Cierre de jornada. Nuevo Capital Base acumulado: ${nuevo_capital:,.2f} USD."
         st.session_state.historial_alertas.append(alerta)
 
-        st.sidebar.success(f"¡Jornada cerrada! Saldo base acumulado actualizado a ${nuevo_capital:,.2f} USD")
+        guardar_datos_persistentes()
+        st.sidebar.success(
+            f"¡Jornada cerrada! Saldo base acumulado actualizado a ${nuevo_capital:,.2f} USD"
+        )
         st.rerun()
     else:
         st.sidebar.warning("No hay posiciones abiertas para cerrar.")
@@ -267,7 +393,9 @@ st.subheader("🟢 Posiciones en Curso — Top 5 Momentum")
 if posiciones_procesadas:
     st.dataframe(pd.DataFrame(posiciones_procesadas), use_container_width=True)
 else:
-    st.success("✅ **Sin posiciones abiertas.** Esperando inicio de jornada o liquidadas a caja.")
+    st.success(
+        "✅ **Sin posiciones abiertas.** Esperando inicio de jornada o liquidadas a caja."
+    )
 
 st.markdown("---")
 st.subheader("📈 Evolución Histórica del Capital Cuenta")
