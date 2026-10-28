@@ -11,7 +11,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# --- BITÁCORA DINÁMICA BLINDADA ---
+# --- BITÁCORA DINÁMICA LOCAL ---
 ARCHIVO_BITACORA = "bitacora_dinamica.json"
 CAPITAL_BASE_DEFECTO = 10507.24
 
