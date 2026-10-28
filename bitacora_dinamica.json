@@ -4,21 +4,24 @@ import os
 
 
 class BitacoraDinamica:
-    """Clase para gestionar la bitácora independiente de cada bot con persistencia JSON."""
 
-    def __init__(self, nombre_archivo, capital_inicial):
+    def __init__(self, nombre_archivo, capital_inicial_default):
         self.archivo = nombre_archivo
-        self.capital_default = capital_inicial
+        self.capital_default = capital_inicial_default
         self.estado = self.cargar_estado()
 
     def cargar_estado(self):
+        # 1. Al iniciar: busca el archivo en disco.
         if os.path.exists(self.archivo):
             try:
                 with open(self.archivo, "r", encoding="utf-8") as f:
-                    return json.load(f)
+                    datos = json.load(f)
+                    # Lee el capital acumulado real de la sesión anterior
+                    return datos
             except Exception:
                 pass
 
+        # Si no existe el archivo (primer día), arranca con el capital base original
         return {
             "capital_inicial": self.capital_default,
             "ganancia_cerrada": 0.0,
@@ -32,12 +35,14 @@ class BitacoraDinamica:
             ],
         }
 
-    def actualizar_y_guardar(
-        self, capital, ganancia, posiciones, peak, rendimiento
+    def guardar_cierre_jornada(
+        self, nuevo_capital, posiciones, peak, rendimiento
     ):
+        # 2. Al cerrar jornada: toma el capital viejo + ganancias,
+        # y sobreescribe el JSON con este NUEVO capital base acumulado.
         self.estado = {
-            "capital_inicial": capital,
-            "ganancia_cerrada": ganancia,
+            "capital_inicial": nuevo_capital,  # <-- ¡Aquí ocurre la magia de la acumulación!
+            "ganancia_cerrada": 0.0,
             "posiciones": posiciones,
             "peak_flotante": peak,
             "historial_rendimiento": rendimiento,
