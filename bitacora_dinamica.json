@@ -1,1 +1,67 @@
+from datetime import datetime
+import json
+import os
 
+
+class BitacoraDinamica:
+    """Ejemplo limpio y autónomo de una bitácora dinámica con persistencia en JSON.
+
+    Garantiza que cualquier cambio en el capital, ganancias o posiciones
+    se guarde de inmediato en disco y no se pierda al cerrar la app.
+    """
+
+    def __init__(self, nombre_archivo, capital_inicial):
+        self.archivo = nombre_archivo
+        self.capital_default = capital_inicial
+        # Carga automática al iniciar
+        self.estado = self.cargar_estado()
+
+    def cargar_estado(self):
+        """Lee el archivo JSON local.
+
+        Si no existe o hay error, inicializa con los valores base.
+        """
+        if os.path.exists(self.archivo):
+            try:
+                with open(self.archivo, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except Exception:
+                pass
+
+        # Estructura inicial dinámica por defecto
+        return {
+            "capital_inicial": self.capital_default,
+            "ganancia_cerrada": 0.0,
+            "posiciones": [],
+            "peak_flotante": 0.0,
+            "historial_rendimiento": [
+                {
+                    "Fecha": datetime.now().strftime("%d/%m/%Y"),
+                    "Capital": self.capital_default,
+                }
+            ],
+        }
+
+    def actualizar_y_guardar(
+        self, capital, ganancia, posiciones, peak, rendimiento
+    ):
+        """Actualiza el diccionario interno y lo escribe de forma dinámica
+
+        en el archivo JSON del disco duro.
+        """
+        self.estado = {
+            "capital_inicial": capital,
+            "ganancia_cerrada": ganancia,
+            "posiciones": posiciones,
+            "peak_flotante": peak,
+            "historial_rendimiento": rendimiento,
+        }
+        try:
+            with open(self.archivo, "w", encoding="utf-8") as f:
+                json.dump(self.estado, f, ensure_ascii=False, indent=4)
+        except Exception as e:
+            print(f"Error al guardar la bitácora: {e}")
+
+    def obtener(self, clave):
+        """Devuelve el valor actual de la clave solicitada."""
+        return self.estado.get(clave, None)
