@@ -57,7 +57,7 @@ try:
 except ImportError:
     pass
 
-# Nombre exacto del archivo JSON de bitácora (sin tildes para evitar errores en la nube)
+# Nombre exacto del archivo JSON de bitácora
 BITACORA_FILE = "bitacora_dinamica.json"
 
 CANDIDATAS_DINAMICO = ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NFLX", "AMD", "INTC"]
@@ -65,6 +65,7 @@ NUM_ACTIVOS = 3
 STOP_LOSS_INDIVIDUAL_PCT = -0.75
 
 def cargar_bitacora():
+    """Lee rigurosamente el archivo JSON físico. Si existe, extrae el capital acumulado real."""
     if os.path.exists(BITACORA_FILE):
         try:
             with open(BITACORA_FILE, "r", encoding="utf-8") as f:
@@ -80,20 +81,21 @@ def cargar_bitacora():
         except Exception:
             pass
 
-    # Si no existe el archivo o falla la lectura, crea la estructura inicial
+    # Estructura inicial por defecto solo si el archivo no existiera por primera vez
     base_data = {
-        "capital_inicial": 10507.24,  # Tu capital real de partida
+        "capital_inicial": 10000.0,
         "ganancia_cerrada": 0.0,
         "posiciones": [],
         "peak_flotante": 0.0,
         "historial_alertas": [],
-        "historial_rendimiento": [{"Fecha": datetime.now().strftime("%d/%m/%Y"), "Capital": 10507.24}],
+        "historial_rendimiento": [{"Fecha": datetime.now().strftime("%d/%m/%Y"), "Capital": 10000.0}],
     }
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(base_data, f, indent=4, ensure_ascii=False)
     return base_data
 
 def guardar_bitacora(data):
+    """Sobrescribe el archivo JSON con el estado actualizado y el nuevo capital compuesto."""
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
@@ -177,6 +179,7 @@ else:
 umbral_calculado = peak_actual - trailing_tolerance_pct
 umbral_salida = max(umbral_calculado, meta_diaria_pct)
 
+# Cierre automático por Trailing Stop Global que actualiza el capital compuesto
 if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posiciones_procesadas) > 0:
     nuevo_capital = round(capital_base + total_flotante + ganancia_cerrada, 2)
     fecha_hoy = datetime.now().strftime("%d/%m/%Y %H:%M")
@@ -230,6 +233,7 @@ if st.sidebar.button("🔴 Cierre Manual de Jornada"):
         nuevo_capital = round(capital_base + ganancia_del_dia, 2)
         fecha_hoy = datetime.now().strftime("%d/%m/%Y %H:%M")
 
+        # TRASPASO CLAVE: El saldo final pasa a ser el nuevo capital inicial compuesto
         data_bitacora["capital_inicial"] = nuevo_capital
         data_bitacora["ganancia_cerrada"] = 0.0
         data_bitacora["posiciones"] = []
