@@ -1,12 +1,12 @@
 {
-    "capital_inicial": 10000.0,
+    "capital_inicial": 10600.0,
     "ganancia_cerrada": 0.0,
     "posiciones": [],
     "peak_flotante": 0.0,
     "historial_rendimiento": [
         {
             "Fecha": "28/10/2026",
-            "Capital": 10000.0
+            "Capital": 10600.0
         }
     ]
 }
