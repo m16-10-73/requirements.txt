@@ -1,4 +1,5 @@
 import os
+impoimport os
 import json
 import time
 from datetime import datetime
@@ -51,6 +52,7 @@ def guardar_bitacora(capital, ganancia, posiciones, peak, rendimiento):
     except Exception as e:
         print(f"Error al guardar la bitácora: {e}")
 
+# Carga inicial segura
 estado_guardado = cargar_o_crear_bitacora()
 
 if "capital_inicial" not in st.session_state:
@@ -93,8 +95,8 @@ CANDIDATAS_DINAMICO = ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NFLX", "AMD", "
 NUM_ACTIVOS = 3
 STOP_LOSS = -0.80
 
-meta_diaria = st.sidebar.slider("Meta Diaria (%)", 0.3, 8.0, 3.0, 0.05)
-tolerancia = st.sidebar.slider("Tolerancia Retroceso (%)", 0.05, 5.0, 0.5, 0.05)
+meta_diaria = st.sidebar.slider("Meta Diaria (%)", 0.3, 8.0, 3.0, 0.05, key="slider_meta_dinamico")
+tolerancia = st.sidebar.slider("Tolerancia Retroceso (%)", 0.05, 5.0, 0.5, 0.05, key="slider_tol_dinamico")
 
 st.markdown("""
     <div class="dinamico-header">
@@ -171,7 +173,7 @@ c4.metric("Meta / Umbral", f"Meta: {meta_diaria}%", f"Umbral: +{umbral_salida:.2
 
 st.markdown("---")
 
-if st.sidebar.button("🚀 Abrir Jornada"):
+if st.sidebar.button("🚀 Abrir Jornada", key="btn_abrir_dinamico"):
     seleccionados = CANDIDATAS_DINAMICO[:NUM_ACTIVOS]
     monto_part = capital_base / len(seleccionados)
     nuevas_pos = []
@@ -186,7 +188,7 @@ if st.sidebar.button("🚀 Abrir Jornada"):
     guardar_bitacora(capital_base, ganancia_cerrada, nuevas_pos, 0.0, st.session_state.historial_rendimiento)
     st.rerun()
 
-if st.sidebar.button("🔴 Cierre Manual"):
+if st.sidebar.button("🔴 Cierre Manual", key="btn_cerrar_dinamico"):
     if st.session_state.posiciones:
         nuevo_capital = round(capital_base + total_flotante + ganancia_cerrada, 2)
         st.session_state.capital_inicial = nuevo_capital
