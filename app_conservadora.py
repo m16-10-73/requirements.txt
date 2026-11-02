@@ -12,52 +12,100 @@ st.set_page_config(
     layout="wide",
 )
 
-# --- CLASE BITÁCORA DINÁMICA INDEPENDIENTE PARA VALORIS ---
-class BitacoraDinamica:
-    def __init__(self, nombre_archivo, capital_inicial_default):
-        self.archivo = nombre_archivo
-        self.capital_default = capital_inicial_default
-        self.estado = self.cargar_estado()
+# Nombre exacto del archivo JSON de bitácora para Valoris
+BITACORA_VALORIS = "bitacora_valoris.json"
 
-    def cargar_estado(self):
-        if os.path.exists(self.archivo):
-            try:
-                with open(self.archivo, "r", encoding="utf-8") as f:
-                    return json.load(f)
-            except Exception:
-                pass
-        return {
-            "capital_inicial": self.capital_default,
-            "ganancia_cerrada": 0.0,
-            "posiciones": [],
-            "peak_flotante": 0.0,
-            "historial_rendimiento": [
-                {
-                    "Fecha": datetime.now().strftime("%d/%m/%Y"),
-                    "Capital": self.capital_default,
-                }
-            ],
-        }
-
-    def actualizar_y_guardar(self, capital, ganancia, posiciones, peak, rendimiento):
-        self.estado = {
-            "capital_inicial": capital,
-            "ganancia_cerrada": ganancia,
-            "posiciones": posiciones,
-            "peak_flotante": peak,
-            "historial_rendimiento": rendimiento,
-        }
+def cargar_bitacora_valoris():
+    """Lee rigurosamente el archivo JSON físico y asegura la presencia de los puntos base históricos."""
+    base_defaults = [
+        {"Fecha": "28/10/2026", "Capital": 10402.48},
+        {"Fecha": "30/10/2026", "Capital": 10402.00},
+        {"Fecha": "02/11/2026", "Capital": 10452.79}
+    ]
+    
+    if os.path.exists(BITACORA_VALORIS):
         try:
-            with open(self.archivo, "w", encoding="utf-8") as f:
-                json.dump(self.estado, f, ensure_ascii=False, indent=4)
-        except Exception as e:
-            print(f"Error al guardar la bitácora: {e}")
+            with open(BITACORA_VALORIS, "r", encoding="utf-8") as f:
+                contenido = json.load(f)
+                if isinstance(contenido, dict):
+                    contenido.setdefault("capital_inicial", 10452.79)
+                    contenido.setdefault("ganancia_cerrada", 0.0)
+                    contenido.setdefault("posiciones", [])
+                    contenido.setdefault("peak_flotante", 0.0)
+                    contenido.setdefault("historial_alertas", [])
+                    
+                    # Asegurar o fusionar los puntos base históricos si faltan en el JSON físico
+                    historial = contenido.get("historial_rendimiento", [])
+                    fechas_existentes = [h.get("Fecha") for h in historial]
+                    
+                    for base in base_defaults:
+                        if base["Fecha"] not in fechas_existentes:
+                            historial.insert(0, base)
+                            
+                    contenido["historial_rendimiento"] = historial
+                    return contenido
+        except Exception:
+            pass
 
-    def obtener(self, clave):
-        return self.estado.get(clave, None)
+    # Estructura inicial por defecto si el archivo no existiera
+    base_data = {
+        "capital_inicial": 10452.79,
+        "ganancia_cerrada": 0.0,
+        "posiciones": [],
+        "peak_flotante": 0.0,
+        "historial_alertas": [],
+        "historial_rendimiento": base_defaults,
+    }
+    with open(BITACORA_VALORIS, "w", encoding="utf-8") as f:
+        json.dump(base_data, f, indent=4, ensure_ascii=False)
+    return base_data
 
-# Instanciación exclusiva para Valoris
-bitacora = BitacoraDinamica("bitacora_valoris.json", 10402.48)
+def guardar_bitacora_valoris(data):
+    """Sobrescribe el archivo JSON con el estado actualizado."""
+    with open(BITACORA_VALORIS, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=4, ensure_ascii=False)
+
+def ejecutar_cierre_jornada_valoris(capital_final):
+    """Función blindada: lee directo de disco, añade el cierre al historial acumulando y actualiza el capital."""
+    fecha_actual = datetime.now().strftime("%d/%m/%Y")
+    capital_redondeado = round(float(capital_final), 2)
+
+    # 1. Leer directamente el archivo actual en disco para asegurar que tenemos todo el historial previo
+    if os.path.exists(BITACORA_VALORIS):
+        try:
+            with open(BITACORA_VALORIS, "r", encoding="utf-8") as f:
+                datos_actuales = json.load(f)
+        except Exception:
+            datos_actuales = {}
+    else:
+        datos_actuales = {}
+
+    # 2. Recuperar el historial previo y añadir el nuevo cierre al final
+    historial = datos_actuales.get("historial_rendimiento", [
+        {"Fecha": "28/10/2026", "Capital": 10402.48},
+        {"Fecha": "30/10/2026", "Capital": 10402.00},
+        {"Fecha": "02/11/2026", "Capital": 10452.79}
+    ])
+    
+    # Evitar duplicar la misma fecha exacta si se presiona varias veces el cierre el mismo día
+    historial = [h for h in historial if h.get("Fecha") != fecha_actual]
+    historial.append({"Fecha": fecha_actual, "Capital": capital_redondeado})
+
+    # 3. Construir la estructura completa actualizada (el capital inicial para mañana será este cierre)
+    nuevo_estado = {
+        "capital_inicial": capital_redondeado,
+        "ganancia_cerrada": 0.0,
+        "posiciones": [],
+        "peak_flotante": 0.0,
+        "historial_alertas": datos_actuales.get("historial_alertas", []),
+        "historial_rendimiento": historial
+    }
+
+    # 4. Guardar rigurosamente en disco
+    with open(BITACORA_VALORIS, "w", encoding="utf-8") as f:
+        json.dump(nuevo_estado, f, indent=4, ensure_ascii=False)
+
+data_bitacora = cargar_bitacora_valoris()
 
 # Estilos CSS
 st.markdown(
@@ -114,18 +162,6 @@ CANDIDATAS_VALORIS = [
 NUM_EMPRESAS_OBJETIVO = 4
 STOP_LOSS_INDIVIDUAL_PCT = -0.75
 
-# --- INICIALIZACIÓN DESDE LA BITÁCORA DINÁMICA ---
-if "capital_inicial" not in st.session_state:
-    st.session_state.capital_inicial = bitacora.obtener("capital_inicial")
-if "ganancia_cerrada" not in st.session_state:
-    st.session_state.ganancia_cerrada = bitacora.obtener("ganancia_cerrada")
-if "posiciones" not in st.session_state:
-    st.session_state.posiciones = bitacora.obtener("posiciones")
-if "peak_flotante" not in st.session_state:
-    st.session_state.peak_flotante = bitacora.obtener("peak_flotante")
-if "historial_rendimiento" not in st.session_state:
-    st.session_state.historial_rendimiento = bitacora.obtener("historial_rendimiento")
-
 def seleccionar_top_valoris(n=4):
     resultados = []
     for ticker in CANDIDATAS_VALORIS:
@@ -169,7 +205,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-posiciones = st.session_state.posiciones
+posiciones = data_bitacora.get("posiciones", [])
 total_flotante = 0.0
 posiciones_procesadas = []
 posiciones_restantes = []
@@ -190,9 +226,10 @@ for pos in posiciones:
     pnl_pct = (((precio_actual - precio_entrada) / precio_entrada) * 100.0) if precio_entrada > 0 else 0.0
 
     if pnl_pct <= STOP_LOSS_INDIVIDUAL_PCT:
-        st.session_state.ganancia_cerrada += pnl_usd
+        data_bitacora["ganancia_cerrada"] += pnl_usd
         hora_act = time.strftime("%H:%M:%S")
         msg = f"[{hora_act}] 🛡️ STOP LOSS INDIVIDUAL: Cierre en {ticker} a {pnl_pct:.2f}% (${pnl_usd:.2f} USD). Posición liquidada a caja."
+        data_bitacora.setdefault("historial_alertas", []).append(msg)
         hubo_cierre_individual = True
     else:
         total_flotante += pnl_usd
@@ -209,26 +246,21 @@ for pos in posiciones:
         )
 
 if hubo_cierre_individual:
-    st.session_state.posiciones = posiciones_restantes
-    bitacora.actualizar_y_guardar(
-        st.session_state.capital_inicial,
-        st.session_state.ganancia_cerrada,
-        st.session_state.posiciones,
-        st.session_state.peak_flotante,
-        st.session_state.historial_rendimiento
-    )
+    data_bitacora["posiciones"] = posiciones_restantes
+    guardar_bitacora_valoris(data_bitacora)
     st.rerun()
 
-capital_base = float(st.session_state.capital_inicial)
-ganancia_cerrada = float(st.session_state.ganancia_cerrada)
+capital_base = float(data_bitacora.get("capital_inicial", 10452.79))
+ganancia_cerrada = float(data_bitacora.get("ganancia_cerrada", 0.0))
 
 flotante_pct = (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
 ganancia_total_dia = ganancia_cerrada + total_flotante
 ganancia_total_pct = (ganancia_total_dia / capital_base) * 100 if capital_base > 0 else 0.0
 
-peak_previo = float(st.session_state.peak_flotante)
+peak_previo = float(data_bitacora.get("peak_flotante", 0.0))
 if flotante_pct > peak_previo:
-    st.session_state.peak_flotante = flotante_pct
+    data_bitacora["peak_flotante"] = flotante_pct
+    guardar_bitacora_valoris(data_bitacora)
     peak_actual = flotante_pct
 else:
     peak_actual = peak_previo
@@ -236,26 +268,10 @@ else:
 umbral_calculado = peak_actual - trailing_tolerance_pct
 umbral_salida = max(umbral_calculado, meta_diaria_pct)
 
+# Cierre automático por Trailing Stop Global
 if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posiciones_procesadas) > 0:
     nuevo_capital = round(capital_base + total_flotante + ganancia_cerrada, 2)
-    fecha_hoy = datetime.now().strftime("%d/%m/%Y %H:%M")
-
-    st.session_state.capital_inicial = nuevo_capital
-    st.session_state.ganancia_cerrada = 0.0
-    st.session_state.posiciones = []
-    st.session_state.peak_flotante = 0.0
-
-    st.session_state.historial_rendimiento.append(
-        {"Fecha": fecha_hoy, "Capital": nuevo_capital}
-    )
-
-    bitacora.actualizar_y_guardar(
-        st.session_state.capital_inicial,
-        st.session_state.ganancia_cerrada,
-        st.session_state.posiciones,
-        st.session_state.peak_flotante,
-        st.session_state.historial_rendimiento
-    )
+    ejecutar_cierre_jornada_valoris(nuevo_capital)
     st.rerun()
 
 col1, col2, col3, col4 = st.columns(4)
@@ -283,40 +299,18 @@ if st.sidebar.button("🚀 Abrir Jornada (Valoris)"):
                 "precio_entrada": round(px, 2),
                 "acciones": round(monto_por_accion / px, 4),
             })
-        st.session_state.posiciones = nuevas_pos
-        st.session_state.peak_flotante = 0.0
-        bitacora.actualizar_y_guardar(
-            st.session_state.capital_inicial,
-            st.session_state.ganancia_cerrada,
-            st.session_state.posiciones,
-            st.session_state.peak_flotante,
-            st.session_state.historial_rendimiento
-        )
+        data_bitacora["posiciones"] = nuevas_pos
+        data_bitacora["peak_flotante"] = 0.0
+        guardar_bitacora_valoris(data_bitacora)
         st.sidebar.success(f"Posiciones abiertas: {', '.join(top_val)}")
         st.rerun()
 
 if st.sidebar.button("🔴 Cierre Manual de Jornada"):
-    if st.session_state.posiciones:
+    if data_bitacora.get("posiciones"):
         ganancia_del_dia = total_flotante + ganancia_cerrada
         nuevo_capital = round(capital_base + ganancia_del_dia, 2)
-        fecha_hoy = datetime.now().strftime("%d/%m/%Y %H:%M")
 
-        st.session_state.capital_inicial = nuevo_capital
-        st.session_state.ganancia_cerrada = 0.0
-        st.session_state.posiciones = []
-        st.session_state.peak_flotante = 0.0
-
-        st.session_state.historial_rendimiento.append(
-            {"Fecha": fecha_hoy, "Capital": nuevo_capital}
-        )
-
-        bitacora.actualizar_y_guardar(
-            st.session_state.capital_inicial,
-            st.session_state.ganancia_cerrada,
-            st.session_state.posiciones,
-            st.session_state.peak_flotante,
-            st.session_state.historial_rendimiento
-        )
+        ejecutar_cierre_jornada_valoris(nuevo_capital)
         st.sidebar.success(f"¡Jornada cerrada! Saldo base acumulado actualizado a ${nuevo_capital:,.2f} USD")
         st.rerun()
     else:
@@ -329,14 +323,21 @@ else:
     st.success("✅ **Sin posiciones abiertas.** Esperando inicio de jornada o liquidadas a caja.")
 
 st.markdown("---")
-st.subheader("📈 Evolución Histórica del Capital Cuenta")
-historial = st.session_state.historial_rendimiento
+st.subheader("📋 Historial de Cierres Recientes (Últimos 14 días)")
+
+historial = data_bitacora.get("historial_rendimiento", [])
 if historial:
     df_hist = pd.DataFrame(historial)
     if "Fecha" in df_hist.columns and "Capital" in df_hist.columns:
-        df_hist = df_hist.set_index("Fecha")
-        st.line_chart(df_hist)
+        # Ordenar del más reciente al más antiguo y tomar los últimos 14 registros
+        df_hist["Fecha_obj"] = pd.to_datetime(df_hist["Fecha"], format="%d/%m/%Y", errors="coerce")
+        df_hist = df_hist.sort_values(by="Fecha_obj", ascending=False).drop(columns=["Fecha_obj"])
+        
+        # Mostrar tabla limpia con formato de moneda en USD
+        df_hist["Capital"] = df_hist["Capital"].apply(lambda x: f"${x:,.2f} USD")
+        st.dataframe(df_hist.head(14), use_container_width=True, hide_index=True)
     else:
-        st.dataframe(df_hist, use_container_width=True)
+        df_hist = pd.DataFrame(historial)
+        st.dataframe(df_hist.tail(14), use_container_width=True)
 else:
     st.info("Aún no hay registros para mostrar la evolución.")
