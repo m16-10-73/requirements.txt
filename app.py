@@ -65,7 +65,12 @@ NUM_ACTIVOS = 3
 STOP_LOSS_INDIVIDUAL_PCT = -0.75
 
 def cargar_bitacora():
-    """Lee rigurosamente el archivo JSON físico. Si existe, extrae el capital acumulado real."""
+    """Lee rigurosamente el archivo JSON físico y asegura la presencia de los puntos base históricos."""
+    base_defaults = [
+        {"Fecha": "30/10/2026", "Capital": 10600.0},
+        {"Fecha": "02/11/2026", "Capital": 10582.99}
+    ]
+    
     if os.path.exists(BITACORA_FILE):
         try:
             with open(BITACORA_FILE, "r", encoding="utf-8") as f:
@@ -76,25 +81,28 @@ def cargar_bitacora():
                     contenido.setdefault("posiciones", [])
                     contenido.setdefault("peak_flotante", 0.0)
                     contenido.setdefault("historial_alertas", [])
-                    contenido.setdefault("historial_rendimiento", [
-                        {"Fecha": "30/10/2026", "Capital": 10600.0},
-                        {"Fecha": "02/11/2026", "Capital": 10582.99}
-                    ])
+                    
+                    # Asegurar o fusionar los puntos base históricos si faltan en el JSON físico
+                    historial = contenido.get("historial_rendimiento", [])
+                    fechas_existentes = [h.get("Fecha") for h in historial]
+                    
+                    for base in base_defaults:
+                        if base["Fecha"] not in fechas_existentes:
+                            historial.insert(0, base)
+                            
+                    contenido["historial_rendimiento"] = historial
                     return contenido
         except Exception:
             pass
 
-    # Estructura inicial por defecto con los puntos base solicitados si el archivo no existiera
+    # Estructura inicial por defecto si el archivo no existiera
     base_data = {
         "capital_inicial": 10582.99,
         "ganancia_cerrada": 0.0,
         "posiciones": [],
         "peak_flotante": 0.0,
         "historial_alertas": [],
-        "historial_rendimiento": [
-            {"Fecha": "30/10/2026", "Capital": 10600.0},
-            {"Fecha": "02/11/2026", "Capital": 10582.99}
-        ],
+        "historial_rendimiento": base_defaults,
     }
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(base_data, f, indent=4, ensure_ascii=False)
@@ -126,7 +134,7 @@ def ejecutar_cierre_jornada(capital_final):
         {"Fecha": "02/11/2026", "Capital": 10582.99}
     ])
     
-    # Evitar duplicar la misma fecha exacta en el mismo día si se presiona varias veces
+    # Evitar duplicar la misma fecha exacta si se presiona varias veces el cierre el mismo día
     historial = [h for h in historial if h.get("Fecha") != fecha_actual]
     historial.append({"Fecha": fecha_actual, "Capital": capital_redondeado})
 
@@ -293,6 +301,7 @@ if historial:
         df_hist["Capital"] = df_hist["Capital"].apply(lambda x: f"${x:,.2f} USD")
         st.dataframe(df_hist.head(14), use_container_width=True, hide_index=True)
     else:
+        df_hist = pd.DataFrame(historial)
         st.dataframe(df_hist.tail(14), use_container_width=True)
 else:
     st.info("Aún no hay registros históricos de cierre.")
