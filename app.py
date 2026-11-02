@@ -99,6 +99,24 @@ def guardar_bitacora(data):
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
+def ejecutar_cierre_jornada(data, capital_final):
+    """Función centralizada para automatizar el cierre: añade al histórico y actualiza capital inicial."""
+    fecha_actual = datetime.now().strftime("%d/%m/%Y %H:%M")
+    capital_redondeado = round(float(capital_final), 2)
+
+    if "historial_rendimiento" not in data:
+        data["historial_rendimiento"] = []
+
+    data["historial_rendimiento"].append(
+        {"Fecha": fecha_actual, "Capital": capital_redondeado}
+    )
+    data["capital_inicial"] = capital_redondeado
+    data["ganancia_cerrada"] = 0.0
+    data["posiciones"] = []
+    data["peak_flotante"] = 0.0
+
+    guardar_bitacora(data)
+
 data_bitacora = cargar_bitacora()
 
 # Sidebar
@@ -182,18 +200,7 @@ umbral_salida = max(umbral_calculado, meta_diaria_pct)
 # Cierre automático por Trailing Stop Global que actualiza el capital compuesto
 if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posiciones_procesadas) > 0:
     nuevo_capital = round(capital_base + total_flotante + ganancia_cerrada, 2)
-    fecha_hoy = datetime.now().strftime("%d/%m/%Y %H:%M")
-    
-    data_bitacora["capital_inicial"] = nuevo_capital
-    data_bitacora["ganancia_cerrada"] = 0.0
-    data_bitacora["posiciones"] = []
-    
-    if "historial_rendimiento" not in data_bitacora:
-        data_bitacora["historial_rendimiento"] = []
-    data_bitacora["historial_rendimiento"].append({"Fecha": fecha_hoy, "Capital": nuevo_capital})
-
-    data_bitacora["peak_flotante"] = 0.0
-    guardar_bitacora(data_bitacora)
+    ejecutar_cierre_jornada(data_bitacora, nuevo_capital)
     st.rerun()
 
 col1, col2, col3, col4 = st.columns(4)
@@ -231,19 +238,8 @@ if st.sidebar.button("🔴 Cierre Manual de Jornada"):
     if data_bitacora.get("posiciones"):
         ganancia_del_dia = total_flotante + ganancia_cerrada
         nuevo_capital = round(capital_base + ganancia_del_dia, 2)
-        fecha_hoy = datetime.now().strftime("%d/%m/%Y %H:%M")
 
-        # TRASPASO CLAVE: El saldo final pasa a ser el nuevo capital inicial compuesto
-        data_bitacora["capital_inicial"] = nuevo_capital
-        data_bitacora["ganancia_cerrada"] = 0.0
-        data_bitacora["posiciones"] = []
-        data_bitacora["peak_flotante"] = 0.0
-
-        if "historial_rendimiento" not in data_bitacora:
-            data_bitacora["historial_rendimiento"] = []
-        data_bitacora["historial_rendimiento"].append({"Fecha": fecha_hoy, "Capital": nuevo_capital})
-
-        guardar_bitacora(data_bitacora)
+        ejecutar_cierre_jornada(data_bitacora, nuevo_capital)
         st.sidebar.success(f"¡Jornada cerrada! Capital acumulado actualizado a ${nuevo_capital:,.2f} USD")
         st.rerun()
     else:
