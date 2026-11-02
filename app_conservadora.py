@@ -16,7 +16,7 @@ st.set_page_config(
 BITACORA_VALORIS = "bitacora_valoris.json"
 
 def cargar_bitacora_valoris():
-    """Lee rigurosamente el archivo JSON físico y asegura la presencia de los puntos base históricos."""
+    """Lee rigurosamente el archivo JSON físico y asegura la presencia limpia de los puntos base históricos."""
     base_defaults = [
         {"Fecha": "28/10/2026", "Capital": 10402.48},
         {"Fecha": "30/10/2026", "Capital": 10402.00},
@@ -34,20 +34,24 @@ def cargar_bitacora_valoris():
                     contenido.setdefault("peak_flotante", 0.0)
                     contenido.setdefault("historial_alertas", [])
                     
-                    # Asegurar o fusionar los puntos base históricos si faltan en el JSON físico
                     historial = contenido.get("historial_rendimiento", [])
-                    fechas_existentes = [h.get("Fecha") for h in historial]
                     
+                    # Limpiar entradas duplicadas o con horas y asegurar puntos base
+                    historial_limpio = {}
                     for base in base_defaults:
-                        if base["Fecha"] not in fechas_existentes:
-                            historial.insert(0, base)
+                        historial_limpio[base["Fecha"]] = base["Capital"]
+                        
+                    for h in historial:
+                        f_limpia = str(h.get("Fecha", "")).split(" ")[0]
+                        if f_limpia:
+                            historial_limpio[f_limpia] = float(h.get("Capital", 0.0))
                             
-                    contenido["historial_rendimiento"] = historial
+                    nuevo_historial = [{"Fecha": k, "Capital": v} for k, v in historial_limpio.items()]
+                    contenido["historial_rendimiento"] = nuevo_historial
                     return contenido
         except Exception:
             pass
 
-    # Estructura inicial por defecto si el archivo no existiera
     base_data = {
         "capital_inicial": 10452.79,
         "ganancia_cerrada": 0.0,
@@ -66,11 +70,10 @@ def guardar_bitacora_valoris(data):
         json.dump(data, f, indent=4, ensure_ascii=False)
 
 def ejecutar_cierre_jornada_valoris(capital_final):
-    """Función blindada: lee directo de disco, añade el cierre al historial acumulando y actualiza el capital."""
+    """Función blindada: guarda estrictamente la fecha en formato DD/MM/YYYY sin horas y sin duplicados."""
     fecha_actual = datetime.now().strftime("%d/%m/%Y")
     capital_redondeado = round(float(capital_final), 2)
 
-    # 1. Leer directamente el archivo actual en disco para asegurar que tenemos todo el historial previo
     if os.path.exists(BITACORA_VALORIS):
         try:
             with open(BITACORA_VALORIS, "r", encoding="utf-8") as f:
@@ -80,18 +83,12 @@ def ejecutar_cierre_jornada_valoris(capital_final):
     else:
         datos_actuales = {}
 
-    # 2. Recuperar el historial previo y añadir el nuevo cierre al final
-    historial = datos_actuales.get("historial_rendimiento", [
-        {"Fecha": "28/10/2026", "Capital": 10402.48},
-        {"Fecha": "30/10/2026", "Capital": 10402.00},
-        {"Fecha": "02/11/2026", "Capital": 10452.79}
-    ])
+    historial = datos_actuales.get("historial_rendimiento", [])
     
-    # Evitar duplicar la misma fecha exacta si se presiona varias veces el cierre el mismo día
-    historial = [h for h in historial if h.get("Fecha") != fecha_actual]
+    # Filtrar cualquier registro previo de la misma fecha exacta para actualizarlo sin duplicar
+    historial = [h for h in historial if str(h.get("Fecha", "")).split(" ")[0] != fecha_actual]
     historial.append({"Fecha": fecha_actual, "Capital": capital_redondeado})
 
-    # 3. Construir la estructura completa actualizada (el capital inicial para mañana será este cierre)
     nuevo_estado = {
         "capital_inicial": capital_redondeado,
         "ganancia_cerrada": 0.0,
@@ -101,7 +98,6 @@ def ejecutar_cierre_jornada_valoris(capital_final):
         "historial_rendimiento": historial
     }
 
-    # 4. Guardar rigurosamente en disco
     with open(BITACORA_VALORIS, "w", encoding="utf-8") as f:
         json.dump(nuevo_estado, f, indent=4, ensure_ascii=False)
 
@@ -329,12 +325,13 @@ historial = data_bitacora.get("historial_rendimiento", [])
 if historial:
     df_hist = pd.DataFrame(historial)
     if "Fecha" in df_hist.columns and "Capital" in df_hist.columns:
-        # Ordenar del más reciente al más antiguo y tomar los últimos 14 registros
-        df_hist["Fecha_obj"] = pd.to_datetime(df_hist["Fecha"], format="%d/%m/%Y", errors="coerce")
-        df_hist = df_hist.sort_values(by="Fecha_obj", ascending=False).drop(columns=["Fecha_obj"])
+        df_hist["Fecha_limpia"] = df_hist["Fecha"].astype(str).str.split(" ").str[0]
+        df_hist["Fecha_obj"] = pd.to_datetime(df_hist["Fecha_limpia"], format="%d/%m/%Y", errors="coerce")
         
-        # Mostrar tabla limpia con formato de moneda en USD
-        df_hist["Capital"] = df_hist["Capital"].apply(lambda x: f"${x:,.2f} USD")
+        df_hist = df_hist.sort_values(by="Fecha_obj", ascending=False).drop(columns=["Fecha_obj", "Fecha"]).rename(columns={"Fecha_limpia": "Fecha"})
+        
+        df_hist = df_hist[["Fecha", "Capital"]]
+        df_hist["Capital"] = df_hist["Capital"].apply(lambda x: f"${float(x):,.2f} USD")
         st.dataframe(df_hist.head(14), use_container_width=True, hide_index=True)
     else:
         df_hist = pd.DataFrame(historial)
