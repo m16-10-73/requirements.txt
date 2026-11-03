@@ -15,13 +15,12 @@ st.set_page_config(
 # Autorefresco nativo robusto cada 30 segundos
 st.markdown('<meta http-equiv="refresh" content="30">', unsafe_allow_html=True)
 
-# Estilos CSS: Corrección de margen superior y contraste móvil
+# Estilos CSS: Margen superior ajustado a cero y contraste móvil optimizado
 st.markdown(
     """
     <style>
-    /* Eliminar el espacio superior excesivo en Streamlit tanto en PC como en móvil */
     .block-container {
-        padding-top: 1rem !important;
+        padding-top: 0.5rem !important;
         padding-bottom: 1rem !important;
     }
     .stApp {
@@ -78,7 +77,7 @@ NUM_ACTIVOS = 3
 STOP_LOSS_INDIVIDUAL_PCT = -0.75
 
 def cargar_bitacora():
-    """Lee el JSON físico asegurando el historial con el cierre de hoy incorporado."""
+    """Lee el JSON físico y sincroniza rigurosamente el capital inicial con el último cierre registrado."""
     historial_base = [
         {"Fecha": "30/10/2026", "Capital": 10600.0},
         {"Fecha": "02/11/2026", "Capital": 10582.99},
@@ -90,7 +89,6 @@ def cargar_bitacora():
             with open(BITACORA_FILE, "r", encoding="utf-8") as f:
                 contenido = json.load(f)
                 if isinstance(contenido, dict):
-                    contenido.setdefault("capital_inicial", 10609.01)
                     contenido.setdefault("ganancia_cerrada", 0.0)
                     contenido.setdefault("posiciones", [])
                     contenido.setdefault("peak_flotante", 0.0)
@@ -105,10 +103,24 @@ def cargar_bitacora():
                             historial.append(base)
                             
                     contenido["historial_rendimiento"] = historial
+
+                    # REGLA CLAVE RESTAURADA: El capital inicial toma por defecto el último cierre del historial
+                    if historial:
+                        # Ordenar por fecha para asegurar que tomamos el más reciente
+                        try:
+                            historial_ordenado = sorted(historial, key=lambda x: datetime.strptime(x["Fecha"], "%d/%m/%Y"))
+                            ultimo_registro = historial_ordenado[-1]
+                            contenido["capital_inicial"] = float(ultimo_registro["Capital"])
+                        except Exception:
+                            contenido["capital_inicial"] = float(historial[-1].get("Capital", 10609.01))
+                    else:
+                        contenido.setdefault("capital_inicial", 10609.01)
+
                     return contenido
         except Exception:
             pass
 
+    # Estructura por defecto si no existe el archivo
     base_data = {
         "capital_inicial": 10609.01,
         "ganancia_cerrada": 0.0,
