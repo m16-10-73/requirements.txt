@@ -12,7 +12,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# Estilos CSS
+# Estilos CSS con corrección de contraste para dispositivos móviles y métricas
 st.markdown(
     """
     <style>
@@ -40,10 +40,24 @@ st.markdown(
         margin-bottom: 0;
         font-size: 0.82rem;
     }
+    /* Mejora de contraste y visibilidad en móvil para las métricas y sus etiquetas */
     [data-testid="stMetricValue"] {
         font-size: 1.6rem !important;
         font-weight: bold;
-        color: #11998e;
+        color: #0d6efd !important;
+    }
+    [data-testid="stMetricLabel"] {
+        color: #333333 !important;
+        font-weight: 600 !important;
+    }
+    [data-testid="stMetricDelta"] {
+        background-color: #e8f5e9 !important;
+        padding: 2px 6px !important;
+        border-radius: 4px !important;
+    }
+    [data-testid="stMetricDelta"] > div {
+        color: #2e7d32 !important;
+        font-weight: 600 !important;
     }
     </style>
 """,
@@ -81,8 +95,8 @@ def cargar_bitacora():
                     contenido.setdefault("posiciones", [])
                     contenido.setdefault("peak_flotante", 0.0)
                     contenido.setdefault("historial_alertas", [])
+                    contenido.setdefault("ultimo_cierre_automatico", "")
                     
-                    # Asegurar o fusionar los puntos base históricos si faltan en el JSON físico
                     historial = contenido.get("historial_rendimiento", [])
                     fechas_existentes = [h.get("Fecha") for h in historial]
                     
@@ -95,13 +109,13 @@ def cargar_bitacora():
         except Exception:
             pass
 
-    # Estructura inicial por defecto si el archivo no existiera
     base_data = {
         "capital_inicial": 10582.99,
         "ganancia_cerrada": 0.0,
         "posiciones": [],
         "peak_flotante": 0.0,
         "historial_alertas": [],
+        "ultimo_cierre_automatico": "",
         "historial_rendimiento": base_defaults,
     }
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
@@ -113,12 +127,11 @@ def guardar_bitacora(data):
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
-def ejecutar_cierre_jornada(capital_final):
-    """Función blindada: lee directo de disco, añade el cierre al historial acumulando y actualiza el capital."""
+def ejecutar_cierre_jornada(capital_final, origen="manual"):
+    """Función blindada: realiza el cierre de jornada, actualiza historial y registra la fecha."""
     fecha_actual = datetime.now().strftime("%d/%m/%Y")
     capital_redondeado = round(float(capital_final), 2)
 
-    # 1. Leer directamente el archivo actual en disco para asegurar que tenemos todo el historial previo
     if os.path.exists(BITACORA_FILE):
         try:
             with open(BITACORA_FILE, "r", encoding="utf-8") as f:
@@ -128,27 +141,24 @@ def ejecutar_cierre_jornada(capital_final):
     else:
         datos_actuales = {}
 
-    # 2. Recuperar el historial previo y añadir el nuevo cierre al final
     historial = datos_actuales.get("historial_rendimiento", [
         {"Fecha": "30/10/2026", "Capital": 10600.0},
         {"Fecha": "02/11/2026", "Capital": 10582.99}
     ])
     
-    # Evitar duplicar la misma fecha exacta si se presiona varias veces el cierre el mismo día
     historial = [h for h in historial if h.get("Fecha") != fecha_actual]
     historial.append({"Fecha": fecha_actual, "Capital": capital_redondeado})
 
-    # 3. Construir la estructura completa actualizada (el capital inicial para mañana será este cierre)
     nuevo_estado = {
         "capital_inicial": capital_redondeado,
         "ganancia_cerrada": 0.0,
         "posiciones": [],
         "peak_flotante": 0.0,
         "historial_alertas": datos_actuales.get("historial_alertas", []),
+        "ultimo_cierre_automatico": fecha_actual if origen == "automatico" else datos_actuales.get("ultimo_cierre_automatico", ""),
         "historial_rendimiento": historial
     }
 
-    # 4. Guardar rigurosamente en disco
     with open(BITACORA_FILE, "w", encoding="utf-8") as f:
         json.dump(nuevo_estado, f, indent=4, ensure_ascii=False)
 
@@ -232,10 +242,21 @@ else:
 umbral_calculado = peak_actual - trailing_tolerance_pct
 umbral_salida = max(umbral_calculado, meta_diaria_pct)
 
-# Cierre automático por Trailing Stop Global
+# 1. Cierre automático por Trailing Stop Global
 if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posiciones_procesadas) > 0:
     nuevo_capital = round(capital_base + total_flotante + ganancia_cerrada, 2)
-    ejecutar_cierre_jornada(nuevo_capital)
+    ejecutar_cierre_jornada(nuevo_capital, origen="automatico")
+    st.rerun()
+
+# 2. Cierre automático por Horario (17:00 hrs) si hay posiciones abiertas y no se ha cerrado hoy
+hora_actual_str = datetime.now().strftime("%H:%M")
+fecha_hoy_str = datetime.now().strftime("%d/%m/%Y")
+ultimo_auto = data_bitacora.get("ultimo_cierre_automatico", "")
+
+if hora_actual_str >= "17:00" and len(posiciones_procesadas) > 0 and ultimo_auto != fecha_hoy_str:
+    nuevo_capital = round(capital_base + total_flotante + ganancia_cerrada, 2)
+    ejecutar_cierre_jornada(nuevo_capital, origen="automatico")
+    st.success(f"⏰ [Cierre Automático 17:00] Jornada cerrada con éxito. Capital acumulado: ${nuevo_capital:,.2f} USD")
     st.rerun()
 
 col1, col2, col3, col4 = st.columns(4)
@@ -274,8 +295,11 @@ if st.sidebar.button("🔴 Cierre Manual de Jornada"):
         ganancia_del_dia = total_flotante + ganancia_cerrada
         nuevo_capital = round(capital_base + ganancia_del_dia, 2)
 
-        ejecutar_cierre_jornada(nuevo_capital)
-        st.sidebar.success(f"¡Jornada cerrada! Capital acumulado actualizado a ${nuevo_capital:,.2f} USD")
+        ejecutar_cierre_jornada(nuevo_capital, origen="manual")
+        
+        # Texto resumen de confirmación recuperado en pantalla
+        st.success(f"✅ **¡Cierre Manual Exitoso!** Jornada cerrada correctamente. El capital acumulado se ha actualizado a **${nuevo_capital:,.2f} USD** y servirá como base inicial para la siguiente sesión.")
+        time.sleep(1.5)
         st.rerun()
     else:
         st.sidebar.warning("No hay posiciones abiertas para cerrar.")
@@ -293,11 +317,9 @@ historial = data_bitacora.get("historial_rendimiento", [])
 if historial:
     df_hist = pd.DataFrame(historial)
     if "Fecha" in df_hist.columns and "Capital" in df_hist.columns:
-        # Ordenar del más reciente al más antiguo y tomar los últimos 14 registros
         df_hist["Fecha_obj"] = pd.to_datetime(df_hist["Fecha"], format="%d/%m/%Y", errors="coerce")
         df_hist = df_hist.sort_values(by="Fecha_obj", ascending=False).drop(columns=["Fecha_obj"])
         
-        # Mostrar tabla limpia con formato de moneda en USD
         df_hist["Capital"] = df_hist["Capital"].apply(lambda x: f"${x:,.2f} USD")
         st.dataframe(df_hist.head(14), use_container_width=True, hide_index=True)
     else:
