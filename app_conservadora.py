@@ -12,15 +12,19 @@ st.set_page_config(
     layout="wide",
 )
 
+# Autorefresco nativo cada 30 segundos
+st.markdown('<meta http-equiv="refresh" content="30">', unsafe_allow_html=True)
+
 # Nombre exacto del archivo JSON de bitácora para Valoris
 BITACORA_VALORIS = "bitacora_valoris.json"
 
 def cargar_bitacora_valoris():
-    """Lee rigurosamente el archivo JSON físico y asegura la presencia limpia de los puntos base históricos."""
+    """Lee rigurosamente el archivo JSON físico asegurando el historial con el cierre de hoy (10,207.20) y sincronización de capital."""
     base_defaults = [
         {"Fecha": "28/10/2026", "Capital": 10402.48},
         {"Fecha": "30/10/2026", "Capital": 10402.00},
-        {"Fecha": "02/11/2026", "Capital": 10452.79}
+        {"Fecha": "02/11/2026", "Capital": 10452.79},
+        {"Fecha": "03/11/2026", "Capital": 10207.20}
     ]
     
     if os.path.exists(BITACORA_VALORIS):
@@ -28,15 +32,15 @@ def cargar_bitacora_valoris():
             with open(BITACORA_VALORIS, "r", encoding="utf-8") as f:
                 contenido = json.load(f)
                 if isinstance(contenido, dict):
-                    contenido.setdefault("capital_inicial", 10452.79)
                     contenido.setdefault("ganancia_cerrada", 0.0)
                     contenido.setdefault("posiciones", [])
                     contenido.setdefault("peak_flotante", 0.0)
                     contenido.setdefault("historial_alertas", [])
+                    contenido.setdefault("ultimo_cierre_automatico", "")
                     
                     historial = contenido.get("historial_rendimiento", [])
                     
-                    # Limpiar entradas duplicadas o con horas y asegurar puntos base
+                    # Limpiar entradas y asegurar puntos base históricos + hoy
                     historial_limpio = {}
                     for base in base_defaults:
                         historial_limpio[base["Fecha"]] = base["Capital"]
@@ -48,16 +52,29 @@ def cargar_bitacora_valoris():
                             
                     nuevo_historial = [{"Fecha": k, "Capital": v} for k, v in historial_limpio.items()]
                     contenido["historial_rendimiento"] = nuevo_historial
+
+                    # Sincronización automática del capital inicial con el último cierre
+                    if nuevo_historial:
+                        try:
+                            historial_ordenado = sorted(nuevo_historial, key=lambda x: datetime.strptime(x["Fecha"], "%d/%m/%Y"))
+                            ultimo_registro = historial_ordenado[-1]
+                            contenido["capital_inicial"] = float(ultimo_registro["Capital"])
+                        except Exception:
+                            contenido["capital_inicial"] = float(nuevo_historial[-1].get("Capital", 10207.20))
+                    else:
+                        contenido.setdefault("capital_inicial", 10207.20)
+
                     return contenido
         except Exception:
             pass
 
     base_data = {
-        "capital_inicial": 10452.79,
+        "capital_inicial": 10207.20,
         "ganancia_cerrada": 0.0,
         "posiciones": [],
         "peak_flotante": 0.0,
         "historial_alertas": [],
+        "ultimo_cierre_automatico": "",
         "historial_rendimiento": base_defaults,
     }
     with open(BITACORA_VALORIS, "w", encoding="utf-8") as f:
@@ -69,8 +86,8 @@ def guardar_bitacora_valoris(data):
     with open(BITACORA_VALORIS, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
-def ejecutar_cierre_jornada_valoris(capital_final):
-    """Función blindada: guarda estrictamente la fecha en formato DD/MM/YYYY sin horas y sin duplicados."""
+def ejecutar_cierre_jornada_valoris(capital_final, origen="manual"):
+    """Función blindada: guarda estrictamente la fecha en formato DD/MM/YYYY sin duplicados y actualiza el capital inicial."""
     fecha_actual = datetime.now().strftime("%d/%m/%Y")
     capital_redondeado = round(float(capital_final), 2)
 
@@ -95,6 +112,7 @@ def ejecutar_cierre_jornada_valoris(capital_final):
         "posiciones": [],
         "peak_flotante": 0.0,
         "historial_alertas": datos_actuales.get("historial_alertas", []),
+        "ultimo_cierre_automatico": fecha_actual if origen == "automatico" else datos_actuales.get("ultimo_cierre_automatico", ""),
         "historial_rendimiento": historial
     }
 
@@ -103,10 +121,14 @@ def ejecutar_cierre_jornada_valoris(capital_final):
 
 data_bitacora = cargar_bitacora_valoris()
 
-# Estilos CSS
+# Estilos CSS con margen superior ajustado y contraste móvil
 st.markdown(
     """
     <style>
+    .block-container {
+        padding-top: 0.5rem !important;
+        padding-bottom: 1rem !important;
+    }
     .stApp {
         background-color: #f8f9fa;
     }
@@ -140,13 +162,6 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
-
-# Autorefresco cada 30 segundos
-try:
-    from streamlit_autorefresh import st_autorefresh
-    st_autorefresh(interval=30000, limit=10000, key="auto_valoris")
-except ImportError:
-    pass
 
 MARKET_CAP_MINIMO_USD = 15_000_000_000
 
@@ -246,7 +261,7 @@ if hubo_cierre_individual:
     guardar_bitacora_valoris(data_bitacora)
     st.rerun()
 
-capital_base = float(data_bitacora.get("capital_inicial", 10452.79))
+capital_base = float(data_bitacora.get("capital_inicial", 10207.20))
 ganancia_cerrada = float(data_bitacora.get("ganancia_cerrada", 0.0))
 
 flotante_pct = (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
@@ -267,7 +282,18 @@ umbral_salida = max(umbral_calculado, meta_diaria_pct)
 # Cierre automático por Trailing Stop Global
 if peak_actual >= meta_diaria_pct and flotante_pct <= umbral_salida and len(posiciones_procesadas) > 0:
     nuevo_capital = round(capital_base + total_flotante + ganancia_cerrada, 2)
-    ejecutar_cierre_jornada_valoris(nuevo_capital)
+    ejecutar_cierre_jornada_valoris(nuevo_capital, origen="automatico")
+    st.rerun()
+
+# Cierre automático por Horario (17:00 hrs)
+hora_actual_str = datetime.now().strftime("%H:%M")
+fecha_hoy_str = datetime.now().strftime("%d/%m/%Y")
+ultimo_auto = data_bitacora.get("ultimo_cierre_automatico", "")
+
+if hora_actual_str >= "17:00" and len(posiciones_procesadas) > 0 and ultimo_auto != fecha_hoy_str:
+    nuevo_capital = round(capital_base + total_flotante + ganancia_cerrada, 2)
+    ejecutar_cierre_jornada_valoris(nuevo_capital, origen="automatico")
+    st.success(f"⏰ [Cierre Automático 17:00] Jornada cerrada. Capital acumulado: ${nuevo_capital:,.2f} USD")
     st.rerun()
 
 col1, col2, col3, col4 = st.columns(4)
@@ -306,8 +332,10 @@ if st.sidebar.button("🔴 Cierre Manual de Jornada"):
         ganancia_del_dia = total_flotante + ganancia_cerrada
         nuevo_capital = round(capital_base + ganancia_del_dia, 2)
 
-        ejecutar_cierre_jornada_valoris(nuevo_capital)
-        st.sidebar.success(f"¡Jornada cerrada! Saldo base acumulado actualizado a ${nuevo_capital:,.2f} USD")
+        ejecutar_cierre_jornada_valoris(nuevo_capital, origen="manual")
+        
+        st.success(f"✅ **¡Cierre Manual Exitoso!** Capital acumulado actualizado a **${nuevo_capital:,.2f} USD** como base inicial para la siguiente sesión.")
+        time.sleep(1.5)
         st.rerun()
     else:
         st.sidebar.warning("No hay posiciones abiertas para cerrar.")
