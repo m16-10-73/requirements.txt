@@ -81,7 +81,8 @@ def cargar_bitacora():
     historial_base = [
         {"Fecha": "30/10/2026", "Capital": 10600.0},
         {"Fecha": "02/11/2026", "Capital": 10582.99},
-        {"Fecha": "03/11/2026", "Capital": 10609.01}
+        {"Fecha": "03/11/2026", "Capital": 10609.01},
+        {"Fecha": "04/11/2026", "Capital": 11229.17}
     ]
     
     if os.path.exists(BITACORA_FILE):
@@ -106,15 +107,14 @@ def cargar_bitacora():
 
                     # REGLA CLAVE RESTAURADA: El capital inicial toma por defecto el último cierre del historial
                     if historial:
-                        # Ordenar por fecha para asegurar que tomamos el más reciente
                         try:
                             historial_ordenado = sorted(historial, key=lambda x: datetime.strptime(x["Fecha"], "%d/%m/%Y"))
                             ultimo_registro = historial_ordenado[-1]
                             contenido["capital_inicial"] = float(ultimo_registro["Capital"])
                         except Exception:
-                            contenido["capital_inicial"] = float(historial[-1].get("Capital", 10609.01))
+                            contenido["capital_inicial"] = float(historial[-1].get("Capital", 11229.17))
                     else:
-                        contenido.setdefault("capital_inicial", 10609.01)
+                        contenido.setdefault("capital_inicial", 11229.17)
 
                     return contenido
         except Exception:
@@ -122,7 +122,7 @@ def cargar_bitacora():
 
     # Estructura por defecto si no existe el archivo
     base_data = {
-        "capital_inicial": 10609.01,
+        "capital_inicial": 11229.17,
         "ganancia_cerrada": 0.0,
         "posiciones": [],
         "peak_flotante": 0.0,
@@ -230,7 +230,7 @@ if hubo_cierre_individual:
     guardar_bitacora(data_bitacora)
     st.rerun()
 
-capital_base = float(data_bitacora.get("capital_inicial", 10609.01))
+capital_base = float(data_bitacora.get("capital_inicial", 11229.17))
 ganancia_cerrada = float(data_bitacora.get("ganancia_cerrada", 0.0))
 
 flotante_pct = (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
