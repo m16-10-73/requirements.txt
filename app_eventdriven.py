@@ -19,13 +19,14 @@ st.markdown('<meta http-equiv="refresh" content="30">', unsafe_allow_html=True)
 BITACORA_EVENTOS = "bitacora_eventos.json"
 
 def cargar_bitacora_eventos():
-    """Lee rigurosamente el archivo JSON físico asegurando la presencia del cierre de hoy (10,552.58) y sincronización de capital."""
+    """Lee rigurosamente el archivo JSON físico asegurando la presencia del cierre real y sincronización de capital."""
     base_defaults = [
         {"Fecha": "28/10/2026", "Capital": 10000.00},
         {"Fecha": "29/10/2026", "Capital": 10247.23},
         {"Fecha": "30/10/2026", "Capital": 10590.01},
         {"Fecha": "02/11/2026", "Capital": 10555.68},
-        {"Fecha": "03/11/2026", "Capital": 10552.58}
+        {"Fecha": "03/11/2026", "Capital": 10552.58},
+        {"Fecha": "04/11/2026", "Capital": 10679.16}
     ]
     
     if os.path.exists(BITACORA_EVENTOS):
@@ -61,16 +62,16 @@ def cargar_bitacora_eventos():
                             ultimo_registro = historial_ordenado[-1]
                             contenido["capital_inicial"] = float(ultimo_registro["Capital"])
                         except Exception:
-                            contenido["capital_inicial"] = float(nuevo_historial[-1].get("Capital", 10552.58))
+                            contenido["capital_inicial"] = float(nuevo_historial[-1].get("Capital", 10679.16))
                     else:
-                        contenido.setdefault("capital_inicial", 10552.58)
+                        contenido.setdefault("capital_inicial", 10679.16)
 
                     return contenido
         except Exception:
             pass
 
     base_data = {
-        "capital_inicial": 10552.58,
+        "capital_inicial": 10679.16,
         "ganancia_cerrada": 0.0,
         "posiciones": [],
         "peak_flotante": 0.0,
@@ -88,7 +89,7 @@ def guardar_bitacora_eventos(data):
         json.dump(data, f, indent=4, ensure_ascii=False)
 
 def ejecutar_cierre_jornada_eventos(capital_final, origen="manual"):
-    """Función blindada: guarda strictly la fecha en formato DD/MM/YYYY sin duplicados y actualiza el capital inicial."""
+    """Función blindada: guarda estrictamente la fecha en formato DD/MM/YYYY sin duplicados y actualiza el capital inicial."""
     fecha_actual = datetime.now().strftime("%d/%m/%Y")
     capital_redondeado = round(float(capital_final), 2)
 
@@ -255,7 +256,7 @@ if hubo_cierre_individual:
     guardar_bitacora_eventos(data_bitacora)
     st.rerun()
 
-capital_base = float(data_bitacora.get("capital_inicial", 10552.58))
+capital_base = float(data_bitacora.get("capital_inicial", 10679.16))
 ganancia_cerrada = float(data_bitacora.get("ganancia_cerrada", 0.0))
 
 flotante_pct = (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
@@ -347,17 +348,33 @@ historial = data_bitacora.get("historial_rendimiento", [])
 if historial:
     df_hist = pd.DataFrame(historial)
     if "Fecha" in df_hist.columns and "Capital" in df_hist.columns:
+        # Parsear fechas y ordenar cronológicamente para calcular porcentajes correctamente
         df_hist["Fecha_limpia"] = df_hist["Fecha"].astype(str).str.split(" ").str[0]
         df_hist["Fecha_obj"] = pd.to_datetime(df_hist["Fecha_limpia"], format="%d/%m/%Y", errors="coerce")
-        
-        df_hist = df_hist.sort_values(by="Fecha_obj", ascending=False).drop(columns=["Fecha_obj", "Fecha"]).rename(columns={"Fecha_limpia": "Fecha"})
-        
-        df_hist = df_hist[["Fecha", "Capital"]]
-        df_hist["Capital"] = df_hist["Capital"].apply(lambda x: f"${float(x):,.2f} USD")
-        st.dataframe(df_hist.head(14), use_container_width=True, hide_index=True)
+        df_hist = df_hist.sort_values(by="Fecha_obj", ascending=True).reset_index(drop=True)
+
+        # Base inicial para cálculo acumulado (tomada del primer registro)
+        capital_inicial_base = float(df_hist["Capital"].iloc[0]) if len(df_hist) > 0 else 10000.0
+
+        # Cálculo de Índices (%)
+        df_hist["Rent_Diaria_Pct"] = df_hist["Capital"].pct_change() * 100.0
+        df_hist["Rent_Diaria_Pct"] = df_hist["Rent_Diaria_Pct"].fillna(0.0)
+        df_hist["Rent_Acumulada_Pct"] = ((df_hist["Capital"] - capital_inicial_base) / capital_inicial_base) * 100.0
+
+        # Formato visual
+        df_hist["Rent. Diaria"] = df_hist["Rent_Diaria_Pct"].apply(lambda x: f"{'+' if x >= 0 else ''}{x:.2f}%")
+        df_hist["Rent. Acumulada"] = df_hist["Rent_Acumulada_Pct"].apply(lambda x: f"{'+' if x >= 0 else ''}{x:.2f}%")
+        df_hist["Capital_USD"] = df_hist["Capital"].apply(lambda x: f"${float(x):,.2f} USD")
+
+        # Reordenar para presentar primero el registro más reciente
+        df_mostrar = df_hist.sort_values(by="Fecha_obj", ascending=False).copy()
+        df_mostrar = df_mostrar[["Fecha_limpia", "Capital_USD", "Rent. Diaria", "Rent. Acumulada"]].rename(
+            columns={"Fecha_limpia": "Fecha", "Capital_USD": "Capital"}
+        )
+
+        st.dataframe(df_mostrar.head(14), use_container_width=True, hide_index=True)
     else:
         df_hist = pd.DataFrame(historial)
         st.dataframe(df_hist.tail(14), use_container_width=True)
 else:
-    st.info("Aún no hay registros para mostrar la evolución.")
     st.info("Aún no hay registros para mostrar la evolución.")
