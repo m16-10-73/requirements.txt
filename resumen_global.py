@@ -52,7 +52,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Orden exacto solicitado: Dinámica, Valoris, Emergente, Eventos
 archivos_bots = [
     {"Nombre": "Bot Dinámico", "Archivo": "bitacora_dinamica.json"},
     {"Nombre": "Bot Valoris", "Archivo": "bitacora.valoris.json"},
@@ -61,6 +60,7 @@ archivos_bots = [
 ]
 
 resumen_datos = []
+debug_info = {}
 
 for bot in archivos_bots:
     nombre = bot["Nombre"]
@@ -68,45 +68,44 @@ for bot in archivos_bots:
     
     capital_inicial = 10000.0
     capital_actual = 10000.0
+    origen_logica = "Por defecto"
     
     if os.path.exists(archivo):
         try:
             with open(archivo, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 
-                # 1. Obtener capital inicial de la raíz con respaldo genérico
-                for key in ["capital_inicial", "capital_base", "initial_capital"]:
-                    if key in data:
-                        capital_inicial = float(data[key])
-                        break
+                # Detectar estructura basada en claves raíz e historial
+                tiene_capital_raiz = "capital_inicial" in data
+                historial = data.get("historial_rendimiento", [])
                 
-                # 2. Obtener historial o registros de rendimiento
-                historial = None
-                for h_key in ["historial_rendimiento", "historial", "history", "rendimiento"]:
-                    if h_key in data and isinstance(data[h_key], list) and len(data[h_key]) > 0:
-                        historial = data[h_key]
-                        break
+                if tiene_capital_raiz:
+                    capital_inicial = float(data["capital_inicial"])
                 
-                if historial:
-                    # Extraer el valor del último registro del historial como capital actual
-                    ultimo_registro = historial[-1]
-                    for c_key in ["Capital", "capital", "capital_actual", "current_capital", "valor"]:
-                        if c_key in ultimo_registro:
-                            capital_actual = float(ultimo_registro[c_key])
+                if historial and isinstance(historial, list) and len(historial) > 0:
+                    # Si hay historial, el actual es el último registro
+                    ultimo_reg = historial[-1]
+                    for c_key in ["Capital", "capital", "capital_actual"]:
+                        if c_key in ultimo_reg:
+                            capital_actual = float(ultimo_reg[c_key])
                             break
+                    if not tiene_capital_raiz:
+                        # Si no hay capital inicial en raíz, tomamos el primer historial como base
+                        primer_reg = historial[0]
+                        for c_key in ["Capital", "capital"]:
+                            if c_key in primer_reg:
+                                capital_inicial = float(primer_reg[c_key])
+                                break
                 else:
-                    # Si no hay historial, buscar capital actual en la raíz
-                    for c_key in ["capital_actual", "current_capital", "capital_cierre"]:
-                        if c_key in data:
-                            capital_actual = float(data[c_key])
-                            break
+                    if "capital_actual" in data:
+                        capital_actual = float(data["capital_actual"])
                     else:
                         capital_actual = capital_inicial
                         
-        except Exception:
-            pass
+                origen_logica = f"Raíz init: {capital_inicial}, Historial len: {len(historial)}"
+        except Exception as e:
+            origen_logica = f"Error: {e}"
 
-    # Cálculo seguro de la rentabilidad
     if capital_inicial > 0:
         rentabilidad = ((capital_actual - capital_inicial) / capital_inicial) * 100.0
     else:
@@ -118,12 +117,17 @@ for bot in archivos_bots:
         "Capital Actual / Cierre": capital_actual,
         "Rentabilidad (%)": rentabilidad
     })
+    
+    debug_info[nombre] = origen_logica
 
 df_resumen = pd.DataFrame(resumen_datos)
 
-# Dar formato visual limpio a la tabla
 df_resumen["Capital Inicial / Base"] = df_resumen["Capital Inicial / Base"].apply(lambda x: f"${x:,.2f} USD")
 df_resumen["Capital Actual / Cierre"] = df_resumen["Capital Actual / Cierre"].apply(lambda x: f"${x:,.2f} USD")
 df_resumen["Rentabilidad (%)"] = df_resumen["Rentabilidad (%)"].apply(lambda x: f"{'+' if x >= 0 else ''}{x:.2f}%")
 
 st.dataframe(df_resumen, use_container_width=True, hide_index=True)
+
+# Panel de transparencia para ver cómo leyó cada archivo
+with st.expander("🔍 Ver diagnóstico de lectura de cada bitácora"):
+    st.json(debug_info)
