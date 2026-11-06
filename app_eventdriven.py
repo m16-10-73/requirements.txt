@@ -29,6 +29,19 @@ def cargar_bitacora_eventos():
         {"Fecha": "04/11/2026", "Capital": 10679.16}
     ]
     
+    def cargar_bitacora_eventos():
+    """Lee rigurosamente el archivo JSON físico asegurando el historial completo hasta el 06/11 y forzando la base de 10k."""
+    base_defaults = [
+        {"Fecha": "28/10/2026", "Capital": 10000.00},
+        {"Fecha": "29/10/2026", "Capital": 10247.23},
+        {"Fecha": "30/10/2026", "Capital": 10590.01},
+        {"Fecha": "02/11/2026", "Capital": 10555.68},
+        {"Fecha": "03/11/2026", "Capital": 10552.58},
+        {"Fecha": "04/11/2026", "Capital": 10679.16},
+        {"Fecha": "05/11/2026", "Capital": 10543.29},
+        {"Fecha": "06/11/2026", "Capital": 10580.06}
+    ]
+    
     if os.path.exists(BITACORA_EVENTOS):
         try:
             with open(BITACORA_EVENTOS, "r", encoding="utf-8") as f:
@@ -42,7 +55,6 @@ def cargar_bitacora_eventos():
                     
                     historial = contenido.get("historial_rendimiento", [])
                     
-                    # Limpiar entradas y asegurar puntos base históricos + hoy
                     historial_limpio = {}
                     for base in base_defaults:
                         historial_limpio[base["Fecha"]] = base["Capital"]
@@ -51,27 +63,29 @@ def cargar_bitacora_eventos():
                         f_limpia = str(h.get("Fecha", "")).split(" ")[0]
                         if f_limpia:
                             historial_limpio[f_limpia] = float(h.get("Capital", 0.0))
+                    
+                    # 🛡️ BLINDAJE OBLIGATORIO: Forzar que el 28/10/2026 sea estrictamente 10,000.00
+                    historial_limpio["28/10/2026"] = 10000.00
                             
                     nuevo_historial = [{"Fecha": k, "Capital": v} for k, v in historial_limpio.items()]
                     contenido["historial_rendimiento"] = nuevo_historial
 
-                    # Sincronización automática del capital inicial con el último cierre
                     if nuevo_historial:
                         try:
                             historial_ordenado = sorted(nuevo_historial, key=lambda x: datetime.strptime(x["Fecha"], "%d/%m/%Y"))
                             ultimo_registro = historial_ordenado[-1]
                             contenido["capital_inicial"] = float(ultimo_registro["Capital"])
                         except Exception:
-                            contenido["capital_inicial"] = float(nuevo_historial[-1].get("Capital", 10679.16))
+                            contenido["capital_inicial"] = float(nuevo_historial[-1].get("Capital", 10580.06))
                     else:
-                        contenido.setdefault("capital_inicial", 10679.16)
+                        contenido.setdefault("capital_inicial", 10580.06)
 
                     return contenido
         except Exception:
             pass
 
     base_data = {
-        "capital_inicial": 10679.16,
+        "capital_inicial": 10580.06,
         "ganancia_cerrada": 0.0,
         "posiciones": [],
         "peak_flotante": 0.0,
@@ -82,7 +96,6 @@ def cargar_bitacora_eventos():
     with open(BITACORA_EVENTOS, "w", encoding="utf-8") as f:
         json.dump(base_data, f, indent=4, ensure_ascii=False)
     return base_data
-
 def guardar_bitacora_eventos(data):
     """Sobrescribe el archivo JSON con el estado actualizado."""
     with open(BITACORA_EVENTOS, "w", encoding="utf-8") as f:
