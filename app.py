@@ -15,7 +15,7 @@ st.set_page_config(
 # Autorefresco nativo robusto cada 30 segundos
 st.markdown('<meta http-equiv="refresh" content="30">', unsafe_allow_html=True)
 
-# Estilos CSS: Margen superior ajustado a cero y contraste móvil optimizado
+# Estilos CSS corregidos para garantizar visibilidad total en móviles y evitar ocultar encabezados
 st.markdown(
     """
     <style>
@@ -28,24 +28,25 @@ st.markdown(
     }
     .dynamic-header {
         background: linear-gradient(135deg, #FF512F, #DD2476);
-        padding: 10px 15px;
+        padding: 12px 18px;
         border-radius: 10px;
-        color: white;
+        color: #ffffff !important;
         box-shadow: 0 3px 10px rgba(0,0,0,0.1);
         margin-bottom: 15px;
     }
     .dynamic-header h1 {
-        color: #ffffff;
+        color: #ffffff !important;
         font-family: 'Helvetica Neue', sans-serif;
         font-weight: 700;
         font-size: 1.25rem;
         margin: 0;
     }
     .dynamic-header p {
-        color: #f0f0f0;
+        color: #ffffff !important;
         margin-top: 3px;
         margin-bottom: 0;
         font-size: 0.82rem;
+        opacity: 0.9;
     }
     [data-testid="stMetricValue"] {
         font-size: 1.6rem !important;
@@ -105,7 +106,6 @@ def cargar_bitacora():
                             
                     contenido["historial_rendimiento"] = historial
 
-                    # REGLA CLAVE RESTAURADA: El capital inicial toma por defecto el último cierre del historial
                     if historial:
                         try:
                             historial_ordenado = sorted(historial, key=lambda x: datetime.strptime(x["Fecha"], "%d/%m/%Y"))
@@ -120,7 +120,6 @@ def cargar_bitacora():
         except Exception:
             pass
 
-    # Estructura por defecto si no existe el archivo
     base_data = {
         "capital_inicial": 11229.17,
         "ganancia_cerrada": 0.0,
@@ -178,6 +177,7 @@ st.sidebar.markdown("---")
 meta_diaria_pct = st.sidebar.slider("Meta Diaria (%)", min_value=0.5, max_value=10.0, value=3.0, step=0.05)
 trailing_tolerance_pct = st.sidebar.slider("Tolerancia Retroceso (%)", min_value=0.05, max_value=5.0, value=0.5, step=0.05)
 
+# Encabezado principal posicionado correctamente para evitar problemas de visualización en móviles
 st.markdown(
     """
     <div class="dynamic-header">
