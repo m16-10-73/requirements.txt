@@ -18,17 +18,6 @@ st.markdown('<meta http-equiv="refresh" content="30">', unsafe_allow_html=True)
 # Nombre exacto del archivo JSON de bitácora para Eventos
 BITACORA_EVENTOS = "bitacora_eventos.json"
 
-def cargar_bitacora_eventos():
-    """Lee rigurosamente el archivo JSON físico asegurando la presencia del cierre real y sincronización de capital."""
-    base_defaults = [
-        {"Fecha": "28/10/2026", "Capital": 10000.00},
-        {"Fecha": "29/10/2026", "Capital": 10247.23},
-        {"Fecha": "30/10/2026", "Capital": 10590.01},
-        {"Fecha": "02/11/2026", "Capital": 10555.68},
-        {"Fecha": "03/11/2026", "Capital": 10552.58},
-        {"Fecha": "04/11/2026", "Capital": 10679.16}
-    ]
-    
     def cargar_bitacora_eventos():
     """Lee rigurosamente el archivo JSON físico asegurando el historial completo hasta el 06/11 y forzando la base de 10k."""
     base_defaults = [
