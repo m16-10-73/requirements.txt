@@ -1,12 +1,38 @@
 {
-    "capital_inicial": 10582.99,
+    "capital_inicial": 11080.20,
     "ganancia_cerrada": 0.0,
     "posiciones": [],
     "peak_flotante": 0.0,
+    "historial_alertas": [],
+    "ultimo_cierre_automatico": "06/11/2026",
     "historial_rendimiento": [
         {
             "Fecha": "28/10/2026",
-            "Capital": 10000.0
+            "Capital": 10600.0
+        },
+        {
+            "Fecha": "30/10/2026",
+            "Capital": 10600.0
+        },
+        {
+            "Fecha": "02/11/2026",
+            "Capital": 10582.99
+        },
+        {
+            "Fecha": "03/11/2026",
+            "Capital": 10609.01
+        },
+        {
+            "Fecha": "04/11/2026",
+            "Capital": 11229.17
+        },
+        {
+            "Fecha": "05/11/2026",
+            "Capital": 11039.36
+        },
+        {
+            "Fecha": "06/11/2026",
+            "Capital": 11080.20
         }
     ]
 }
