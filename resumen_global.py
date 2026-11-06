@@ -52,12 +52,12 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Nombres exactos de las bitácoras según tu repositorio de GitHub
+# Definición de los bots ordenados exactamente como solicitaste
 archivos_bots = [
-    {"Nombre": "Bot Eventos", "Archivo": "bitacora_eventos.json"},
     {"Nombre": "Bot Dinámico", "Archivo": "bitacora_dinamica.json"},
     {"Nombre": "Bot Valoris", "Archivo": "bitacora.valoris.json"},
-    {"Nombre": "Bot Emergente", "Archivo": "bitacora_emerging.json"}
+    {"Nombre": "Bot Emergente", "Archivo": "bitacora_emerging.json"},
+    {"Nombre": "Bot Eventos", "Archivo": "bitacora_eventos.json"}
 ]
 
 resumen_datos = []
@@ -74,20 +74,17 @@ for bot in archivos_bots:
             with open(archivo, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 
-                historial = data.get("historial_rendimiento", [])
+                capital_inicial = float(data.get("capital_inicial", 10000.0))
                 
+                historial = data.get("historial_rendimiento", [])
                 if historial:
-                    # El capital inicial real es el primer registro del historial (o capital_inicial)
-                    capital_inicial = float(historial[0].get("Capital", data.get("capital_inicial", 10000.0)))
-                    # El capital actual es el último registro registrado
+                    capital_inicial = float(historial[0].get("Capital", capital_inicial))
                     capital_actual = float(historial[-1].get("Capital", capital_inicial))
                 else:
-                    capital_inicial = float(data.get("capital_inicial", 10000.0))
                     capital_actual = capital_inicial
         except Exception:
             pass
 
-    # Cálculo directo y matemáticamente exacto
     if capital_inicial > 0:
         rentabilidad = ((capital_actual - capital_inicial) / capital_inicial) * 100.0
     else:
@@ -102,7 +99,7 @@ for bot in archivos_bots:
 
 df_resumen = pd.DataFrame(resumen_datos)
 
-# Formato visual limpio
+# Formatear visualmente los números para la tabla
 df_resumen["Capital Inicial / Base"] = df_resumen["Capital Inicial / Base"].apply(lambda x: f"${x:,.2f} USD")
 df_resumen["Capital Actual / Cierre"] = df_resumen["Capital Actual / Cierre"].apply(lambda x: f"${x:,.2f} USD")
 df_resumen["Rentabilidad (%)"] = df_resumen["Rentabilidad (%)"].apply(lambda x: f"{'+' if x >= 0 else ''}{x:.2f}%")
