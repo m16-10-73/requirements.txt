@@ -86,15 +86,13 @@ for bot in archivos_bots:
                     historial = data["historial"]
                 
                 if historial and isinstance(historial, list) and len(historial) > 0:
-                    # Intentar extraer la clave 'Capital' o 'capital' del primer registro
-def_cap = lambda entry: float(entry.get("Capital", entry.get("capital", capital_inicial)))
+                    def_cap = lambda entry: float(entry.get("Capital", entry.get("capital", capital_inicial)))
                     capital_inicial = def_cap(historial[0])
                     capital_actual = def_cap(historial[-1])
                 else:
-                    # Si no hay historial, el actual es igual al inicial o busca en métricas
                     capital_actual = float(data.get("capital_actual", capital_inicial))
                     
-        except Exception as e:
+        except Exception:
             pass
 
     # Cálculo seguro de la rentabilidad porcentual
