@@ -45,14 +45,13 @@ st.markdown(
 st.markdown(
     """
     <div class="master-header">
-        <h1>📊 RESUMEN CONSOLIDADO — 4 BOTS DE TRADING</h1>
-        <p>Vista global de capitales iniciales, cierres y rendimiento actual de las estrategias</p>
+        <h1>📊 RESUMEN CONSOLIDADO — 4 BOTS</h1>
+        <p>Vista global de capitales y rendimiento actual</p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-# Orden exacto solicitado: Dinámica, Valoris, Emergente y Eventos
 archivos_bots = [
     {"Nombre": "Bot Dinámico", "Archivo": "bitacora_dinamica.json"},
     {"Nombre": "Bot Valoris", "Archivo": "bitacora.valoris.json"},
@@ -76,17 +75,14 @@ for bot in archivos_bots:
                 historial = data.get("historial_rendimiento", [])
                 
                 if historial and isinstance(historial, list) and len(historial) > 0:
-                    # El primer registro marca el capital inicial base y el último el actual
                     capital_inicial = float(historial[0].get("Capital", 10000.0))
                     capital_actual = float(historial[-1].get("Capital", capital_inicial))
                 else:
-                    # Respaldo por si faltara historial
                     capital_inicial = float(data.get("capital_inicial", 10000.0))
                     capital_actual = capital_inicial
         except Exception:
             pass
 
-    # Cálculo exacto de la rentabilidad porcentual
     if capital_inicial > 0:
         rentabilidad = ((capital_actual - capital_inicial) / capital_inicial) * 100.0
     else:
@@ -94,16 +90,16 @@ for bot in archivos_bots:
 
     resumen_datos.append({
         "Estrategia": nombre,
-        "Capital Inicial / Base": capital_inicial,
-        "Capital Actual / Cierre": capital_actual,
-        "Rentabilidad (%)": rentabilidad
+        "Cap. Inicial": capital_inicial,
+        "Cap. Actual": capital_actual,
+        "Rentab. (%)": rentabilidad
     })
 
 df_resumen = pd.DataFrame(resumen_datos)
 
-# Aplicar formato visual de moneda y porcentajes
-df_resumen["Capital Inicial / Base"] = df_resumen["Capital Inicial / Base"].apply(lambda x: f"${x:,.2f} USD")
-df_resumen["Capital Actual / Cierre"] = df_resumen["Capital Actual / Cierre"].apply(lambda x: f"${x:,.2f} USD")
-df_resumen["Rentabilidad (%)"] = df_resumen["Rentabilidad (%)"].apply(lambda x: f"{'+' if x >= 0 else ''}{x:.2f}%")
+# Formato compacto sin "USD"
+df_resumen["Cap. Inicial"] = df_resumen["Cap. Inicial"].apply(lambda x: f"${x:,.2f}")
+df_resumen["Cap. Actual"] = df_resumen["Cap. Actual"].apply(lambda x: f"${x:,.2f}")
+df_resumen["Rentab. (%)"] = df_resumen["Rentab. (%)"].apply(lambda x: f"{'+' if x >= 0 else ''}{x:.2f}%")
 
 st.dataframe(df_resumen, use_container_width=True, hide_index=True)
