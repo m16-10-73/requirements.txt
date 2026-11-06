@@ -1,6 +1,5 @@
 import os
 import json
-import pandas as pd
 import streamlit as st
 
 st.set_page_config(
@@ -13,29 +12,67 @@ st.markdown(
     """
     <style>
     .block-container {
-        padding-top: 1rem !important;
-        padding-bottom: 1rem !important;
+        padding-top: 0.8rem !important;
+        padding-bottom: 0.8rem !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
     }
     .stApp {
         background-color: #f8f9fa;
     }
     .master-header {
         background: linear-gradient(135deg, #2c3e50, #4ca1af);
-        padding: 12px 18px;
-        border-radius: 10px;
+        padding: 10px 14px;
+        border-radius: 8px;
         color: white;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        margin-bottom: 15px;
     }
     .master-header h1 {
         color: #ffffff;
-        font-size: 1.3rem;
+        font-size: 1.1rem;
         margin: 0;
     }
     .master-header p {
         color: #f0f0f0;
-        margin: 3px 0 0 0;
-        font-size: 0.85rem;
+        margin: 2px 0 0 0;
+        font-size: 0.75rem;
+    }
+    /* Estilo de tarjeta vertical optimizada para celular */
+    .bot-card {
+        background: white;
+        border-radius: 8px;
+        padding: 12px 15px;
+        margin-bottom: 10px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        border-left: 4px solid #4ca1af;
+    }
+    .bot-title {
+        font-weight: bold;
+        font-size: 1rem;
+        color: #2c3e50;
+        margin-bottom: 8px;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 5px;
+    }
+    .bot-row {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.88rem;
+        padding: 4px 0;
+    }
+    .bot-label {
+        color: #666;
+    }
+    .bot-value {
+        font-weight: 600;
+        color: #333;
+    }
+    .positive {
+        color: #2e7d32;
+    }
+    .negative {
+        color: #c62828;
     }
     </style>
     """,
@@ -58,8 +95,6 @@ archivos_bots = [
     {"Nombre": "Bot Emergente", "Archivo": "bitacora_emerging.json"},
     {"Nombre": "Bot Eventos", "Archivo": "bitacora_eventos.json"}
 ]
-
-resumen_datos = []
 
 for bot in archivos_bots:
     nombre = bot["Nombre"]
@@ -88,18 +123,24 @@ for bot in archivos_bots:
     else:
         rentabilidad = 0.0
 
-    resumen_datos.append({
-        "Estrategia": nombre,
-        "Cap. Inicial": capital_inicial,
-        "Cap. Actual": capital_actual,
-        "Rentab. (%)": rentabilidad
-    })
+    rent_class = "positive" if rentabilidad >= 0 else "negative"
+    rent_sign = "+" if rentabilidad >= 0 else ""
 
-df_resumen = pd.DataFrame(resumen_datos)
-
-# Formato compacto sin "USD"
-df_resumen["Cap. Inicial"] = df_resumen["Cap. Inicial"].apply(lambda x: f"${x:,.2f}")
-df_resumen["Cap. Actual"] = df_resumen["Cap. Actual"].apply(lambda x: f"${x:,.2f}")
-df_resumen["Rentab. (%)"] = df_resumen["Rentab. (%)"].apply(lambda x: f"{'+' if x >= 0 else ''}{x:.2f}%")
-
-st.dataframe(df_resumen, use_container_width=True, hide_index=True)
+    # Tarjeta vertical compacta
+    st.markdown(f"""
+    <div class="bot-card">
+        <div class="bot-title">{nombre}</div>
+        <div class="bot-row">
+            <span class="bot-label">Cap. Inicial:</span>
+            <span class="bot-value">${capital_inicial:,.2f}</span>
+        </div>
+        <div class="bot-row">
+            <span class="bot-label">Cap. Actual:</span>
+            <span class="bot-value">${capital_actual:,.2f}</span>
+        </div>
+        <div class="bot-row">
+            <span class="bot-label">Rentabilidad:</span>
+            <span class="bot-value {rent_class}">{rent_sign}{rentabilidad:.2f}%</span>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
