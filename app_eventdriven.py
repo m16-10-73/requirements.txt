@@ -18,7 +18,7 @@ st.markdown('<meta http-equiv="refresh" content="30">', unsafe_allow_html=True)
 # Nombre exacto del archivo JSON de bitácora para Eventos
 BITACORA_EVENTOS = "bitacora_eventos.json"
 
-    def cargar_bitacora_eventos():
+def cargar_bitacora_eventos():
     """Lee rigurosamente el archivo JSON físico asegurando el historial completo hasta el 06/11 y forzando la base de 10k."""
     base_defaults = [
         {"Fecha": "28/10/2026", "Capital": 10000.00},
@@ -53,7 +53,6 @@ BITACORA_EVENTOS = "bitacora_eventos.json"
                         if f_limpia:
                             historial_limpio[f_limpia] = float(h.get("Capital", 0.0))
                     
-                    # 🛡️ BLINDAJE OBLIGATORIO: Forzar que el 28/10/2026 sea estrictamente 10,000.00
                     historial_limpio["28/10/2026"] = 10000.00
                             
                     nuevo_historial = [{"Fecha": k, "Capital": v} for k, v in historial_limpio.items()]
