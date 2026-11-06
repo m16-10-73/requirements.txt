@@ -52,7 +52,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Definición de los bots ordenados exactamente como solicitaste
+# Definición de los bots en el orden correcto solicitado
 archivos_bots = [
     {"Nombre": "Bot Dinámico", "Archivo": "bitacora_dinamica.json"},
     {"Nombre": "Bot Valoris", "Archivo": "bitacora.valoris.json"},
@@ -74,17 +74,30 @@ for bot in archivos_bots:
             with open(archivo, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 
-                capital_inicial = float(data.get("capital_inicial", 10000.0))
+                # 1. Buscar capital inicial genérico en el JSON
+                if "capital_inicial" in data:
+                    capital_inicial = float(data["capital_inicial"])
+                elif "capital_base" in data:
+                    capital_inicial = float(data["capital_base"])
                 
+                # 2. Revisar si hay historial de rendimiento o registros de capital
                 historial = data.get("historial_rendimiento", [])
-                if historial:
-                    capital_inicial = float(historial[0].get("Capital", capital_inicial))
-                    capital_actual = float(historial[-1].get("Capital", capital_inicial))
+                if not historial and "historial" in data:
+                    historial = data["historial"]
+                
+                if historial and isinstance(historial, list) and len(historial) > 0:
+                    # Intentar extraer la clave 'Capital' o 'capital' del primer registro
+def_cap = lambda entry: float(entry.get("Capital", entry.get("capital", capital_inicial)))
+                    capital_inicial = def_cap(historial[0])
+                    capital_actual = def_cap(historial[-1])
                 else:
-                    capital_actual = capital_inicial
-        except Exception:
+                    # Si no hay historial, el actual es igual al inicial o busca en métricas
+                    capital_actual = float(data.get("capital_actual", capital_inicial))
+                    
+        except Exception as e:
             pass
 
+    # Cálculo seguro de la rentabilidad porcentual
     if capital_inicial > 0:
         rentabilidad = ((capital_actual - capital_inicial) / capital_inicial) * 100.0
     else:
@@ -99,7 +112,7 @@ for bot in archivos_bots:
 
 df_resumen = pd.DataFrame(resumen_datos)
 
-# Formatear visualmente los números para la tabla
+# Aplicar formato de moneda y porcentajes limpios
 df_resumen["Capital Inicial / Base"] = df_resumen["Capital Inicial / Base"].apply(lambda x: f"${x:,.2f} USD")
 df_resumen["Capital Actual / Cierre"] = df_resumen["Capital Actual / Cierre"].apply(lambda x: f"${x:,.2f} USD")
 df_resumen["Rentabilidad (%)"] = df_resumen["Rentabilidad (%)"].apply(lambda x: f"{'+' if x >= 0 else ''}{x:.2f}%")
