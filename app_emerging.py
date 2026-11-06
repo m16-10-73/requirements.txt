@@ -341,9 +341,40 @@ else:
     st.success("✅ **Sin posiciones abiertas.** Esperando inicio de jornada.")
 
 st.markdown("---")
+
+# 📈 Gráfico de Evolución Histórica del Capital con Altair
+historial = data_bitacora.get("historial_rendimiento", [])
+if historial:
+    df_chart = pd.DataFrame(historial)
+    if "Fecha" in df_chart.columns and "Capital" in df_chart.columns:
+        df_chart["Fecha_limpia"] = df_chart["Fecha"].astype(str).str.split(" ").str[0]
+        df_chart["Fecha_obj"] = pd.to_datetime(df_chart["Fecha_limpia"], format="%d/%m/%Y", errors="coerce")
+        df_chart = df_chart.sort_values(by="Fecha_obj", ascending=True).reset_index(drop=True)
+
+        st.subheader("📈 Evolución Histórica del Capital")
+        
+        import altair as alt
+        chart = alt.Chart(df_chart).mark_line(point=True, strokeWidth=3).encode(
+            x=alt.X('Fecha_limpia:N', title='Fecha', sort=None),
+            y=alt.Y('Capital:Q', title='Capital (USD)', scale=alt.Scale(domain=[9000, 15000])),
+            tooltip=['Fecha_limpia', alt.Tooltip('Capital:Q', format='$,.2f')]
+        ).properties(
+            height=320
+        )
+        
+        text = chart.mark_text(
+            align='center',
+            baseline='bottom',
+            dy=-12
+        ).encode(
+            text=alt.Text('Capital:Q', format='$,.0f')
+        )
+        
+        st.altair_chart(chart + text, use_container_width=True)
+
+st.markdown("---")
 st.subheader("📋 Historial de Cierres Recientes (Últimos 14 días)")
 
-historial = data_bitacora.get("historial_rendimiento", [])
 if historial:
     df_hist = pd.DataFrame(historial)
     if "Fecha" in df_hist.columns and "Capital" in df_hist.columns:
