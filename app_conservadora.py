@@ -21,7 +21,7 @@ BITACORA_VALORIS = "bitacora_valoris.json"
 def cargar_bitacora_valoris():
     """Lee rigurosamente el archivo JSON físico asegurando el historial con el cierre de hoy (10,207.20) y sincronización de capital."""
     base_defaults = [
-        {"Fecha": "28/10/2026", "Capital": 10402.48},
+        {"Fecha": "28/10/2026", "Capital": 10000.00},
         {"Fecha": "30/10/2026", "Capital": 10402.00},
         {"Fecha": "02/11/2026", "Capital": 10452.79},
         {"Fecha": "03/11/2026", "Capital": 10207.20}
