@@ -1,5 +1,6 @@
 import os
 import json
+import pandas as pd
 import streamlit as st
 
 st.set_page_config(
@@ -38,42 +39,6 @@ st.markdown(
         margin: 2px 0 0 0;
         font-size: 0.75rem;
     }
-    /* Estilo de tarjeta vertical optimizada para celular */
-    .bot-card {
-        background: white;
-        border-radius: 8px;
-        padding: 12px 15px;
-        margin-bottom: 10px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
-        border-left: 4px solid #4ca1af;
-    }
-    .bot-title {
-        font-weight: bold;
-        font-size: 1rem;
-        color: #2c3e50;
-        margin-bottom: 8px;
-        border-bottom: 1px solid #eee;
-        padding-bottom: 5px;
-    }
-    .bot-row {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.88rem;
-        padding: 4px 0;
-    }
-    .bot-label {
-        color: #666;
-    }
-    .bot-value {
-        font-weight: 600;
-        color: #333;
-    }
-    .positive {
-        color: #2e7d32;
-    }
-    .negative {
-        color: #c62828;
-    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -95,6 +60,8 @@ archivos_bots = [
     {"Nombre": "Bot Emergente", "Archivo": "bitacora_emerging.json"},
     {"Nombre": "Bot Eventos", "Archivo": "bitacora_eventos.json"}
 ]
+
+resumen_datos = []
 
 for bot in archivos_bots:
     nombre = bot["Nombre"]
@@ -123,24 +90,24 @@ for bot in archivos_bots:
     else:
         rentabilidad = 0.0
 
-    rent_class = "positive" if rentabilidad >= 0 else "negative"
-    rent_sign = "+" if rentabilidad >= 0 else ""
+    resumen_datos.append({
+        "Estrategia": nombre,
+        "Inicial": capital_inicial,
+        "Actual": capital_actual,
+        "Rentab (%)": rentabilidad
+    })
 
-    # Tarjeta vertical compacta
-    st.markdown(f"""
-    <div class="bot-card">
-        <div class="bot-title">{nombre}</div>
-        <div class="bot-row">
-            <span class="bot-label">Cap. Inicial:</span>
-            <span class="bot-value">${capital_inicial:,.2f}</span>
-        </div>
-        <div class="bot-row">
-            <span class="bot-label">Cap. Actual:</span>
-            <span class="bot-value">${capital_actual:,.2f}</span>
-        </div>
-        <div class="bot-row">
-            <span class="bot-label">Rentabilidad:</span>
-            <span class="bot-value {rent_class}">{rent_sign}{rentabilidad:.2f}%</span>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+df_resumen = pd.DataFrame(resumen_datos)
+
+# Función para formatear al estilo europeo/latino (10.000,00) sin sufijos largos
+def formato_moneda_latino(val):
+    # Formatea con comas para miles y punto para decimales temporalmente, luego invierte
+    s = f"{val:,.2f}"
+    s = s.replace(",", "X").replace(".", ",").replace("X", ".")
+    return f"${s}"
+
+df_resumen["Inicial"] = df_resumen["Inicial"].apply(formato_moneda_latino)
+df_resumen["Actual"] = df_resumen["Actual"].apply(formato_moneda_latino)
+df_resumen["Rentab (%)"] = df_resumen["Rentab (%)"].apply(lambda x: f"{'+' if x >= 0 else ''}{x:.2f}%")
+
+st.dataframe(df_resumen, use_container_width=True, hide_index=True)
