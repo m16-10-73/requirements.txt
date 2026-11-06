@@ -19,12 +19,15 @@ st.markdown('<meta http-equiv="refresh" content="30">', unsafe_allow_html=True)
 BITACORA_VALORIS = "bitacora_valoris.json"
 
 def cargar_bitacora_valoris():
-    """Lee rigurosamente el archivo JSON físico asegurando el historial con el cierre de hoy (10,207.20) y sincronización de capital."""
+    """Lee rigurosamente el archivo JSON físico asegurando el historial y forzando la base de 10k el 28/10/2026."""
     base_defaults = [
         {"Fecha": "28/10/2026", "Capital": 10000.00},
         {"Fecha": "30/10/2026", "Capital": 10402.00},
         {"Fecha": "02/11/2026", "Capital": 10452.79},
-        {"Fecha": "03/11/2026", "Capital": 10207.20}
+        {"Fecha": "03/11/2026", "Capital": 10207.20},
+        {"Fecha": "04/11/2026", "Capital": 10292.78},
+        {"Fecha": "05/11/2026", "Capital": 10197.52},
+        {"Fecha": "06/11/2026", "Capital": 10128.27}
     ]
     
     if os.path.exists(BITACORA_VALORIS):
@@ -40,7 +43,6 @@ def cargar_bitacora_valoris():
                     
                     historial = contenido.get("historial_rendimiento", [])
                     
-                    # Limpiar entradas y asegurar puntos base históricos + hoy
                     historial_limpio = {}
                     for base in base_defaults:
                         historial_limpio[base["Fecha"]] = base["Capital"]
@@ -49,6 +51,9 @@ def cargar_bitacora_valoris():
                         f_limpia = str(h.get("Fecha", "")).split(" ")[0]
                         if f_limpia:
                             historial_limpio[f_limpia] = float(h.get("Capital", 0.0))
+                    
+                    # 🛡️ BLINDAJE OBLIGATORIO: Forzar que el 28/10/2026 sea estrictamente 10,000.00
+                    historial_limpio["28/10/2026"] = 10000.00
                             
                     nuevo_historial = [{"Fecha": k, "Capital": v} for k, v in historial_limpio.items()]
                     contenido["historial_rendimiento"] = nuevo_historial
@@ -60,16 +65,16 @@ def cargar_bitacora_valoris():
                             ultimo_registro = historial_ordenado[-1]
                             contenido["capital_inicial"] = float(ultimo_registro["Capital"])
                         except Exception:
-                            contenido["capital_inicial"] = float(nuevo_historial[-1].get("Capital", 10207.20))
+                            contenido["capital_inicial"] = float(nuevo_historial[-1].get("Capital", 10128.27))
                     else:
-                        contenido.setdefault("capital_inicial", 10207.20)
+                        contenido.setdefault("capital_inicial", 10128.27)
 
                     return contenido
         except Exception:
             pass
 
     base_data = {
-        "capital_inicial": 10207.20,
+        "capital_inicial": 10128.27,
         "ganancia_cerrada": 0.0,
         "posiciones": [],
         "peak_flotante": 0.0,
@@ -80,7 +85,6 @@ def cargar_bitacora_valoris():
     with open(BITACORA_VALORIS, "w", encoding="utf-8") as f:
         json.dump(base_data, f, indent=4, ensure_ascii=False)
     return base_data
-
 def guardar_bitacora_valoris(data):
     """Sobrescribe el archivo JSON con el estado actualizado."""
     with open(BITACORA_VALORIS, "w", encoding="utf-8") as f:
