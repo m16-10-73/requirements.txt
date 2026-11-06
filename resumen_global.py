@@ -13,7 +13,6 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    /* Margen superior general para que no pegue arriba en el celu */
     .block-container {
         padding-top: 1.8rem !important;
         padding-bottom: 1rem !important;
@@ -64,6 +63,7 @@ archivos_bots = [
 ]
 
 resumen_datos = []
+datos_grafico = []
 sum_rentabilidad = 0.0
 
 def formato_moneda_latino(val):
@@ -97,7 +97,6 @@ for bot in archivos_bots:
                     fecha_inicio = primer_reg.get("Fecha", "-")
                     fecha_cierre = ultimo_reg.get("Fecha", "-")
                     
-                    # Calcular días transcurridos si las fechas tienen formato válido DD/MM/YYYY
                     try:
                         f1 = datetime.strptime(fecha_inicio, "%d/%m/%Y")
                         f2 = datetime.strptime(fecha_cierre, "%d/%m/%Y")
@@ -127,7 +126,13 @@ for bot in archivos_bots:
         "Rentab (%)": f"{'+' if rentabilidad >= 0 else ''}{rentabilidad:.2f}%"
     })
 
-# Agregar fila de Promedio General al final
+    # Guardar datos limpios para el gráfico de barras
+    datos_grafico.append({
+        "Estrategia": nombre.replace("Bot ", ""),
+        "Rentabilidad (%)": round(rentabilidad, 2)
+    })
+
+# Fila de Promedio en la tabla
 promedio_rentabilidad = sum_rentabilidad / len(archivos_bots) if archivos_bots else 0.0
 resumen_datos.append({
     "Estrategia": "PROMEDIO",
@@ -140,5 +145,9 @@ resumen_datos.append({
 })
 
 df_resumen = pd.DataFrame(resumen_datos)
-
 st.dataframe(df_resumen, use_container_width=True, hide_index=True)
+
+# Gráfico de barras interactivo de rentabilidad
+st.markdown("### 📈 Comparativa de Rentabilidad (%)")
+df_chart = pd.DataFrame(datos_grafico).set_index("Estrategia")
+st.bar_chart(df_chart)
