@@ -344,35 +344,57 @@ else:
     st.success("✅ **Sin posiciones abiertas.** Esperando catalizadores de mercado.")
 
 st.markdown("---")
-st.subheader("📋 Historial de Cierres Recientes (Últimos 14 días)")
 
+# 📈 Gráfico de Evolución Histórica del Capital con Altair (Escala optimizada de 9000 a 15000 y valores visibles)
 historial = data_bitacora.get("historial_rendimiento", [])
 if historial:
     df_hist = pd.DataFrame(historial)
     if "Fecha" in df_hist.columns and "Capital" in df_hist.columns:
-        # Parsear fechas y ordenar cronológicamente para cálculos y gráfico
         df_hist["Fecha_limpia"] = df_hist["Fecha"].astype(str).str.split(" ").str[0]
         df_hist["Fecha_obj"] = pd.to_datetime(df_hist["Fecha_limpia"], format="%d/%m/%Y", errors="coerce")
         df_hist = df_hist.sort_values(by="Fecha_obj", ascending=True).reset_index(drop=True)
 
-        # 📈 Gráfico de Evolución Histórica del Capital
-        st.markdown("### 📈 Evolución Histórica del Capital")
-        st.line_chart(df_hist.set_index("Fecha_limpia")["Capital"], use_container_width=True)
+        st.subheader("📈 Evolución Histórica del Capital")
+        
+        import altair as alt
+        chart = alt.Chart(df_hist).mark_line(point=True, strokeWidth=3).encode(
+            x=alt.X('Fecha_limpia:N', title='Fecha', sort=None),
+            y=alt.Y('Capital:Q', title='Capital (USD)', scale=alt.Scale(domain=[9000, 15000])),
+            tooltip=['Fecha_limpia', alt.Tooltip('Capital:Q', format='$,.2f')]
+        ).properties(
+            height=320
+        )
+        
+        text = chart.mark_text(
+            align='center',
+            baseline='bottom',
+            dy=-12
+        ).encode(
+            text=alt.Text('Capital:Q', format='$,.0f')
+        )
+        
+        st.altair_chart(chart + text, use_container_width=True)
 
-        # Base inicial para cálculo acumulado (tomada del primer registro)
+st.markdown("---")
+st.subheader("📋 Historial de Cierres Recientes (Últimos 14 días)")
+
+if historial:
+    df_hist = pd.DataFrame(historial)
+    if "Fecha" in df_hist.columns and "Capital" in df_hist.columns:
+        df_hist["Fecha_limpia"] = df_hist["Fecha"].astype(str).str.split(" ").str[0]
+        df_hist["Fecha_obj"] = pd.to_datetime(df_hist["Fecha_limpia"], format="%d/%m/%Y", errors="coerce")
+        df_hist = df_hist.sort_values(by="Fecha_obj", ascending=True).reset_index(drop=True)
+
         capital_inicial_base = float(df_hist["Capital"].iloc[0]) if len(df_hist) > 0 else 10000.0
 
-        # Cálculo de Índices (%)
         df_hist["Rent_Diaria_Pct"] = df_hist["Capital"].pct_change() * 100.0
         df_hist["Rent_Diaria_Pct"] = df_hist["Rent_Diaria_Pct"].fillna(0.0)
         df_hist["Rent_Acumulada_Pct"] = ((df_hist["Capital"] - capital_inicial_base) / capital_inicial_base) * 100.0
 
-        # Formato visual
         df_hist["Rent. Diaria"] = df_hist["Rent_Diaria_Pct"].apply(lambda x: f"{'+' if x >= 0 else ''}{x:.2f}%")
         df_hist["Rent. Acumulada"] = df_hist["Rent_Acumulada_Pct"].apply(lambda x: f"{'+' if x >= 0 else ''}{x:.2f}%")
         df_hist["Capital_USD"] = df_hist["Capital"].apply(lambda x: f"${float(x):,.2f} USD")
 
-        # Reordenar para presentar primero el registro más reciente
         df_mostrar = df_hist.sort_values(by="Fecha_obj", ascending=False).copy()
         df_mostrar = df_mostrar[["Fecha_limpia", "Capital_USD", "Rent. Diaria", "Rent. Acumulada"]].rename(
             columns={"Fecha_limpia": "Fecha", "Capital_USD": "Capital"}
