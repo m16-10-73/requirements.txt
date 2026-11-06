@@ -52,12 +52,12 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Definición de los archivos de bitácora de cada bot
+# Nombres exactos de las bitácoras según tu repositorio de GitHub
 archivos_bots = [
     {"Nombre": "Bot Eventos", "Archivo": "bitacora_eventos.json"},
     {"Nombre": "Bot Dinámico", "Archivo": "bitacora_dinamica.json"},
-    {"Nombre": "Bot Valoris", "Archivo": "bitacora_valoris.json"},
-    {"Nombre": "Bot Emergente", "Archivo": "bitacora_emergente.json"}
+    {"Nombre": "Bot Valoris", "Archivo": "bitacora.valoris.json"},
+    {"Nombre": "Bot Emergente", "Archivo": "bitacora_emerging.json"}
 ]
 
 resumen_datos = []
@@ -68,43 +68,43 @@ for bot in archivos_bots:
     
     capital_inicial = 10000.0
     capital_actual = 10000.0
-    rentabilidad = 0.0
     
     if os.path.exists(archivo):
         try:
             with open(archivo, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 
-                # Obtener capital base o inicial configurado
-                capital_inicial = float(data.get("capital_inicial", 10000.0))
-                
-                # Buscar en el historial de rendimiento el último cierre o valor
                 historial = data.get("historial_rendimiento", [])
+                
                 if historial:
-                    ultimo_reg = historial[-1]
-                    capital_actual = float(ultimo_reg.get("Capital", capital_inicial))
+                    # El capital inicial real es el primer registro del historial (o capital_inicial)
+                    capital_inicial = float(historial[0].get("Capital", data.get("capital_inicial", 10000.0)))
+                    # El capital actual es el último registro registrado
+                    capital_actual = float(historial[-1].get("Capital", capital_inicial))
                 else:
+                    capital_inicial = float(data.get("capital_inicial", 10000.0))
                     capital_actual = capital_inicial
-                    
-                # Calcular rentabilidad respecto al inicio histórico (10,000 USD de base general)
-                primer_capital = float(historial[0].get("Capital", 10000.0)) if historial else 10000.0
-                rentabilidad = ((capital_actual - primer_capital) / primer_capital) * 100.0
         except Exception:
             pass
 
+    # Cálculo directo y matemáticamente exacto
+    if capital_inicial > 0:
+        rentabilidad = ((capital_actual - capital_inicial) / capital_inicial) * 100.0
+    else:
+        rentabilidad = 0.0
+
     resumen_datos.append({
         "Estrategia": nombre,
-        "Capital Inicial / Base": round(capital_inicial, 2),
-        "Capital Actual / Cierre": round(capital_actual, 2),
-        "Rentabilidad (%)": round(rentabilidad, 2)
+        "Capital Inicial / Base": capital_inicial,
+        "Capital Actual / Cierre": capital_actual,
+        "Rentabilidad (%)": rentabilidad
     })
 
 df_resumen = pd.DataFrame(resumen_datos)
 
-# Formatear visualmente los números para la tabla
+# Formato visual limpio
 df_resumen["Capital Inicial / Base"] = df_resumen["Capital Inicial / Base"].apply(lambda x: f"${x:,.2f} USD")
 df_resumen["Capital Actual / Cierre"] = df_resumen["Capital Actual / Cierre"].apply(lambda x: f"${x:,.2f} USD")
 df_resumen["Rentabilidad (%)"] = df_resumen["Rentabilidad (%)"].apply(lambda x: f"{'+' if x >= 0 else ''}{x:.2f}%")
 
-# Mostrar la tabla resumen en fila / planilla limpia
 st.dataframe(df_resumen, use_container_width=True, hide_index=True)
