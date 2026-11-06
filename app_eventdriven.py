@@ -85,6 +85,7 @@ BITACORA_EVENTOS = "bitacora_eventos.json"
     with open(BITACORA_EVENTOS, "w", encoding="utf-8") as f:
         json.dump(base_data, f, indent=4, ensure_ascii=False)
     return base_data
+        
 def guardar_bitacora_eventos(data):
     """Sobrescribe el archivo JSON con el estado actualizado."""
     with open(BITACORA_EVENTOS, "w", encoding="utf-8") as f:
