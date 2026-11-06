@@ -346,6 +346,19 @@ else:
 st.markdown("---")
 st.subheader("📋 Historial de Cierres Recientes (Últimos 14 días)")
 
+# 📈 Gráfico de Evolución del Capital (Últimos días)
+if historial:
+    df_chart = pd.DataFrame(historial)
+    if "Fecha" in df_chart.columns and "Capital" in df_chart.columns:
+        df_chart["Fecha_limpia"] = df_chart["Fecha"].astype(str).str.split(" ").str[0]
+        df_chart["Fecha_obj"] = pd.to_datetime(df_chart["Fecha_limpia"], format="%d/%m/%Y", errors="coerce")
+        df_chart = df_chart.sort_values(by="Fecha_obj", ascending=True).reset_index(drop=True)
+        
+        st.markdown("### 📈 Evolución Histórica del Capital")
+        st.line_chart(df_chart.set_index("Fecha_limpia")["Capital"], use_container_width=True)
+
+st.markdown("---")
+
 historial = data_bitacora.get("historial_rendimiento", [])
 if historial:
     df_hist = pd.DataFrame(historial)
