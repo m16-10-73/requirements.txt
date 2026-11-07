@@ -3,48 +3,54 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 
-# Configuración de la interfaz web optimizada para móvil y escritorio
+# Configuración de la interfaz web
 st.set_page_config(page_title="Motor de Backtesting - Flota", layout="wide", page_icon="📊")
 
-# Ajuste CSS avanzado para perfecta visualización en móviles y escritorio
+# Estilos CSS avanzados con mayor margen superior y tipografías compactas
 st.markdown(
     """
     <style>
     .block-container {
-        padding-top: 1.2rem !important;
-        padding-bottom: 1.0rem !important;
-        padding-left: 0.6rem !important;
-        padding-right: 0.6rem !important;
+        padding-top: 2.2rem !important;
+        padding-bottom: 2rem !important;
+        padding-left: 0.8rem !important;
+        padding-right: 0.8rem !important;
+        max-width: 1200px;
     }
-    .custom-title {
-        font-size: 1.25rem;
+    .main-header {
+        background: linear-gradient(135deg, #1e293b, #0f172a);
+        padding: 14px 16px;
+        border-radius: 10px;
+        color: white;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .main-header h1 {
+        color: #ffffff;
+        font-size: 1.15rem;
         font-weight: 700;
-        color: #2c3e50;
-        margin-top: 8px;
-        margin-bottom: 2px;
-        line-height: 1.2;
+        margin: 0;
     }
-    .custom-caption {
-        font-size: 0.78rem;
-        color: #6c757d;
-        margin-bottom: 10px;
-    }
-    /* Estilo responsivo para tarjetas de métricas */
-    div[data-testid="stMetric"] {
-        background-color: #ffffff;
-        border: 1px solid #e0e0e0;
-        padding: 10px 12px;
-        border-radius: 8px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    .main-header p {
+        color: #94a3b8;
+        font-size: 0.75rem;
+        margin: 3px 0 0 0;
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# Encabezado estilizado con diseño compacto
-st.markdown('<div class="custom-title">📊 Motor de Backtesting e Histórico</div>', unsafe_allow_html=True)
-st.markdown('<div class="custom-caption">Herramienta privada de simulación e inspección cuantitativa para la flota.</div>', unsafe_allow_html=True)
+# Encabezado visual tipo plataforma
+st.markdown(
+    """
+    <div class="main-header">
+        <h1>📊 Motor de Backtesting e Histórico</h1>
+        <p>Herramienta privada de simulación e inspección cuantitativa.</p>
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
 
 # Panel lateral con parámetros de simulación
 st.sidebar.header("⚙️ Parámetros de Simulación")
@@ -60,15 +66,13 @@ take_profit_pct = take_profit_input / 100.0
 tickers_input = st.sidebar.text_input("Activos", "NVDA, AAPL, TSLA, MSFT, TXN")
 tickers = [t.strip().upper() for t in tickers_input.split(",")]
 
+# Botón principal de ejecución
+ejecutar = st.button("▶️ Ejecutar Simulación Histórica", type="primary", use_container_width=True)
+
 st.markdown("---")
 
-# Botón principal de ejecución (ancho completo en móvil)
-col_btn1, col_btn2 = st.columns([1, 2])
-with col_btn1:
-    ejecutar = st.button("▶️ Ejecutar Simulación", type="primary", use_container_width=True)
-
 if ejecutar:
-    with st.spinner("Procesando datos históricos..."):
+    with st.spinner("Procesando datos históricos y ejecutando reglas de riesgo..."):
         data = yf.download(tickers, start="2021-01-01", end="2026-10-22")
         
         capital = capital_inicial
@@ -111,7 +115,7 @@ if ejecutar:
                             'Activo': ticker,
                             'Resultado': '🔴 STOP LOSS',
                             'PnL ($)': round(pnl, 2),
-                    'Capital ($)': round(capital, 2)
+                            'Capital ($)': round(capital, 2)
                         })
                         in_position = False
                         
@@ -128,33 +132,47 @@ if ejecutar:
                         })
                         in_position = False
 
-    st.success(f"¡Simulación completada con Take Profit al {take_profit_input:.1f}%!")
+    st.success(f"¡Simulación completada con éxito (Take Profit al {take_profit_input:.1f}%)!")
     
-    # 1. Métricas organizadas en tarjetas limpias adaptables a móviles
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("Capital Inicial", f"${capital_inicial:,.2f}")
-        rendimiento = ((capital / capital_inicial) - 1) * 100
-        st.metric("Rendimiento", f"{rendimiento:.2f}%")
-    with col2:
-        st.metric("Capital Final", f"${capital:,.2f}")
-        st.metric("Operaciones", len(trades_log))
+    rendimiento = ((capital / capital_inicial) - 1) * 100
     
-    st.markdown("---")
+    # CUADRÍCULA 2x2 RESPETANDO EL ORDEN EXACTO:
+    # 1. Capital Inicial | 2. Capital Final
+    # 3. Rendimiento    | 4. Operaciones
+    # Con números achicados a la mitad para que no rompan líneas.
+    st.markdown(f"""
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px;">
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Inicial</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital_inicial:,.2f}</div>
+            </div>
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Final</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital:,.2f}</div>
+            </div>
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Rendimiento</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #16a34a; margin-top: 2px; white-space: nowrap;">+{rendimiento:.2f}%</div>
+            </div>
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Operaciones</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">{len(trades_log)}</div>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
     
-    # 2. Análisis Dinámico
+    # Análisis Dinámico de Parámetros con tipografía compacta
     if take_profit_input == 6.0 and abs(stop_loss_pct - (-0.005)) < 1e-5:
         st.success("🎯 **Análisis Dinámico:** ¡Estás operando en la **Configuración Récord Óptima** (Stop Loss: -0.5% | Take Profit: 6.0%)!")
     elif take_profit_input == 5.0:
-        st.info("ℹ️ **Análisis Dinámico:** Estás evaluando el estándar anterior (5.0% -> $227,886.52 USD). El 6.0% demostró mayor rentabilidad.")
+        st.info("ℹ️ **Análisis Dinámico:** Estás evaluando el estándar anterior (5.0% -> $227,886.52 USD). El 6.0% demostró mayor rendimiento.")
     else:
-        st.warning(f"🔍 **Análisis Dinámico:** Prueba activa con Stop Loss al {stop_loss_pct*100:.1f}% y Take Profit al **{take_profit_input:.1f}%** (${capital:,.2f} USD).")
+        st.warning(f"🔍 **Análisis Dinámico:** Stop Loss al {stop_loss_pct*100:.1f}% y Take Profit al **{take_profit_input:.1f}%** (${capital:,.2f} USD).")
 
-    # 3. Referencia Fija
+    # Referencia Fija compacta
     st.info(
         "💡 **Estrategia Base de Referencia Óptima (Fija):**\n\n"
-        "• **Configuración Histórica Récord:** Stop Loss: **-0.5%** | Take Profit: **6.0%** -> **$266,062.85 USD** (**+2,560.63%** en **1,812 operaciones**).\n"
-        "• *Nota:* Referencia estructural derivada del análisis cuantitativo del Bot Dinámico."
+        "• **Configuración Histórica Récord:** Stop Loss: **-0.5%** | Take Profit: **6.0%** -> **$266,062.85 USD** (**+2,560.63%** en **1,812 operaciones**)."
     )
     
     st.markdown("---")
@@ -164,4 +182,4 @@ if ejecutar:
     else:
         st.info("No se registraron operaciones bajo los parámetros actuales.")
 else:
-    st.info("👈 Configura tus parámetros en la barra lateral y presiona **▶️ Ejecutar Simulación** para desplegar los resultados.")
+    st.info("👈 Configura tus parámetros en la barra lateral y presiona **▶️ Ejecutar Simulación Histórica** para desplegar los resultados.")
