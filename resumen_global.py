@@ -55,6 +55,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
+# Orden estricto solicitado: Dinámico, Valoris, Emergente, Eventos
 archivos_bots = [
     {"Nombre": "Bot Dinámico", "Archivo": "bitacora_dinamica.json"},
     {"Nombre": "Bot Valoris", "Archivo": "bitacora.valoris.json"},
@@ -126,7 +127,6 @@ for bot in archivos_bots:
         "Rentab (%)": f"{'+' if rentabilidad >= 0 else ''}{rentabilidad:.2f}%"
     })
 
-    # Guardar datos limpios para el gráfico de barras
     datos_grafico.append({
         "Estrategia": nombre.replace("Bot ", ""),
         "Rentabilidad (%)": round(rentabilidad, 2)
@@ -147,7 +147,11 @@ resumen_datos.append({
 df_resumen = pd.DataFrame(resumen_datos)
 st.dataframe(df_resumen, use_container_width=True, hide_index=True)
 
-# Gráfico de barras interactivo de rentabilidad
+# Gráfico de barras interactivo respetando el orden exacto
 st.markdown("### 📈 Comparativa de Rentabilidad (%)")
-df_chart = pd.DataFrame(datos_grafico).set_index("Estrategia")
+df_chart = pd.DataFrame(datos_grafico)
+# Establecer índice categórico ordenado para que el gráfico no los reordene alfabéticamente
+df_chart["Estrategia"] = pd.Categorical(df_chart["Estrategia"], categories=[b["Nombre"].replace("Bot ", "") for b in archivos_bots], ordered=True)
+df_chart = df_chart.sort_values("Estrategia").set_index("Estrategia")
+
 st.bar_chart(df_chart)
