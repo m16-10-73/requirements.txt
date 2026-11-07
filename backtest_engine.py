@@ -22,7 +22,7 @@ st.markdown(
         padding: 14px 16px;
         border-radius: 10px;
         color: white;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     }
     .main-header h1 {
@@ -41,12 +41,12 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Encabezado visual tipo plataforma
+# Encabezado visual tipo plataforma (como estaba antes)
 st.markdown(
     """
     <div class="main-header">
-        <h1>📊 Motor de Backtesting e Histórico</h1>
-        <p>Herramienta privada de simulación e inspección cuantitativa.</p>
+        <h1>📊 Motor de Backtesting e Histórico de Estrategias</h1>
+        <p>Herramienta privada de simulación e inspección cuantitativa para la flota.</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -108,7 +108,7 @@ if ejecutar:
                     position_size = (capital * 0.20) / entry_price
                     continue
                     
-                # Gestión de riesgo (Stop Loss / Take Profit) con descuento de comisiones
+                # Gestión de riesgo con descuento de comisiones
                 if in_position:
                     min_return = (curr_low - entry_price) / entry_price
                     max_return = (curr_high - entry_price) / entry_price
@@ -141,7 +141,7 @@ if ejecutar:
                         })
                         in_position = False
 
-    # Cálculo del Máximo Drawdown (Peor Baja)
+    # Cálculos estadísticos
     equity_series = pd.Series(equity_curve)
     peak = equity_series.cummax()
     drawdown = (equity_series - peak) / peak
@@ -149,35 +149,53 @@ if ejecutar:
 
     num_operaciones = len(trades_log)
     comisiones_totales = num_operaciones * comision_por_trade
-
-    st.success(f"¡Simulación completada con éxito! | Periodo: **01/01/2021 al 22/10/2026** (Take Profit {take_profit_input:.1f}%)")
     
+    # Capital antes de comisiones = Capital Final real + Comisiones Totales pagadas
+    capital_antes_comisiones = capital + comisiones_totales
     rendimiento = ((capital / capital_inicial) - 1) * 100
+
+    # 1. RECUADRO APARTE PARA EL PERIODO
+    st.info(f"📅 **Periodo de Simulación:** 01/01/2021 al 22/10/2026  |  *Take Profit:* **{take_profit_input:.1f}%**")
     
-    # CUADRÍCULA EXPANDIDA 2x3 CON LAS NUEVAS MÉTRICAS
+    # 2. CUADRÍCULA 2 COLUMNAS x 4 FILAS (Orden exacto solicitado)
     st.markdown(f"""
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px;">
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <!-- Fila 1 -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;">
                 <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Inicial</div>
                 <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital_inicial:,.2f}</div>
             </div>
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Final</div>
-                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital:,.2f}</div>
-            </div>
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Rendimiento Neto</div>
-                <div style="font-size: 0.95rem; font-weight: 700; color: #16a34a; margin-top: 2px; white-space: nowrap;">+{rendimiento:.2f}%</div>
-            </div>
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;">
                 <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Operaciones</div>
                 <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">{num_operaciones}</div>
             </div>
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Comisiones Totales</div>
-                <div style="font-size: 0.95rem; font-weight: 700; color: #dc2626; margin-top: 2px; white-space: nowrap;">${comisiones_totales:,.2f} <span style="font-size: 0.68rem; color: #64748b;">(${comision_por_trade:.2f}/t)</span></div>
+
+            <!-- Fila 2 -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;">
+                <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Antes de Comisiones</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital_antes_comisiones:,.2f}</div>
             </div>
-            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;">
+                <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Rendimiento Neto</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #16a34a; margin-top: 2px; white-space: nowrap;">+{rendimiento:.2f}%</div>
+            </div>
+
+            <!-- Fila 3 -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;">
+                <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Comisiones Totales</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #dc2626; margin-top: 2px; white-space: nowrap;">${comisiones_totales:,.2f}</div>
+            </div>
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;">
+                <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Índice de Comisiones</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${comision_por_trade:.2f} / trade</div>
+            </div>
+
+            <!-- Fila 4 -->
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;">
+                <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Final (Neto)</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital:,.2f}</div>
+            </div>
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;">
                 <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Peor Baja (Max DD)</div>
                 <div style="font-size: 0.95rem; font-weight: 700; color: #dc2626; margin-top: 2px; white-space: nowrap;">{max_drawdown:.2f}%</div>
             </div>
