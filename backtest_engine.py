@@ -75,7 +75,8 @@ ejecutar = st.button("▶️ Ejecutar Simulación Histórica", type="primary", u
 st.markdown("---")
 
 if ejecutar:
-    fecha_inicio = "2021-01-01"
+    # Ajuste exacto al primer día hábil de operaciones de 2021
+    fecha_inicio = "2021-01-11"
     fecha_fin = "2026-10-22"
     
     with st.spinner("Procesando datos históricos y ejecutando reglas de riesgo..."):
@@ -160,8 +161,8 @@ if ejecutar:
     indice_comisiones_pct = (comisiones_totales / capital_antes_comisiones) * 100 if capital_antes_comisiones > 0 else 0.0
     rendimiento = ((capital_neto / capital_inicial) - 1) * 100
 
-    # Recuadro independiente para el periodo
-    st.info(f"📅 **Periodo de Simulación:** 01/01/2021 al 22/10/2026  |  *Take Profit:* **{take_profit_input:.1f}%**")
+    # Recuadro independiente para el periodo actualizado
+    st.info(f"📅 **Periodo de Simulación:** 11/01/2021 al 22/10/2026  |  *Take Profit:* **{take_profit_input:.1f}%**")
     
     # Cuadrícula 2 columnas x 4 filas limpia
     st.markdown(f'<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px;"><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Inicial</div><div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital_inicial:,.2f}</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Operaciones</div><div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">{num_operaciones}</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Antes de Comisiones</div><div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital_antes_comisiones:,.2f}</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Rendimiento Neto</div><div style="font-size: 0.95rem; font-weight: 700; color: #16a34a; margin-top: 2px; white-space: nowrap;">+{rendimiento:.2f}%</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Comisiones Totales</div><div style="font-size: 0.95rem; font-weight: 700; color: #dc2626; margin-top: 2px; white-space: nowrap;">${comisiones_totales:,.2f}</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Índice de Comisiones</div><div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">{indice_comisiones_pct:.2f}% <span style="font-size: 0.65rem; color: #64748b;">(sobre capital bruto)</span></div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Final (Neto)</div><div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital_neto:,.2f}</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Peor Baja (Max DD)</div><div style="font-size: 0.95rem; font-weight: 700; color: #dc2626; margin-top: 2px; white-space: nowrap;">{max_drawdown:.2f}%</div></div></div>', unsafe_allow_html=True)
@@ -173,10 +174,10 @@ if ejecutar:
         f"El *Índice de Comisiones* ({indice_comisiones_pct:.2f}%) expresa la proporción exacta que representa este costo operativo respecto al *Capital Antes de Comisiones*."
     )
 
-    # Referencia Fija dinámica sincronizada con el resultado real actual del motor
+    # Referencia Fija dinámica sincronizada
     st.info(
         "💡 **Estrategia Base de Referencia Óptima (Sincronizada):**\n\n"
-        f"• **Configuración Histórica Récord (01/01/2021 - 22/10/2026):** Stop Loss: **-0.5%** | Take Profit: **6.0%** -> **${capital_antes_comisiones:,.2f} USD** (**+{((capital_antes_comisiones/capital_inicial)-1)*100:.2f}%** en **{num_operaciones} operaciones** con los precios de mercado actuales)."
+        f"• **Configuración Histórica Récord (11/01/2021 - 22/10/2026):** Stop Loss: **-0.5%** | Take Profit: **6.0%** -> **${capital_antes_comisiones:,.2f} USD** (**+{((capital_antes_comisiones/capital_inicial)-1)*100:.2f}%** en **{num_operaciones} operaciones** con los precios de mercado actuales)."
     )
     
     st.markdown("---")
