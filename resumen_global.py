@@ -117,15 +117,15 @@ for bot in archivos_bots:
 
     sum_rentabilidad += rentabilidad
 
-    # Orden exacto de columnas solicitadas: Estrategia, Inicio, Cierre, Días, Inicial, Actual, Rentab (%)
+    # Orden exacto solicitado: Estrategia, Inicial, Actual, Rentab (%), Días, Inicio, Cierre
     resumen_datos.append({
         "Estrategia": nombre,
-        "Inicio": fecha_inicio,
-        "Cierre": fecha_cierre,
-        "Días": dias_acumulados,
         "Inicial": formato_moneda_latino(capital_inicial),
         "Actual": formato_moneda_latino(capital_actual),
-        "Rentab (%)": f"{'+' if rentabilidad >= 0 else ''}{rentabilidad:.2f}%"
+        "Rentab (%)": f"{'+' if rentabilidad >= 0 else ''}{rentabilidad:.2f}%",
+        "Días": dias_acumulados,
+        "Inicio": fecha_inicio,
+        "Cierre": fecha_cierre
     })
 
     estrategia_corta = nombre.replace("Bot ", "")
@@ -136,16 +136,16 @@ for bot in archivos_bots:
         "Periodo": f"{fecha_inicio} al {fecha_cierre}"
     })
 
-# Fila de Promedio general
+# Fila de Promedio general con el mismo orden
 promedio_rentabilidad = sum_rentabilidad / len(archivos_bots) if archivos_bots else 0.0
 resumen_datos.append({
     "Estrategia": "PROMEDIO",
-    "Inicio": "-",
-    "Cierre": "-",
-    "Días": "-",
     "Inicial": "-",
     "Actual": "-",
-    "Rentab (%)": f"{'+' if promedio_rentabilidad >= 0 else ''}{promedio_rentabilidad:.2f}%"
+    "Rentab (%)": f"{'+' if promedio_rentabilidad >= 0 else ''}{promedio_rentabilidad:.2f}%",
+    "Días": "-",
+    "Inicio": "-",
+    "Cierre": "-"
 })
 
 df_resumen = pd.DataFrame(resumen_datos)
