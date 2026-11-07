@@ -75,10 +75,10 @@ ejecutar = st.button("▶️ Ejecutar Simulación Histórica", type="primary", u
 st.markdown("---")
 
 if ejecutar:
-    fecha_inicio = "2021-01-11"
+    fecha_inicio = "2021-01-01"
     fecha_fin = "2026-10-22"
     
-    with st.spinner("Procesando datos históricos y ejecutando reglas de riesgo (incluyendo benchmark al 6%)..."):
+    with st.spinner("Procesando datos históricos y ejecutando reglas de riesgo..."):
         data = yf.download(tickers, start=fecha_inicio, end=fecha_fin)
         
         # -------------------------------------------------------------
@@ -123,7 +123,7 @@ if ejecutar:
                         capital += pnl
                         equity_curve.append(capital)
                         trades_log.append({
-                            'Fecha': date.strftime('%Y-%m-%d'),
+                            'Fecha': date,
                             'Activo': ticker,
                             'Resultado': '🔴 STOP LOSS',
                             'PnL ($)': round(pnl, 2),
@@ -138,7 +138,7 @@ if ejecutar:
                         capital += pnl
                         equity_curve.append(capital)
                         trades_log.append({
-                            'Fecha': date.strftime('%Y-%m-%d'),
+                            'Fecha': date,
                             'Activo': ticker,
                             'Resultado': '🟢 TAKE PROFIT',
                             'PnL ($)': round(pnl, 2),
@@ -152,6 +152,7 @@ if ejecutar:
         cap_bm = capital_inicial
         vol_bm = 0.0
         ops_bm = 0
+        trades_bm_log = []
         
         for ticker in tickers:
             try:
@@ -163,6 +164,7 @@ if ejecutar:
             ent_bm = 0.0
             
             for i in range(1, len(df_bm)):
+                d_bm = df_bm.index[i]
                 p_close = df_bm['Close'].iloc[i-1]
                 c_open = df_bm['Open'].iloc[i]
                 c_low = df_bm['Low'].iloc[i]
@@ -179,25 +181,47 @@ if ejecutar:
                     min_r_bm = (c_low - ent_bm) / ent_bm
                     max_r_bm = (c_high - ent_bm) / ent_bm
                     
-                    if min_r_bm <= -0.005: # Stop Loss fijo -0.5%
+                    if min_r_bm <= -0.005:
                         exit_bm = ent_bm * (1 - 0.005)
                         pnl_bm = ((exit_bm - ent_bm) * pos_sz_bm)
                         vol_bm += (pos_sz_bm * exit_bm)
                         cap_bm += pnl_bm
                         ops_bm += 1
+                        trades_bm_log.append({'Fecha': d_bm})
                         in_pos_bm = False
                         
-                    elif max_r_bm >= 0.06: # Take Profit fijo 6.0%
+                    elif max_r_bm >= 0.06:
                         exit_bm = ent_bm * (1 + 0.06)
                         pnl_bm = ((exit_bm - ent_bm) * pos_sz_bm)
                         vol_bm += (pos_sz_bm * exit_bm)
                         cap_bm += pnl_bm
                         ops_bm += 1
+                        trades_bm_log.append({'Fecha': d_bm})
                         in_pos_bm = False
 
         comisiones_bm = vol_bm * tasa_friccion_comision
         cap_neto_bm = cap_bm - comisiones_bm
         rend_bm = ((cap_neto_bm / capital_inicial) - 1) * 100
+
+    # Ordenar y formatear fechas del log principal
+    df_trades = pd.DataFrame(trades_log)
+    if not df_trades.empty:
+        df_trades['Fecha'] = pd.to_datetime(df_trades['Fecha'])
+        df_trades = df_trades.sort_values('Fecha').reset_index(drop=True)
+        primera_fecha_real = df_trades['Fecha'].min().strftime('%d/%m/%Y')
+        ultima_fecha_real = df_trades['Fecha'].max().strftime('%d/%m/%Y')
+        df_trades['Fecha'] = df_trades['Fecha'].dt.strftime('%Y-%m-%d')
+    else:
+        primera_fecha_real = "N/A"
+        ultima_fecha_real = "22/10/2026"
+
+    # Detección automática también para el benchmark
+    df_bm_log = pd.DataFrame(trades_bm_log)
+    if not df_bm_log.empty:
+        df_bm_log['Fecha'] = pd.to_datetime(df_bm_log['Fecha'])
+        primera_fecha_bm = df_bm_log['Fecha'].min().strftime('%d/%m/%Y')
+    else:
+        primera_fecha_bm = primera_fecha_real
 
     # Cálculos estadísticos principales
     equity_series = pd.Series(equity_curve)
@@ -205,7 +229,7 @@ if ejecutar:
     drawdown = (equity_series - peak) / peak
     max_drawdown = drawdown.min() * 100
 
-    num_operaciones = len(trades_log)
+    num_operaciones = len(df_trades)
     capital_antes_comisiones = capital
     comisiones_totales = volumen_nocional_acumulado * tasa_friccion_comision
     capital_neto = capital_antes_comisiones - comisiones_totales
@@ -213,8 +237,8 @@ if ejecutar:
     indice_comisiones_pct = (comisiones_totales / capital_antes_comisiones) * 100 if capital_antes_comisiones > 0 else 0.0
     rendimiento = ((capital_neto / capital_inicial) - 1) * 100
 
-    # 1. Recuadro superior del periodo
-    st.info(f"📅 **Periodo de Simulación:** 11/01/2021 al 22/10/2026  |  *Take Profit:* **{take_profit_input:.1f}%**")
+    # 1. Recuadro superior del periodo sincronizado automáticamente con los datos reales
+    st.info(f"📅 **Periodo de Simulación:** {primera_fecha_real} al {ultima_fecha_real}  |  *Take Profit:* **{take_profit_input:.1f}%**")
     
     # 2. Cuadrícula principal (2 columnas x 4 filas)
     st.markdown(f'<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px;"><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Inicial</div><div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital_inicial:,.2f}</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Operaciones</div><div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">{num_operaciones}</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Antes de Comisiones</div><div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital_antes_comisiones:,.2f}</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Rendimiento Neto</div><div style="font-size: 0.95rem; font-weight: 700; color: #16a34a; margin-top: 2px; white-space: nowrap;">+{rendimiento:.2f}%</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Comisiones Totales</div><div style="font-size: 0.95rem; font-weight: 700; color: #dc2626; margin-top: 2px; white-space: nowrap;">${comisiones_totales:,.2f}</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Índice de Comisiones</div><div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">{indice_comisiones_pct:.2f}% <span style="font-size: 0.65rem; color: #64748b;">(sobre capital bruto)</span></div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Final (Neto)</div><div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital_neto:,.2f}</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Peor Baja (Max DD)</div><div style="font-size: 0.95rem; font-weight: 700; color: #dc2626; margin-top: 2px; white-space: nowrap;">{max_drawdown:.2f}%</div></div></div>', unsafe_allow_html=True)
@@ -226,16 +250,16 @@ if ejecutar:
         f"El *Índice de Comisiones* ({indice_comisiones_pct:.2f}%) expresa la proporción exacta que representa este costo operativo respecto al *Capital Antes de Comisiones*."
     )
 
-    # 4. Benchmark Independiente (Calculado internamente al 6.0% fijo con los cierres actualizados)
+    # 4. Benchmark Independiente (Sincronizado con la primera fecha real detectada)
     st.info(
         "💡 **Estrategia Base de Referencia Óptima (Benchmark Independiente al 6.0%):**\n\n"
-        f"• **Configuración Histórica Fija (11/01/2021 - 22/10/2026):** Stop Loss: **-0.5%** | Take Profit: **6.0%** -> **${cap_bm:,.2f} USD** (**+{rend_bm:.2f}%** neto en **{ops_bm} operaciones** calculadas con la fricción actual)."
+        f"• **Configuración Histórica Fija ({primera_fecha_bm} - 22/10/2026):** Stop Loss: **-0.5%** | Take Profit: **6.0%** -> **${cap_bm:,.2f} USD** (**+{rend_bm:.2f}%** neto en **{ops_bm} operaciones** calculadas con la fricción actual)."
     )
     
     st.markdown("---")
     st.subheader("📋 Detalle de Operaciones")
-    if trades_log:
-        st.dataframe(pd.DataFrame(trades_log), use_container_width=True)
+    if not df_trades.empty:
+        st.dataframe(df_trades, use_container_width=True)
     else:
         st.info("No se registraron operaciones bajo los parámetros actuales.")
 else:
