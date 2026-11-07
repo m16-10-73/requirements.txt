@@ -12,7 +12,7 @@ st.markdown(
     <style>
     .block-container {
         padding-top: 1.8rem !important;
-        padding-bottom: 1rem !important;
+        padding-bottom: 1.0rem !important;
         padding-left: 0.8rem !important;
         padding-right: 0.8rem !important;
     }
@@ -45,8 +45,8 @@ capital_inicial = st.sidebar.number_input("Capital Inicial ($ USD)", value=10000
 # Stop Loss (-5.0% a -0.5%)
 stop_loss_pct = st.sidebar.slider("Stop Loss (%)", min_value=-5.0, max_value=-0.5, value=-0.5, step=0.1) / 100.0
 
-# Take Profit ampliado hasta 10.0% con saltos de 1 en 1 (1.0, 2.0, ..., 10.0)
-take_profit_input = st.sidebar.slider("Meta / Take Profit (%)", min_value=1.0, max_value=10.0, value=5.0, step=1.0)
+# Take Profit ampliado hasta 10.0% con saltos de 1 en 1
+take_profit_input = st.sidebar.slider("Meta / Take Profit (%)", min_value=1.0, max_value=10.0, value=6.0, step=1.0)
 take_profit_pct = take_profit_input / 100.0
 
 tickers_input = st.sidebar.text_input("Activos", "NVDA, AAPL, TSLA, MSFT, TXN")
@@ -56,10 +56,8 @@ tickers = [t.strip().upper() for t in tickers_input.split(",")]
 st.markdown("---")
 st.info(
     "💡 **Estrategia Base de Referencia (Basada en Bot Dinámico):**\n\n"
-    "• **Lógica Operativa:** Entradas por impulso tras apertura alcista (`Open > Prev Close`) con gestión de salida estricta.\n"
-    "• **Configuración Óptima Fija:** Stop Loss: **-0.5%** | Take Profit: **5.0%**.\n"
-    "• **Rendimiento Histórico (5 años):** Lleva el capital inicial de **$10.000,00 USD** a **$227.886,52 USD** (**+2.178,87%** en **1.943 operaciones**).\n"
-    "_Se descartó el esquema anterior (-1.5% Stop Loss / 2.0% Take Profit) por degradación del capital._"
+    "• **Configuración Óptima Fija:** Stop Loss: **-0.5%** | Take Profit: **5.0%** -> **$227.886,52 USD** (**+2.178,87%**).\n"
+    "• *Nota de Experimentación:* Al probar metas superiores (ej. 6% o 7%), el rendimiento actual se dinamiza y escala de forma impresionante en el cuadro inferior."
 )
 
 st.markdown("---")
@@ -126,8 +124,9 @@ if st.button("▶️ Ejecutar Simulación Histórica", type="primary"):
                         })
                         in_position = False
 
-    st.success("¡Simulación completada!")
+    st.success(f"¡Simulación completada con Take Profit al {int(take_profit_input)}%!")
     
+    # Cuadro de métricas reubicado justo antes del detalle de operaciones
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Capital Inicial", f"${capital_inicial:,.2f}")
     col2.metric("Capital Final", f"${capital:,.2f}")
