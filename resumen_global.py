@@ -41,7 +41,6 @@ st.markdown(
         margin: 2px 0 0 0;
         font-size: 0.75rem;
     }
-    /* Estilo para asegurar que el título del gráfico entre en una sola línea en móviles */
     .chart-title {
         font-size: 1rem;
         font-weight: 600;
@@ -137,8 +136,11 @@ for bot in archivos_bots:
     })
 
     estrategia_corta = nombre.replace("Bot ", "")
+    # Formato de etiqueta con la fecha de cierre debajo entre paréntesis (ej: Dinámico<br>(06/11/2026))
+    etiqueta_eje_x = f"{estrategia_corta}<br>({fecha_cierre})"
+    
     datos_grafico.append({
-        "Estrategia": estrategia_corta,
+        "EstrategiaLabel": etiqueta_eje_x,
         "Rentabilidad": round(rentabilidad, 2),
         "ValorActual": formato_moneda_latino(capital_actual),
         "Periodo": f"{fecha_inicio} al {fecha_cierre}"
@@ -159,18 +161,17 @@ resumen_datos.append({
 df_resumen = pd.DataFrame(resumen_datos)
 st.dataframe(df_resumen, use_container_width=True, hide_index=True)
 
-# Título ajustado para que quede perfecto en una sola línea en el celular
 st.markdown('<div class="chart-title">📈 Evolución y Rentabilidad</div>', unsafe_allow_html=True)
 
 df_chart = pd.DataFrame(datos_grafico)
 
 fig = px.bar(
     df_chart,
-    x="Estrategia",
+    x="EstrategiaLabel",
     y="Rentabilidad",
     text="ValorActual",
     hover_data=["Periodo"],
-    color="Estrategia",
+    color="EstrategiaLabel",
     color_discrete_sequence=["#2c3e50", "#4ca1af", "#34495e", "#16a085"]
 )
 
@@ -184,7 +185,7 @@ fig.update_layout(
     yaxis_title="Rentabilidad (%)",
     showlegend=False,
     margin=dict(l=10, r=10, t=30, b=10),
-    height=320
+    height=340
 )
 
 st.plotly_chart(fig, use_container_width=True)
