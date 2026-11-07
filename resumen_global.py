@@ -117,6 +117,7 @@ for bot in archivos_bots:
 
     sum_rentabilidad += rentabilidad
 
+    # Orden exacto de columnas solicitadas: Estrategia, Inicio, Cierre, Días, Inicial, Actual, Rentab (%)
     resumen_datos.append({
         "Estrategia": nombre,
         "Inicio": fecha_inicio,
@@ -127,7 +128,6 @@ for bot in archivos_bots:
         "Rentab (%)": f"{'+' if rentabilidad >= 0 else ''}{rentabilidad:.2f}%"
     })
 
-    # Datos para el gráfico con etiqueta de fecha debajo y valor actual encima
     estrategia_corta = nombre.replace("Bot ", "")
     datos_grafico.append({
         "Estrategia": estrategia_corta,
@@ -136,7 +136,7 @@ for bot in archivos_bots:
         "Periodo": f"{fecha_inicio} al {fecha_cierre}"
     })
 
-# Fila de Promedio en la tabla
+# Fila de Promedio general
 promedio_rentabilidad = sum_rentabilidad / len(archivos_bots) if archivos_bots else 0.0
 resumen_datos.append({
     "Estrategia": "PROMEDIO",
@@ -165,7 +165,6 @@ fig = px.bar(
     color_discrete_sequence=["#2c3e50", "#4ca1af", "#34495e", "#16a085"]
 )
 
-# Colocar el valor actual exactamente sobre la barra
 fig.update_traces(
     textposition="outside",
     textfont_size=11
