@@ -3,6 +3,7 @@ import json
 import pandas as pd
 from datetime import datetime
 import streamlit as st
+import plotly.express as px
 
 st.set_page_config(
     page_title="Consolidado de Bots de Trading",
@@ -55,7 +56,6 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Orden estricto solicitado: Dinámico, Valoris, Emergente, Eventos
 archivos_bots = [
     {"Nombre": "Bot Dinámico", "Archivo": "bitacora_dinamica.json"},
     {"Nombre": "Bot Valoris", "Archivo": "bitacora.valoris.json"},
@@ -127,9 +127,13 @@ for bot in archivos_bots:
         "Rentab (%)": f"{'+' if rentabilidad >= 0 else ''}{rentabilidad:.2f}%"
     })
 
+    # Datos para el gráfico con etiqueta de fecha debajo y valor actual encima
+    estrategia_corta = nombre.replace("Bot ", "")
     datos_grafico.append({
-        "Estrategia": nombre.replace("Bot ", ""),
-        "Rentabilidad (%)": round(rentabilidad, 2)
+        "Estrategia": estrategia_corta,
+        "Rentabilidad": round(rentabilidad, 2),
+        "ValorActual": formato_moneda_latino(capital_actual),
+        "Periodo": f"{fecha_inicio} al {fecha_cierre}"
     })
 
 # Fila de Promedio en la tabla
@@ -147,11 +151,32 @@ resumen_datos.append({
 df_resumen = pd.DataFrame(resumen_datos)
 st.dataframe(df_resumen, use_container_width=True, hide_index=True)
 
-# Gráfico de barras interactivo respetando el orden exacto
-st.markdown("### 📈 Comparativa de Rentabilidad (%)")
+# Gráfico interactivo con Plotly
+st.markdown("### 📈 Evolución y Rentabilidad")
 df_chart = pd.DataFrame(datos_grafico)
-# Establecer índice categórico ordenado para que el gráfico no los reordene alfabéticamente
-df_chart["Estrategia"] = pd.Categorical(df_chart["Estrategia"], categories=[b["Nombre"].replace("Bot ", "") for b in archivos_bots], ordered=True)
-df_chart = df_chart.sort_values("Estrategia").set_index("Estrategia")
 
-st.bar_chart(df_chart)
+fig = px.bar(
+    df_chart,
+    x="Estrategia",
+    y="Rentabilidad",
+    text="ValorActual",
+    hover_data=["Periodo"],
+    color="Estrategia",
+    color_discrete_sequence=["#2c3e50", "#4ca1af", "#34495e", "#16a085"]
+)
+
+# Colocar el valor actual exactamente sobre la barra
+fig.update_traces(
+    textposition="outside",
+    textfont_size=11
+)
+
+fig.update_layout(
+    xaxis_title="",
+    yaxis_title="Rentabilidad (%)",
+    showlegend=False,
+    margin=dict(l=10, r=10, t=30, b=10),
+    height=320
+)
+
+st.plotly_chart(fig, use_container_width=True)
