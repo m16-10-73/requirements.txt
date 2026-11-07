@@ -63,7 +63,7 @@ stop_loss_pct = st.sidebar.slider("Stop Loss (%)", min_value=-5.0, max_value=-0.
 take_profit_input = st.sidebar.slider("Meta / Take Profit (%)", min_value=1.0, max_value=10.0, value=6.0, step=1.0, format="%.1f")
 take_profit_pct = take_profit_input / 100.0
 
-# Comisión porcentual por valor negociado (ej. 0.05% por operación o tarifa fija por volumen)
+# Comisión porcentual por valor negociado
 tasa_comision = st.sidebar.slider("Comisión por Volumen (%)", min_value=0.0, max_value=0.5, value=0.05, step=0.01) / 100.0
 
 tickers_input = st.sidebar.text_input("Activos", "NVDA, AAPL, TSLA, MSFT, TXN")
@@ -81,7 +81,6 @@ if ejecutar:
     with st.spinner("Procesando datos históricos y ejecutando reglas de riesgo..."):
         data = yf.download(tickers, start=fecha_inicio, end=fecha_fin)
         
-        # Simulamos dos capitales en paralelo para aislar el impacto real: sin comisiones y con comisiones
         capital_neto = capital_inicial
         capital_bruto = capital_inicial
         
@@ -111,7 +110,6 @@ if ejecutar:
                 if not in_position and (curr_open > prev_close):
                     in_position = True
                     entry_price = curr_open
-                    # Asignación del 20% del capital actual para la posición
                     position_size = (capital_neto * 0.20) / entry_price
                     valor_nocional = position_size * entry_price
                     volumen_operacional_total += valor_nocional
@@ -126,7 +124,6 @@ if ejecutar:
                         exit_price = entry_price * (1 + stop_loss_pct)
                         pnl_bruto = (exit_price - entry_price) * position_size
                         
-                        # Comisión real basada en el volumen de salida
                         valor_salida = position_size * exit_price
                         volumen_operacional_total += valor_salida
                         comision_trade = (valor_nocional + valor_salida) * tasa_comision
@@ -149,7 +146,6 @@ if ejecutar:
                         exit_price = entry_price * (1 + take_profit_pct)
                         pnl_bruto = (exit_price - entry_price) * position_size
                         
-                        # Comisión real basada en el volumen de salida
                         valor_salida = position_size * exit_price
                         volumen_operacional_total += valor_salida
                         comision_trade = (valor_nocional + valor_salida) * tasa_comision
@@ -175,53 +171,14 @@ if ejecutar:
     max_drawdown = drawdown.min() * 100
 
     num_operaciones = len(trades_log)
-    
-    # Índice real de comisiones: porcentaje que representan las comisiones sobre el volumen total operado
     indice_comisiones_real = (comisiones_totales / volumen_operacional_total * 100) if volumen_operacional_total > 0 else 0.0
-    
     rendimiento = ((capital_neto / capital_inicial) - 1) * 100
 
     # Recuadro independiente para el periodo
     st.info(f"📅 **Periodo de Simulación:** 01/01/2021 al 22/10/2026  |  *Take Profit:* **{take_profit_input:.1f}%**")
     
-    # Cuadrícula 2 columnas x 4 filas con datos reales y matemáticamente consistentes
-    st.markdown(f'''<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px;">
-    <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;">
-        <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Inicial</div>
-        <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital_inicial:,.2f}</div>
-    </div>
-    <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;">
-        <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Operaciones</div>
-        <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">{num_operaciones}</div>
-    </div>
-
-    <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;">
-        <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Antes de Comisiones</div>
-        <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital_bruto:,.2f}</div>
-    </div>
-    <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;">
-        <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Rendimiento Neto</div>
-        <div style="font-size: 0.95rem; font-weight: 700; color: #16a34a; margin-top: 2px; white-space: nowrap;">+{rendimiento:.2f}%</div>
-    </div>
-
-    <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;">
-        <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Comisiones Totales</div>
-        <div style="font-size: 0.95rem; font-weight: 700; color: #dc2626; margin-top: 2px; white-space: nowrap;">${comisiones_totales:,.2f}</div>
-    </div>
-    <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;">
-        <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Índice de Comisiones</div>
-        <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">{indice_comisiones_real:.3f}% <span style="font-size: 0.65rem; color: #64748b;">(sobre volumen)</span></div>
-    </div>
-
-    <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;">
-        <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Final (Neto)</div>
-        <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital_neto:,.2f}</div>
-    </div>
-    <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;">
-        <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Peor Baja (Max DD)</div>
-        <div style="font-size: 0.95rem; font-weight: 700; color: #dc2626; margin-top: 2px; white-space: nowrap;">{max_drawdown:.2f}%</div>
-    </div>
-</div>''', unsafe_allow_html=True)
+    # Cuadrícula 2 columnas x 4 filas en una sola línea estricta para evitar errores de renderizado de Streamlit
+    st.markdown(f'<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px;"><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Inicial</div><div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital_inicial:,.2f}</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Operaciones</div><div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">{num_operaciones}</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Antes de Comisiones</div><div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital_bruto:,.2f}</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Rendimiento Neto</div><div style="font-size: 0.95rem; font-weight: 700; color: #16a34a; margin-top: 2px; white-space: nowrap;">+{rendimiento:.2f}%</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Comisiones Totales</div><div style="font-size: 0.95rem; font-weight: 700; color: #dc2626; margin-top: 2px; white-space: nowrap;">${comisiones_totales:,.2f}</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Índice de Comisiones</div><div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">{indice_comisiones_real:.3f}% <span style="font-size: 0.65rem; color: #64748b;">(sobre volumen)</span></div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Capital Final (Neto)</div><div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital_neto:,.2f}</div></div><div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px;"><div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Peor Baja (Max DD)</div><div style="font-size: 0.95rem; font-weight: 700; color: #dc2626; margin-top: 2px; white-space: nowrap;">{max_drawdown:.2f}%</div></div></div>', unsafe_allow_html=True)
     
     # Análisis Dinámico de Parámetros
     if take_profit_input == 6.0 and abs(stop_loss_pct - (-0.005)) < 1e-5:
