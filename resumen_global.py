@@ -16,7 +16,7 @@ st.markdown(
     <style>
     .block-container {
         padding-top: 1.8rem !important;
-        padding-bottom: 1rem !important;
+        padding-bottom: 1.0rem !important;
         padding-left: 0.5rem !important;
         padding-right: 0.5rem !important;
     }
@@ -136,7 +136,6 @@ for bot in archivos_bots:
     })
 
     estrategia_corta = nombre.replace("Bot ", "")
-    # Formato de etiqueta con la fecha de cierre debajo entre paréntesis (ej: Dinámico<br>(06/11/2026))
     etiqueta_eje_x = f"{estrategia_corta}<br>({fecha_cierre})"
     
     datos_grafico.append({
@@ -146,7 +145,6 @@ for bot in archivos_bots:
         "Periodo": f"{fecha_inicio} al {fecha_cierre}"
     })
 
-# Fila de Promedio general
 promedio_rentabilidad = sum_rentabilidad / len(archivos_bots) if archivos_bots else 0.0
 resumen_datos.append({
     "Estrategia": "PROMEDIO",
@@ -180,10 +178,12 @@ fig.update_traces(
     textfont_size=11
 )
 
+# Se achica el tamaño de fuente del eje X para que la fecha quede sutil
 fig.update_layout(
     xaxis_title="",
     yaxis_title="Rentabilidad (%)",
     showlegend=False,
+    xaxis=dict(tickfont=dict(size=10)),
     margin=dict(l=10, r=10, t=30, b=10),
     height=340
 )
