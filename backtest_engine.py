@@ -52,12 +52,12 @@ take_profit_pct = take_profit_input / 100.0
 tickers_input = st.sidebar.text_input("Activos", "NVDA, AAPL, TSLA, MSFT, TXN")
 tickers = [t.strip().upper() for t in tickers_input.split(",")]
 
-# --- RESUMEN FIJO DE LA CONFIGURACIÓN BASE RÉCORD ---
+# --- RESUMEN FIJO ACTUALIZADO CON EL NUEVO ÓPTIMO RÉCORD (6%) ---
 st.markdown("---")
 st.info(
-    "💡 **Estrategia Base de Referencia (Basada en Bot Dinámico):**\n\n"
-    "• **Configuración Óptima Fija:** Stop Loss: **-0.5%** | Take Profit: **5.0%** -> **$227.886,52 USD** (**+2.178,87%**).\n"
-    "• *Nota de Experimentación:* Al probar metas superiores (ej. 6% o 7%), el rendimiento actual se dinamiza y escala de forma impresionante en el cuadro inferior."
+    "💡 **Estrategia Base de Referencia Óptima (Actualizada):**\n\n"
+    "• **Configuración Récord:** Stop Loss: **-0.5%** | Take Profit: **6.0%** -> **$266,062.85 USD** (**+2,560.63%** en **1,812 operaciones**).\n"
+    "• *Nota:* Supera al anterior estándar del 5.0% ($227,886.52 USD). Utiliza el panel lateral para seguir testeando variantes en tiempo real."
 )
 
 st.markdown("---")
