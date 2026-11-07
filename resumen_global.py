@@ -41,6 +41,15 @@ st.markdown(
         margin: 2px 0 0 0;
         font-size: 0.75rem;
     }
+    /* Estilo para asegurar que el título del gráfico entre en una sola línea en móviles */
+    .chart-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-top: 15px;
+        margin-bottom: 5px;
+        white-space: nowrap;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -117,7 +126,6 @@ for bot in archivos_bots:
 
     sum_rentabilidad += rentabilidad
 
-    # Orden exacto solicitado: Estrategia, Inicial, Actual, Rentab (%), Días, Inicio, Cierre
     resumen_datos.append({
         "Estrategia": nombre,
         "Inicial": formato_moneda_latino(capital_inicial),
@@ -136,7 +144,7 @@ for bot in archivos_bots:
         "Periodo": f"{fecha_inicio} al {fecha_cierre}"
     })
 
-# Fila de Promedio general con el mismo orden
+# Fila de Promedio general
 promedio_rentabilidad = sum_rentabilidad / len(archivos_bots) if archivos_bots else 0.0
 resumen_datos.append({
     "Estrategia": "PROMEDIO",
@@ -151,8 +159,9 @@ resumen_datos.append({
 df_resumen = pd.DataFrame(resumen_datos)
 st.dataframe(df_resumen, use_container_width=True, hide_index=True)
 
-# Gráfico interactivo con Plotly
-st.markdown("### 📈 Evolución y Rentabilidad")
+# Título ajustado para que quede perfecto en una sola línea en el celular
+st.markdown('<div class="chart-title">📈 Evolución y Rentabilidad</div>', unsafe_allow_html=True)
+
 df_chart = pd.DataFrame(datos_grafico)
 
 fig = px.bar(
