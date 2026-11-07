@@ -14,8 +14,8 @@ st.markdown("---")
 # Panel lateral con parámetros de simulación
 st.sidebar.header("⚙️ Parámetros de Simulación")
 capital_inicial = st.sidebar.number_input("Capital Inicial ($ USD)", value=10000.0, step=1000.0)
-stop_loss_pct = st.sidebar.slider("Stop Loss (%)", min_value=-5.0, max_value=-0.5, value=-2.0, step=0.1) / 100.0
-take_profit_pct = st.sidebar.slider("Meta / Take Profit (%)", min_value=0.5, max_value=5.0, value=1.35, step=0.05) / 100.0
+stop_loss_pct = st.sidebar.slider("Stop Loss (%)", min_value=-5.0, max_value=-0.5, value=-0.5, step=0.1) / 100.0
+take_profit_pct = st.sidebar.slider("Meta / Take Profit (%)", min_value=0.5, max_value=5.0, value=5.0, step=0.05) / 100.0
 
 tickers_input = st.sidebar.text_input("Activos", "NVDA, AAPL, TSLA, MSFT, TXN")
 tickers = [t.strip().upper() for t in tickers_input.split(",")]
