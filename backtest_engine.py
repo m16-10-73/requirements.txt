@@ -6,7 +6,7 @@ import numpy as np
 # Configuración de la interfaz web
 st.set_page_config(page_title="Motor de Backtesting - Flota", layout="wide", page_icon="📊")
 
-# Estilos CSS avanzados con mayor margen superior y tipografías compactas
+# Estilos CSS avanzados para mantener lectura compacta en móviles
 st.markdown(
     """
     <style>
@@ -63,6 +63,9 @@ stop_loss_pct = st.sidebar.slider("Stop Loss (%)", min_value=-5.0, max_value=-0.
 take_profit_input = st.sidebar.slider("Meta / Take Profit (%)", min_value=1.0, max_value=10.0, value=6.0, step=1.0, format="%.1f")
 take_profit_pct = take_profit_input / 100.0
 
+# Costo estimado de comisión por operación ($ USD)
+comision_por_trade = st.sidebar.number_input("Comisión por Trade ($ USD)", value=1.00, step=0.50)
+
 tickers_input = st.sidebar.text_input("Activos", "NVDA, AAPL, TSLA, MSFT, TXN")
 tickers = [t.strip().upper() for t in tickers_input.split(",")]
 
@@ -72,11 +75,15 @@ ejecutar = st.button("▶️ Ejecutar Simulación Histórica", type="primary", u
 st.markdown("---")
 
 if ejecutar:
+    fecha_inicio = "2021-01-01"
+    fecha_fin = "2026-10-22"
+    
     with st.spinner("Procesando datos históricos y ejecutando reglas de riesgo..."):
-        data = yf.download(tickers, start="2021-01-01", end="2026-10-22")
+        data = yf.download(tickers, start=fecha_inicio, end=fecha_fin)
         
         capital = capital_inicial
         trades_log = []
+        equity_curve = [capital_inicial]
         
         for ticker in tickers:
             try:
@@ -101,15 +108,16 @@ if ejecutar:
                     position_size = (capital * 0.20) / entry_price
                     continue
                     
-                # Gestión de riesgo (Stop Loss / Take Profit)
+                # Gestión de riesgo (Stop Loss / Take Profit) con descuento de comisiones
                 if in_position:
                     min_return = (curr_low - entry_price) / entry_price
                     max_return = (curr_high - entry_price) / entry_price
                     
                     if min_return <= stop_loss_pct:
                         exit_price = entry_price * (1 + stop_loss_pct)
-                        pnl = (exit_price - entry_price) * position_size
+                        pnl = ((exit_price - entry_price) * position_size) - comision_por_trade
                         capital += pnl
+                        equity_curve.append(capital)
                         trades_log.append({
                             'Fecha': date.strftime('%Y-%m-%d'),
                             'Activo': ticker,
@@ -121,8 +129,9 @@ if ejecutar:
                         
                     elif max_return >= take_profit_pct:
                         exit_price = entry_price * (1 + take_profit_pct)
-                        pnl = (exit_price - entry_price) * position_size
+                        pnl = ((exit_price - entry_price) * position_size) - comision_por_trade
                         capital += pnl
+                        equity_curve.append(capital)
                         trades_log.append({
                             'Fecha': date.strftime('%Y-%m-%d'),
                             'Activo': ticker,
@@ -132,14 +141,20 @@ if ejecutar:
                         })
                         in_position = False
 
-    st.success(f"¡Simulación completada con éxito (Take Profit al {take_profit_input:.1f}%)!")
+    # Cálculo del Máximo Drawdown (Peor Baja)
+    equity_series = pd.Series(equity_curve)
+    peak = equity_series.cummax()
+    drawdown = (equity_series - peak) / peak
+    max_drawdown = drawdown.min() * 100
+
+    num_operaciones = len(trades_log)
+    comisiones_totales = num_operaciones * comision_por_trade
+
+    st.success(f"¡Simulación completada con éxito! | Periodo: **01/01/2021 al 22/10/2026** (Take Profit {take_profit_input:.1f}%)")
     
     rendimiento = ((capital / capital_inicial) - 1) * 100
     
-    # CUADRÍCULA 2x2 RESPETANDO EL ORDEN EXACTO:
-    # 1. Capital Inicial | 2. Capital Final
-    # 3. Rendimiento    | 4. Operaciones
-    # Con números achicados a la mitad para que no rompan líneas.
+    # CUADRÍCULA EXPANDIDA 2x3 CON LAS NUEVAS MÉTRICAS
     st.markdown(f"""
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px;">
             <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
@@ -151,28 +166,36 @@ if ejecutar:
                 <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">${capital:,.2f}</div>
             </div>
             <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-                <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Rendimiento</div>
+                <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Rendimiento Neto</div>
                 <div style="font-size: 0.95rem; font-weight: 700; color: #16a34a; margin-top: 2px; white-space: nowrap;">+{rendimiento:.2f}%</div>
             </div>
             <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
                 <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Operaciones</div>
-                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">{len(trades_log)}</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 2px; white-space: nowrap;">{num_operaciones}</div>
+            </div>
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Comisiones Totales</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #dc2626; margin-top: 2px; white-space: nowrap;">${comisiones_totales:,.2f} <span style="font-size: 0.68rem; color: #64748b;">(${comision_por_trade:.2f}/t)</span></div>
+            </div>
+            <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+                <div style="font-size: 0.68rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Peor Baja (Max DD)</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #dc2626; margin-top: 2px; white-space: nowrap;">{max_drawdown:.2f}%</div>
             </div>
         </div>
     """, unsafe_allow_html=True)
     
-    # Análisis Dinámico de Parámetros con tipografía compacta
+    # Análisis Dinámico de Parámetros
     if take_profit_input == 6.0 and abs(stop_loss_pct - (-0.005)) < 1e-5:
         st.success("🎯 **Análisis Dinámico:** ¡Estás operando en la **Configuración Récord Óptima** (Stop Loss: -0.5% | Take Profit: 6.0%)!")
     elif take_profit_input == 5.0:
-        st.info("ℹ️ **Análisis Dinámico:** Estás evaluando el estándar anterior (5.0% -> $227,886.52 USD). El 6.0% demostró mayor rendimiento.")
+        st.info("ℹ️ **Análisis Dinámico:** Estás evaluando el estándar anterior (5.0%). El 6.0% demostró mayor rendimiento.")
     else:
         st.warning(f"🔍 **Análisis Dinámico:** Stop Loss al {stop_loss_pct*100:.1f}% y Take Profit al **{take_profit_input:.1f}%** (${capital:,.2f} USD).")
 
     # Referencia Fija compacta
     st.info(
         "💡 **Estrategia Base de Referencia Óptima (Fija):**\n\n"
-        "• **Configuración Histórica Récord:** Stop Loss: **-0.5%** | Take Profit: **6.0%** -> **$266,062.85 USD** (**+2,560.63%** en **1,812 operaciones**)."
+        "• **Configuración Histórica Récord (01/01/2021 - 22/10/2026):** Stop Loss: **-0.5%** | Take Profit: **6.0%** -> **$266,062.85 USD** (**+2,560.63%** en **1,812 operaciones**)."
     )
     
     st.markdown("---")
