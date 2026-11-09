@@ -111,7 +111,6 @@ for bot in archivos_bots:
           try:
             f1 = datetime.strptime(fecha_inicio, "%d/%m/%Y")
             f2 = datetime.strptime(fecha_cierre, "%d/%m/%Y")
-            # 🛡️ CÁLCULO DE DÍAS HÁBILES EXCLUYENDO FINES DE SEMANA (Lunes a Viernes)
             dias_acumulados = len(pd.bdate_range(start=f1, end=f2))
             if dias_acumulados == 0 and f1 == f2:
               dias_acumulados = 1 if f1.weekday() < 5 else 0
@@ -145,10 +144,14 @@ for bot in archivos_bots:
   estrategia_corta = nombre.replace("Bot ", "")
   etiqueta_eje_x = f"{estrategia_corta}<br>({fecha_cierre})"
 
+  # 🛠️ CAMBIO CLAVE: Guardamos el valor numérico real para graficar torres por capital absoluto
   datos_grafico.append({
       "EstrategiaLabel": etiqueta_eje_x,
-      "Rentabilidad": round(rentabilidad, 2),
+      "CapitalNum": round(capital_actual, 2),
       "ValorActual": formato_moneda_latino(capital_actual),
+      "RentabilidadStr": (
+          f"{'+' if rentabilidad >= 0 else ''}{rentabilidad:.2f}%"
+      ),
       "Periodo": f"{fecha_inicio} al {fecha_cierre}",
   })
 
@@ -171,18 +174,19 @@ df_resumen = pd.DataFrame(resumen_datos)
 st.dataframe(df_resumen, use_container_width=True, hide_index=True)
 
 st.markdown(
-    '<div class="chart-title">📈 Evolución y Rentabilidad</div>',
+    '<div class="chart-title">📈 Evolución y Capital Actual por Estrategia</div>',
     unsafe_allow_html=True,
 )
 
 df_chart = pd.DataFrame(datos_grafico)
 
+# 📊 Gráfico basado en capital monetario (Eje Y en USD, con escala desde 9000 para apreciar diferencias)
 fig = px.bar(
     df_chart,
     x="EstrategiaLabel",
-    y="Rentabilidad",
+    y="CapitalNum",
     text="ValorActual",
-    hover_data=["Periodo"],
+    hover_data=["RentabilidadStr", "Periodo"],
     color="EstrategiaLabel",
     color_discrete_sequence=["#2c3e50", "#4ca1af", "#34495e", "#16a085"],
 )
@@ -191,7 +195,10 @@ fig.update_traces(textposition="outside", textfont_size=11)
 
 fig.update_layout(
     xaxis_title="",
-    yaxis_title="Rentabilidad (%)",
+    yaxis_title="Capital Total (USD)",
+    yaxis=dict(
+        range=[9000, 12500]
+    ),  # Rango óptimo para ver el crecimiento desde los 10k
     showlegend=False,
     xaxis=dict(tickfont=dict(size=10)),
     margin=dict(l=10, r=10, t=30, b=10),
