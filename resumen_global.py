@@ -1,9 +1,9 @@
-import os
-import json
-import pandas as pd
 from datetime import datetime
-import streamlit as st
+import json
+import os
+import pandas as pd
 import plotly.express as px
+import streamlit as st
 
 st.set_page_config(
     page_title="Consolidado de Bots de Trading",
@@ -68,98 +68,112 @@ archivos_bots = [
     {"Nombre": "Bot Dinámico", "Archivo": "bitacora_dinamica.json"},
     {"Nombre": "Bot Valoris", "Archivo": "bitacora.valoris.json"},
     {"Nombre": "Bot Emergente", "Archivo": "bitacora_emerging.json"},
-    {"Nombre": "Bot Eventos", "Archivo": "bitacora_eventos.json"}
+    {"Nombre": "Bot Eventos", "Archivo": "bitacora_eventos.json"},
 ]
 
 resumen_datos = []
 datos_grafico = []
 sum_rentabilidad = 0.0
 
+
 def formato_moneda_latino(val):
-    s = f"{val:,.2f}"
-    s = s.replace(",", "X").replace(".", ",").replace("X", ".")
-    return f"${s}"
+  s = f"{val:,.2f}"
+  s = s.replace(",", "X").replace(".", ",").replace("X", ".")
+  return f"${s}"
+
 
 for bot in archivos_bots:
-    nombre = bot["Nombre"]
-    archivo = bot["Archivo"]
-    
-    capital_inicial = 10000.0
-    capital_actual = 10000.0
-    fecha_inicio = "-"
-    fecha_cierre = "-"
-    dias_acumulados = 0
-    
-    if os.path.exists(archivo):
-        try:
-            with open(archivo, "r", encoding="utf-8") as f:
-                data = json.load(f)
-                historial = data.get("historial_rendimiento", [])
-                
-                if historial and isinstance(historial, list) and len(historial) > 0:
-                    primer_reg = historial[0]
-                    ultimo_reg = historial[-1]
-                    
-                    capital_inicial = float(primer_reg.get("Capital", 10000.0))
-                    capital_actual = float(ultimo_reg.get("Capital", capital_inicial))
-                    
-                    fecha_inicio = primer_reg.get("Fecha", "-")
-                    fecha_cierre = ultimo_reg.get("Fecha", "-")
-                    
-                    try:
-                        f1 = datetime.strptime(fecha_inicio, "%d/%m/%Y")
-                        f2 = datetime.strptime(fecha_cierre, "%d/%m/%Y")
-                        dias_acumulados = (f2 - f1).days
-                    except Exception:
-                        dias_acumulados = len(historial) - 1
-                else:
-                    capital_inicial = float(data.get("capital_inicial", 10000.0))
-                    capital_actual = capital_inicial
-        except Exception:
-            pass
+  nombre = bot["Nombre"]
+  archivo = bot["Archivo"]
 
-    if capital_inicial > 0:
-        rentabilidad = ((capital_actual - capital_inicial) / capital_inicial) * 100.0
-    else:
-        rentabilidad = 0.0
+  capital_inicial = 10000.0
+  capital_actual = 10000.0
+  fecha_inicio = "-"
+  fecha_cierre = "-"
+  dias_acumulados = 0
 
-    sum_rentabilidad += rentabilidad
+  if os.path.exists(archivo):
+    try:
+      with open(archivo, "r", encoding="utf-8") as f:
+        data = json.load(f)
+        historial = data.get("historial_rendimiento", [])
 
-    resumen_datos.append({
-        "Estrategia": nombre,
-        "Inicial": formato_moneda_latino(capital_inicial),
-        "Actual": formato_moneda_latino(capital_actual),
-        "Rentab (%)": f"{'+' if rentabilidad >= 0 else ''}{rentabilidad:.2f}%",
-        "Días": dias_acumulados,
-        "Inicio": fecha_inicio,
-        "Cierre": fecha_cierre
-    })
+        if historial and isinstance(historial, list) and len(historial) > 0:
+          primer_reg = historial[0]
+          ultimo_reg = historial[-1]
 
-    estrategia_corta = nombre.replace("Bot ", "")
-    etiqueta_eje_x = f"{estrategia_corta}<br>({fecha_cierre})"
-    
-    datos_grafico.append({
-        "EstrategiaLabel": etiqueta_eje_x,
-        "Rentabilidad": round(rentabilidad, 2),
-        "ValorActual": formato_moneda_latino(capital_actual),
-        "Periodo": f"{fecha_inicio} al {fecha_cierre}"
-    })
+          capital_inicial = float(primer_reg.get("Capital", 10000.0))
+          capital_actual = float(ultimo_reg.get("Capital", capital_inicial))
 
-promedio_rentabilidad = sum_rentabilidad / len(archivos_bots) if archivos_bots else 0.0
+          fecha_inicio = primer_reg.get("Fecha", "-")
+          fecha_cierre = ultimo_reg.get("Fecha", "-")
+
+          try:
+            f1 = datetime.strptime(fecha_inicio, "%d/%m/%Y")
+            f2 = datetime.strptime(fecha_cierre, "%d/%m/%Y")
+            # 🛡️ CÁLCULO DE DÍAS HÁBILES EXCLUYENDO FINES DE SEMANA (Lunes a Viernes)
+            dias_acumulados = len(pd.bdate_range(start=f1, end=f2))
+            if dias_acumulados == 0 and f1 == f2:
+              dias_acumulados = 1 if f1.weekday() < 5 else 0
+          except Exception:
+            dias_acumulados = len(historial) - 1
+        else:
+          capital_inicial = float(data.get("capital_inicial", 10000.0))
+          capital_actual = capital_inicial
+    except Exception:
+      pass
+
+  if capital_inicial > 0:
+    rentabilidad = (
+        (capital_actual - capital_inicial) / capital_inicial
+    ) * 100.0
+  else:
+    rentabilidad = 0.0
+
+  sum_rentabilidad += rentabilidad
+
+  resumen_datos.append({
+      "Estrategia": nombre,
+      "Inicial": formato_moneda_latino(capital_inicial),
+      "Actual": formato_moneda_latino(capital_actual),
+      "Rentab (%)": f"{'+' if rentabilidad >= 0 else ''}{rentabilidad:.2f}%",
+      "Días": dias_acumulados,
+      "Inicio": fecha_inicio,
+      "Cierre": fecha_cierre,
+  })
+
+  estrategia_corta = nombre.replace("Bot ", "")
+  etiqueta_eje_x = f"{estrategia_corta}<br>({fecha_cierre})"
+
+  datos_grafico.append({
+      "EstrategiaLabel": etiqueta_eje_x,
+      "Rentabilidad": round(rentabilidad, 2),
+      "ValorActual": formato_moneda_latino(capital_actual),
+      "Periodo": f"{fecha_inicio} al {fecha_cierre}",
+  })
+
+promedio_rentabilidad = (
+    sum_rentabilidad / len(archivos_bots) if archivos_bots else 0.0
+)
 resumen_datos.append({
     "Estrategia": "PROMEDIO",
     "Inicial": "-",
     "Actual": "-",
-    "Rentab (%)": f"{'+' if promedio_rentabilidad >= 0 else ''}{promedio_rentabilidad:.2f}%",
+    "Rentab (%)": (
+        f"{'+' if promedio_rentabilidad >= 0 else ''}{promedio_rentabilidad:.2f}%"
+    ),
     "Días": "-",
     "Inicio": "-",
-    "Cierre": "-"
+    "Cierre": "-",
 })
 
 df_resumen = pd.DataFrame(resumen_datos)
 st.dataframe(df_resumen, use_container_width=True, hide_index=True)
 
-st.markdown('<div class="chart-title">📈 Evolución y Rentabilidad</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="chart-title">📈 Evolución y Rentabilidad</div>',
+    unsafe_allow_html=True,
+)
 
 df_chart = pd.DataFrame(datos_grafico)
 
@@ -170,22 +184,18 @@ fig = px.bar(
     text="ValorActual",
     hover_data=["Periodo"],
     color="EstrategiaLabel",
-    color_discrete_sequence=["#2c3e50", "#4ca1af", "#34495e", "#16a085"]
+    color_discrete_sequence=["#2c3e50", "#4ca1af", "#34495e", "#16a085"],
 )
 
-fig.update_traces(
-    textposition="outside",
-    textfont_size=11
-)
+fig.update_traces(textposition="outside", textfont_size=11)
 
-# Se achica el tamaño de fuente del eje X para que la fecha quede sutil
 fig.update_layout(
     xaxis_title="",
     yaxis_title="Rentabilidad (%)",
     showlegend=False,
     xaxis=dict(tickfont=dict(size=10)),
     margin=dict(l=10, r=10, t=30, b=10),
-    height=340
+    height=340,
 )
 
 st.plotly_chart(fig, use_container_width=True)
