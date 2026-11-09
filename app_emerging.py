@@ -21,19 +21,8 @@ BITACORA_EMERGENTE = "bitacora_emerging.json"
 
 
 def cargar_bitacora_emergente():
-  """Lee rigurosamente el archivo JSON físico y asegura la presencia de todo el histórico real incluyendo el cierre de hoy."""
-  # Base por defecto actualizada que incluye explícitamente el cierre de hoy (09/11/2026: 11,338.95)
-  base_defaults = [
-      {"Fecha": "28/10/2026", "Capital": 10000.00},
-      {"Fecha": "29/10/2026", "Capital": 10171.00},
-      {"Fecha": "30/10/2026", "Capital": 10389.00},
-      {"Fecha": "02/11/2026", "Capital": 10796.08},
-      {"Fecha": "03/11/2026", "Capital": 10963.75},
-      {
-          "Fecha": "09/11/2026",
-          "Capital": 11338.95,
-      },  # Cierre de hoy forzado en base
-  ]
+  """Lee rigurosamente el JSON físico respetando todo el histórico real sin frenarse en listas estáticas."""
+  base_default_inicial = {"Fecha": "28/10/2026", "Capital": 10000.00}
 
   if os.path.exists(BITACORA_EMERGENTE):
     try:
@@ -48,18 +37,20 @@ def cargar_bitacora_emergente():
 
           historial = contenido.get("historial_rendimiento", [])
 
-          # Combinar los defaults históricos con lo que ya tenga el JSON real para no perder nada
+          # Limpiar y parsear cada entrada del JSON real
           historial_limpio = {}
-          for base in base_defaults:
-            historial_limpio[base["Fecha"]] = base["Capital"]
-
           for h in historial:
             f_limpia = str(h.get("Fecha", "")).split(" ")[0]
             cap_val = float(h.get("Capital", 0.0))
             if f_limpia and cap_val > 0:
               historial_limpio[f_limpia] = cap_val
 
-          # Reconstruir la lista ordenada cronológicamente por objeto Datetime real
+          if not historial_limpio:
+            historial_limpio[base_default_inicial["Fecha"]] = (
+                base_default_inicial["Capital"]
+            )
+
+          # Reconstruir la lista ordenada cronológicamente
           lista_temporal = [
               {"Fecha": k, "Capital": v} for k, v in historial_limpio.items()
           ]
@@ -73,26 +64,27 @@ def cargar_bitacora_emergente():
 
           contenido["historial_rendimiento"] = lista_ordenada
 
+          # Sincronización automática del capital inicial con el último cierre registrado
           if lista_ordenada:
             contenido["capital_inicial"] = float(
                 lista_ordenada[-1]["Capital"]
             )
           else:
-            contenido["capital_inicial"] = 11338.95
+            contenido["capital_inicial"] = 10000.00
 
           return contenido
     except Exception:
       pass
 
-  # Si no existe el archivo, se crea la estructura inicial con el día de hoy incluido
+  # Si no existe el archivo, se crea la estructura inicial
   base_data = {
-      "capital_inicial": 11338.95,
+      "capital_inicial": 10000.00,
       "ganancia_cerrada": 0.0,
       "posiciones": [],
       "peak_flotante": 0.0,
       "historial_alertas": [],
       "ultimo_cierre_automatico": "",
-      "historial_rendimiento": base_defaults,
+      "historial_rendimiento": [base_default_inicial],
   }
   with open(BITACORA_EMERGENTE, "w", encoding="utf-8") as f:
     json.dump(base_data, f, indent=4, ensure_ascii=False)
@@ -308,7 +300,7 @@ if hubo_cierre_individual:
   guardar_bitacora_emergente(data_bitacora)
   st.rerun()
 
-capital_base = float(data_bitacora.get("capital_inicial", 11338.95))
+capital_base = float(data_bitacora.get("capital_inicial", 10000.00))
 ganancia_cerrada = float(data_bitacora.get("ganancia_cerrada", 0.0))
 
 flotante_pct = (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
