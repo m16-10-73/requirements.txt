@@ -443,7 +443,7 @@ else:
 
 st.markdown("---")
 
-# 📈 Gráfico de Evolución Histórica del Capital con Altair
+# 📈 Gráfico de Evolución Histórica del Capital con Etiquetas Alternadas (Fechas intactas)
 historial = data_bitacora.get("historial_rendimiento", [])
 if historial:
   df_chart = pd.DataFrame(historial)
@@ -460,9 +460,8 @@ if historial:
 
     st.subheader("📈 Evolución Histórica del Capital")
 
-    chart = (
+    base_chart = (
         alt.Chart(df_chart)
-        .mark_line(point=True, strokeWidth=3)
         .encode(
             x=alt.X(
                 "Fecha_limpia:N",
@@ -476,14 +475,47 @@ if historial:
             ),
             tooltip=["Fecha_limpia", alt.Tooltip("Capital:Q", format="$,.2f")],
         )
-        .properties(height=320)
     )
 
-    text = chart.mark_text(
-        align="center", baseline="bottom", dy=-12
-    ).encode(text=alt.Text("Capital:Q", format="$,.0f"))
+    linea_puntos = base_chart.mark_line(point=True, strokeWidth=2.5)
 
-    st.altair_chart(chart + text, use_container_width=True)
+    # Separamos en dos capas manteniendo las fechas en su formato vertical original
+    df_pares = df_chart[df_chart.index % 2 == 0]
+    df_impares = df_chart[df_chart.index % 2 != 0]
+
+    texto_pares = (
+        alt.Chart(df_pares)
+        .mark_text(
+            align="center",
+            baseline="bottom",
+            dy=-14,
+            fontSize=10,
+            fontWeight="bold",
+        )
+        .encode(
+            x="Fecha_limpia:N",
+            y="Capital:Q",
+            text=alt.Text("Capital:Q", format="$,.0f"),
+        )
+    )
+
+    texto_impares = (
+        alt.Chart(df_impares)
+        .mark_text(
+            align="center", baseline="top", dy=16, fontSize=10, fontWeight="bold"
+        )
+        .encode(
+            x="Fecha_limpia:N",
+            y="Capital:Q",
+            text=alt.Text("Capital:Q", format="$,.0f"),
+        )
+    )
+
+    chart_final = (linea_puntos + texto_pares + texto_impares).properties(
+        height=320
+    )
+
+    st.altair_chart(chart_final, use_container_width=True)
 
 st.markdown("---")
 st.subheader("📋 Historial de Cierres Recientes (Últimos 14 días)")
