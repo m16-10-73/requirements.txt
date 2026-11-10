@@ -21,7 +21,7 @@ BITACORA_VALORIS = "bitacora_valoris.json"
 
 
 def cargar_bitacora_valoris():
-  """Lee rigurosamente el archivo JSON físico respetando todo el histórico real sin frenarse en listas estáticas."""
+  """Lee rigurosamente el archivo JSON físico sin riesgo de destrucción de datos históricos."""
   base_default_inicial = {"Fecha": "28/10/2026", "Capital": 10000.00}
 
   if os.path.exists(BITACORA_VALORIS):
@@ -73,10 +73,13 @@ def cargar_bitacora_valoris():
             contenido["capital_inicial"] = 10000.00
 
           return contenido
-    except Exception:
-      pass
+    except Exception as e:
+      st.error(
+          f"⚠️ Error al leer la bitácora física de Valoris: {e}. Se cargará"
+          " modo seguro."
+      )
 
-  # Si no existe el archivo, se crea con el punto base inicial
+  # 🛡️ MODO SEGURO: Si el archivo no existe realmente en disco, se inicializa por única vez.
   base_data = {
       "capital_inicial": 10000.00,
       "ganancia_cerrada": 0.0,
@@ -86,8 +89,10 @@ def cargar_bitacora_valoris():
       "ultimo_cierre_automatico": "",
       "historial_rendimiento": [base_default_inicial],
   }
-  with open(BITACORA_VALORIS, "w", encoding="utf-8") as f:
-    json.dump(base_data, f, indent=4, ensure_ascii=False)
+  if not os.path.exists(BITACORA_VALORIS):
+    with open(BITACORA_VALORIS, "w", encoding="utf-8") as f:
+      json.dump(base_data, f, indent=4, ensure_ascii=False)
+
   return base_data
 
 
