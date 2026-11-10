@@ -406,48 +406,79 @@ else:
 
 st.markdown("---")
 
-# 📈 Gráfico de Evolución Histórica del Capital con Etiquetas Alternadas (Móvil & Escritorio)
+# 📈 Gráfico de Evolución Histórica del Capital con Etiquetas Alternadas (Fechas intactas)
 historial = data_bitacora.get("historial_rendimiento", [])
 if historial:
-    df_chart = pd.DataFrame(historial)
-    if "Fecha" in df_chart.columns and "Capital" in df_chart.columns:
-        df_chart["Fecha_limpia"] = df_chart["Fecha"].astype(str).str.split(" ").str[0]
-        df_chart["Fecha_obj"] = pd.to_datetime(df_chart["Fecha_limpia"], format="%d/%m/%Y", errors="coerce")
-        df_chart = df_chart.sort_values(by="Fecha_obj", ascending=True).reset_index(drop=True)
+  df_chart = pd.DataFrame(historial)
+  if "Fecha" in df_chart.columns and "Capital" in df_chart.columns:
+    df_chart["Fecha_limpia"] = (
+        df_chart["Fecha"].astype(str).str.split(" ").str[0]
+    )
+    df_chart["Fecha_obj"] = pd.to_datetime(
+        df_chart["Fecha_limpia"], format="%d/%m/%Y", errors="coerce"
+    )
+    df_chart = df_chart.sort_values(by="Fecha_obj", ascending=True).reset_index(
+        drop=True
+    )
 
-        # Asignamos dinámicamente posición arriba (bottom offset) y abajo (top offset) según el índice
-        df_chart["pos_baseline"] = ["bottom" if i % 2 == 0 else "top" for i in range(len(df_chart))]
-        df_chart["desplazamiento_dy"] = [-14 if i % 2 == 0 else 16 for i in range(len(df_chart))]
+    st.subheader("📈 Evolución Histórica del Capital")
 
-        st.subheader("📈 Evolución Histórica del Capital")
-
-        base_chart = alt.Chart(df_chart).encode(
-            x=alt.X('Fecha_limpia:N', title='Fecha', sort=df_chart['Fecha_limpia'].tolist(), axis=alt.Axis(labelAngle=-45)),
-            y=alt.Y('Capital:Q', title='Capital (USD)', scale=alt.Scale(domain=[9000, 15000])),
-            tooltip=['Fecha_limpia', alt.Tooltip('Capital:Q', format='$,.2f')]
+    base_chart = (
+        alt.Chart(df_chart)
+        .encode(
+            x=alt.X(
+                "Fecha_limpia:N",
+                title="Fecha",
+                sort=df_chart["Fecha_limpia"].tolist(),
+            ),
+            y=alt.Y(
+                "Capital:Q",
+                title="Capital (USD)",
+                scale=alt.Scale(domain=[9000, 15000]),
+            ),
+            tooltip=["Fecha_limpia", alt.Tooltip("Capital:Q", format="$,.2f")],
         )
+    )
 
-        linea_puntos = base_chart.mark_line(point=True, strokeWidth=2.5)
+    linea_puntos = base_chart.mark_line(point=True, strokeWidth=2.5)
 
-        # Capas separadas para alternar el texto limpiamente sin conflictos de sintaxis en Altair
-        df_pares = df_chart[df_chart.index % 2 == 0]
-        df_impares = df_chart[df_chart.index % 2 != 0]
+    # Separamos en dos capas manteniendo las fechas en su formato vertical original
+    df_pares = df_chart[df_chart.index % 2 == 0]
+    df_impares = df_chart[df_chart.index % 2 != 0]
 
-        texto_pares = alt.Chart(df_pares).mark_text(
-            align='center', baseline='bottom', dy=-14, fontSize=10, fontWeight='bold'
-        ).encode(
-            x='Fecha_limpia:N', y='Capital:Q', text=alt.Text('Capital:Q', format='$,.0f')
+    texto_pares = (
+        alt.Chart(df_pares)
+        .mark_text(
+            align="center",
+            baseline="bottom",
+            dy=-14,
+            fontSize=10,
+            fontWeight="bold",
         )
-
-        texto_impares = alt.Chart(df_impares).mark_text(
-            align='center', baseline='top', dy=16, fontSize=10, fontWeight='bold'
-        ).encode(
-            x='Fecha_limpia:N', y='Capital:Q', text=alt.Text('Capital:Q', format='$,.0f')
+        .encode(
+            x="Fecha_limpia:N",
+            y="Capital:Q",
+            text=alt.Text("Capital:Q", format="$,.0f"),
         )
+    )
 
-        chart_final = (linea_puntos + texto_pares + texto_impares).properties(height=320)
+    texto_impares = (
+        alt.Chart(df_impares)
+        .mark_text(
+            align="center", baseline="top", dy=16, fontSize=10, fontWeight="bold"
+        )
+        .encode(
+            x="Fecha_limpia:N",
+            y="Capital:Q",
+            text=alt.Text("Capital:Q", format="$,.0f"),
+        )
+    )
 
-        st.altair_chart(chart_final, use_container_width=True)
+    chart_final = (linea_puntos + texto_pares + texto_impares).properties(
+        height=320
+    )
+
+    st.altair_chart(chart_final, use_container_width=True)
 st.markdown("---")
 st.subheader("📋 Historial de Cierres Recientes (Últimos 14 días)")
 
