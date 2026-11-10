@@ -482,7 +482,7 @@ if historial:
     )
 
     st.altair_chart(chart_final, use_container_width=True)
-      st.markdown("---")
+st.markdown("---")
 st.subheader("📋 Historial de Cierres Recientes (Últimos 14 días)")
 
 if historial:
