@@ -426,45 +426,79 @@ st.markdown("---")
 # 📈 Gráfico de Evolución Histórica del Capital con Altair
 historial = data_bitacora.get("historial_rendimiento", [])
 if historial:
-  df_hist = pd.DataFrame(historial)
-  if "Fecha" in df_hist.columns and "Capital" in df_hist.columns:
-    df_hist["Fecha_limpia"] = (
-        df_hist["Fecha"].astype(str).str.split(" ").str[0]
+  df_chart = pd.DataFrame(historial)
+  if "Fecha" in df_chart.columns and "Capital" in df_chart.columns:
+    df_chart["Fecha_limpia"] = (
+        df_chart["Fecha"].astype(str).str.split(" ").str[0]
     )
-    df_hist["Fecha_obj"] = pd.to_datetime(
-        df_hist["Fecha_limpia"], format="%d/%m/%Y", errors="coerce"
+    df_chart["Fecha_obj"] = pd.to_datetime(
+        df_chart["Fecha_limpia"], format="%d/%m/%Y", errors="coerce"
     )
-    df_hist = df_hist.sort_values(by="Fecha_obj", ascending=True).reset_index(
+    df_chart = df_chart.sort_values(by="Fecha_obj", ascending=True).reset_index(
         drop=True
     )
 
     st.subheader("📈 Evolución Histórica del Capital")
 
-    chart = (
-        alt.Chart(df_hist)
-        .mark_line(point=True, strokeWidth=3)
+    base_chart = (
+        alt.Chart(df_chart)
         .encode(
             x=alt.X(
                 "Fecha_limpia:N",
                 title="Fecha",
-                sort=df_hist["Fecha_limpia"].tolist(),
+                sort=df_chart["Fecha_limpia"].tolist(),
             ),
             y=alt.Y(
                 "Capital:Q",
                 title="Capital (USD)",
-                scale=alt.Scale(domain=[9000, 15000]),
+                scale=alt.Scale(zero=False),
             ),
             tooltip=["Fecha_limpia", alt.Tooltip("Capital:Q", format="$,.2f")],
         )
-        .properties(height=320)
     )
 
-    text = chart.mark_text(
-        align="center", baseline="bottom", dy=-12
-    ).encode(text=alt.Text("Capital:Q", format="$,.0f"))
+    linea_puntos = base_chart.mark_line(point=True, strokeWidth=3)
 
-    st.altair_chart(chart + text, use_container_width=True)
+    df_pares = df_chart[df_chart.index % 2 == 0]
+    df_impares = df_chart[df_chart.index % 2 != 0]
 
+    texto_pares = (
+        alt.Chart(df_pares)
+        .mark_text(
+            align="center",
+            baseline="bottom",
+            dy=-12,
+            fontSize=10,
+            fontWeight="bold",
+        )
+        .encode(
+            x=alt.X("Fecha_limpia:N", sort=df_chart["Fecha_limpia"].tolist()),
+            y="Capital:Q",
+            text=alt.Text("Capital:Q", format="$,.0f"),
+        )
+    )
+
+    texto_impares = (
+        alt.Chart(df_impares)
+        .mark_text(
+            align="center",
+            baseline="top",
+            dy=14,
+            fontSize=10,
+            fontWeight="bold",
+        )
+        .encode(
+            x=alt.X("Fecha_limpia:N", sort=df_chart["Fecha_limpia"].tolist()),
+            y="Capital:Q",
+            text=alt.Text("Capital:Q", format="$,.0f"),
+        )
+    )
+
+    chart_final = (linea_puntos + texto_pares + texto_impares).properties(
+        height=320
+    )
+
+    st.altair_chart(chart_final, use_container_width=True)
 st.markdown("---")
 st.subheader("📋 Historial de Cierres Recientes (Últimos 14 días)")
 
