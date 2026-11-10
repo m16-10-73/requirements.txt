@@ -66,7 +66,7 @@ st.markdown(
 
 archivos_bots = [
     {"Nombre": "Bot Dinámico", "Archivo": "bitacora_dinamica.json"},
-    {"Nombre": "Bot Valoris", "Archivo": "bitacora.valoris.json"},
+    {"Nombre": "Bot Valoris", "Archivo": "bitacora_valoris.json"},
     {"Nombre": "Bot Emergente", "Archivo": "bitacora_emerging.json"},
     {"Nombre": "Bot Eventos", "Archivo": "bitacora_eventos.json"},
 ]
