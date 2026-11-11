@@ -333,22 +333,22 @@ if (
   ejecutar_cierre_jornada_eventos(nuevo_capital, origen="automatico")
   st.rerun()
 
-# Cierre automático por Horario (17:00 hrs)
+# Cierre automático por Horario de Mercado (18:00 hrs) - SIN RESTRICCIÓN DE POSICIONES
 hora_actual_str = datetime.now().strftime("%H:%M")
 fecha_hoy_str = datetime.now().strftime("%d/%m/%Y")
 ultimo_auto = data_bitacora.get("ultimo_cierre_automatico", "")
 
-if (
-    hora_actual_str >= "17:00"
-    and len(posiciones_procesadas) > 0
-    and ultimo_auto != fecha_hoy_str
-):
-  nuevo_capital = round(capital_base + total_flotante + ganancia_cerrada, 2)
+if hora_actual_str >= "18:00" and ultimo_auto != fecha_hoy_str:
+  capital_base_actual = float(data_bitacora.get("capital_inicial", 10000.00))
+  ganancia_dia_auto = float(data_bitacora.get("ganancia_cerrada", 0.0)) + total_flotante
+  nuevo_capital = round(capital_base_actual + ganancia_dia_auto, 2)
+
   ejecutar_cierre_jornada_eventos(nuevo_capital, origen="automatico")
   st.success(
-      "⏰ [Cierre Automático 17:00] Jornada cerrada. Capital acumulado:"
+      f"⏰ [Cierre Automático Mercado] Jornada {fecha_hoy_str} cerrada con éxito. Capital:"
       f" ${nuevo_capital:,.2f} USD"
   )
+  time.sleep(1)
   st.rerun()
 
 col1, col2, col3, col4 = st.columns(4)
@@ -399,21 +399,19 @@ if st.sidebar.button("🚀 Abrir Jornada (Eventos)"):
     st.rerun()
 
 if st.sidebar.button("🔴 Cierre Manual de Jornada"):
-  if data_bitacora.get("posiciones"):
-    ganancia_del_dia = total_flotante + ganancia_cerrada
-    nuevo_capital = round(capital_base + ganancia_del_dia, 2)
+  capital_base_actual = float(data_bitacora.get("capital_inicial", 10000.00))
+  ganancia_del_dia = total_flotante + float(data_bitacora.get("ganancia_cerrada", 0.0))
+  nuevo_capital = round(capital_base_actual + ganancia_del_dia, 2)
 
-    ejecutar_cierre_jornada_eventos(nuevo_capital, origen="manual")
+  ejecutar_cierre_jornada_eventos(nuevo_capital, origen="manual")
 
-    st.success(
-        "✅ **¡Cierre Manual Exitoso!** Capital acumulado actualizado a"
-        f" **${nuevo_capital:,.2f} USD** como base inicial para la siguiente"
-        " sesión."
-    )
-    time.sleep(1.5)
-    st.rerun()
-  else:
-    st.sidebar.warning("No hay posiciones abiertas para cerrar.")
+  st.success(
+      "✅ **¡Cierre Manual Exitoso!** Capital acumulado actualizado a"
+      f" **${nuevo_capital:,.2f} USD** como base inicial para la siguiente"
+      " sesión."
+  )
+  time.sleep(1.5)
+  st.rerun()
 
 st.subheader("📰 Posiciones en Curso — Bot de Eventos")
 if posiciones_procesadas:
