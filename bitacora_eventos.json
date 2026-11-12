@@ -1,5 +1,5 @@
 {
-    "capital_inicial": 10705.48,
+    "capital_inicial": 11705.48,
     "ganancia_cerrada": 0.0,
     "posiciones": [],
     "peak_flotante": 0.0,
@@ -44,6 +44,10 @@
         },
         {
             "Fecha": "10/11/2026",
+            "Capital": 11705.48
+        },
+        {
+            "Fecha": "12/11/2026",
             "Capital": 11705.48
         }
     ]
