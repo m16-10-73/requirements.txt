@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 import json
 import os
 import time
@@ -158,10 +158,14 @@ def cargar_bitacora():
 def guardar_bitacora(data):
   with open(BITACORA_FILE, "w", encoding="utf-8") as f:
     json.dump(data, f, indent=4, ensure_ascii=False)
+    f.flush()
+    os.fsync(f.fileno())
 
 
 def ejecutar_cierre_jornada(capital_final, origen="manual"):
-  fecha_actual = datetime.now().strftime("%d/%m/%Y")
+  chile_tz = timezone(timedelta(hours=-3))
+  # Forzamos estricta fecha actual de Chile en formato DD/MM/YYYY
+  fecha_actual = datetime.now(chile_tz).strftime("%d/%m/%Y")
   capital_redondeado = round(float(capital_final), 2)
 
   if os.path.exists(BITACORA_FILE):
@@ -174,11 +178,15 @@ def ejecutar_cierre_jornada(capital_final, origen="manual"):
     datos_actuales = {}
 
   historial = datos_actuales.get("historial_rendimiento", [])
+
+  # Filtramos cualquier registro previo del mismo día exacto para evitar duplicados o desfases
   historial = [
       h
       for h in historial
       if str(h.get("Fecha", "")).split(" ")[0] != fecha_actual
   ]
+
+  # Añadimos de forma limpia el nuevo cierre
   historial.append({"Fecha": fecha_actual, "Capital": capital_redondeado})
 
   try:
@@ -202,8 +210,11 @@ def ejecutar_cierre_jornada(capital_final, origen="manual"):
       "historial_rendimiento": historial,
   }
 
+  # Escritura física por fuerza bruta asegurando volcado a disco y flush
   with open(BITACORA_FILE, "w", encoding="utf-8") as f:
     json.dump(nuevo_estado, f, indent=4, ensure_ascii=False)
+    f.flush()
+    os.fsync(f.fileno())
 
 
 data_bitacora = cargar_bitacora()
@@ -312,9 +323,10 @@ if (
   ejecutar_cierre_jornada(nuevo_capital, origen="automatico")
   st.rerun()
 
-# Cierre automático por Horario de Mercado (18:00 hrs) - SIN RESTRICCIÓN DE POSICIONES
-hora_actual_str = datetime.now().strftime("%H:%M")
-fecha_hoy_str = datetime.now().strftime("%d/%m/%Y")
+# Cierre automático por Horario de Mercado (18:00 hrs)
+chile_tz = timezone(timedelta(hours=-3))
+hora_actual_str = datetime.now(chile_tz).strftime("%H:%M")
+fecha_hoy_str = datetime.now(chile_tz).strftime("%d/%m/%Y")
 ultimo_auto = data_bitacora.get("ultimo_cierre_automatico", "")
 
 if hora_actual_str >= "18:00" and ultimo_auto != fecha_hoy_str:
@@ -392,41 +404,24 @@ if st.sidebar.button("🔴 Cierre Manual de Jornada"):
 
   ejecutar_cierre_jornada(nuevo_capital, origen="manual")
 
-  st.success(
+  st.sidebar.success(
       "✅ **¡Cierre Manual Exitoso!** Capital acumulado actualizado a"
       f" **${nuevo_capital:,.2f} USD**."
   )
   time.sleep(1.5)
   st.rerun()
 
-# 3. Botón con Auditoría en Vivo
+# 3. Botón: Forzar Guardado / Copiar Cierre a Disco (Rescate)
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 🛠️ **Auditoría de Cierre**")
+st.sidebar.markdown("### 🛠️ **Rescate de Cierre**")
 if st.sidebar.button("💾 Forzar Guardado de Hoy en Disco"):
   capital_actual_en_pantalla = capital_base + total_flotante
-
-  # Auditoría 1: Verificamos qué ruta física está buscando Python
-  ruta_absoluta = os.path.abspath(BITACORA_FILE)
-  st.sidebar.write(f"📂 Ruta archivo: {ruta_absoluta}")
-  st.sidebar.write(f"💰 Capital a escribir: {capital_actual_en_pantalla}")
-
-  try:
-    # Intentamos forzar la escritura paso a paso
-    ejecutar_cierre_jornada(capital_actual_en_pantalla, origen="manual")
-    st.sidebar.success("✅ ¡La función de escritura se ejecutó!")
-
-    # Auditoría 2: Leemos inmediatamente el archivo recién guardado para confirmar
-    with open(BITACORA_FILE, "r", encoding="utf-8") as f:
-      verificacion = json.load(f)
-    st.sidebar.write(
-        "📊 Último registro en disco ahora:"
-        f" {verificacion['historial_rendimiento'][-1]}"
-    )
-
-  except Exception as e:
-    st.sidebar.error(f"❌ Error crítico al escribir: {e}")
-
-  time.sleep(3)
+  ejecutar_cierre_jornada(capital_actual_en_pantalla, origen="manual")
+  st.sidebar.success(
+      f"✅ ¡Guardado forzado! Capital de ${capital_actual_en_pantalla:,.2f} USD"
+      " escrito físicamente en disco."
+  )
+  time.sleep(1)
   st.rerun()
 
 st.subheader("🟢 Posiciones en Curso")
