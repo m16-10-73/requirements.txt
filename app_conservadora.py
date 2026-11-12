@@ -31,7 +31,7 @@ BITACORA_VALORIS = "bitacora_valoris.json"
 
 def cargar_bitacora_valoris():
     """Lee rigurosamente el JSON directamente desde el repositorio en GitHub vía API."""
-    base_default_inicial = {"Fecha": "28/10/2026", "Capital": 10000.00}
+    base_default_inicial = {"Fecha": "28/10/2026", "Capital": 100000.00}
     url = f"https://api.github.com/repos/{OWNER}/{REPO}/contents/{FILE_PATH}"
     headers = {
         "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -84,7 +84,7 @@ def cargar_bitacora_valoris():
                         lista_ordenada[-1]["Capital"]
                     )
                 else:
-                    contenido["capital_inicial"] = 10000.00
+                    contenido["capital_inicial"] = 100000.00
 
                 return contenido
     except Exception as e:
@@ -93,7 +93,7 @@ def cargar_bitacora_valoris():
         )
 
     base_data = {
-        "capital_inicial": 10000.00,
+        "capital_inicial": 100000.00,
         "ganancia_cerrada": 0.0,
         "posiciones": [],
         "peak_flotante": 0.0,
@@ -238,11 +238,11 @@ CANDIDATAS_VALORIS = [
     "UNH",
 ]
 
-NUM_EMPRESAS_OBJETIVO = 4
+NUM_EMPRESAS_OBJETIVO = 5
 STOP_LOSS_INDIVIDUAL_PCT = -0.75
 
 
-def seleccionar_top_valoris(n=4):
+def seleccionar_top_valoris(n=5):
     resultados = []
     for ticker in CANDIDATAS_VALORIS:
         try:
@@ -338,7 +338,7 @@ if hubo_cierre_individual:
     guardar_bitacora_valoris(data_bitacora)
     st.rerun()
 
-capital_base = float(data_bitacora.get("capital_inicial", 10000.00))
+capital_base = float(data_bitacora.get("capital_inicial", 100000.00))
 ganancia_cerrada = float(data_bitacora.get("ganancia_cerrada", 0.0))
 
 flotante_pct = (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
@@ -374,7 +374,7 @@ fecha_hoy_str = datetime.now().strftime("%d/%m/%Y")
 ultimo_auto = data_bitacora.get("ultimo_cierre_automatico", "")
 
 if hora_actual_str >= "18:00" and ultimo_auto != fecha_hoy_str:
-    capital_base_actual = float(data_bitacora.get("capital_inicial", 10000.00))
+    capital_base_actual = float(data_bitacora.get("capital_inicial", 100000.00))
     ganancia_dia_auto = float(data_bitacora.get("ganancia_cerrada", 0.0)) + total_flotante
     nuevo_capital = round(capital_base_actual + ganancia_dia_auto, 2)
 
@@ -434,7 +434,7 @@ if st.sidebar.button("🚀 Abrir Jornada (Valoris)"):
         st.rerun()
 
 if st.sidebar.button("🔴 Cierre Manual de Jornada"):
-    capital_base_actual = float(data_bitacora.get("capital_inicial", 10000.00))
+    capital_base_actual = float(data_bitacora.get("capital_inicial", 100000.00))
     ganancia_del_dia = total_flotante + float(data_bitacora.get("ganancia_cerrada", 0.0))
     nuevo_capital = round(capital_base_actual + ganancia_del_dia, 2)
 
@@ -565,7 +565,7 @@ if historial:
         )
 
         capital_inicial_base = (
-            float(df_hist["Capital"].iloc[0]) if len(df_hist) > 0 else 10000.0
+            float(df_hist["Capital"].iloc[0]) if len(df_hist) > 0 else 100000.0
         )
 
         df_hist["Rent_Diaria_Pct"] = df_hist["Capital"].pct_change() * 100.0
