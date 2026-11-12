@@ -1,24 +1,8 @@
 {
-    "capital_inicial": 117680.11,
+    "capital_inicial": 117809.11,
     "ganancia_cerrada": 0.0,
-    "posiciones": [
-        {
-            "ticker": "QQQ",
-            "precio_entrada": 690.38,
-            "acciones": 56.819
-        },
-        {
-            "ticker": "XLE",
-            "precio_entrada": 63.37,
-            "acciones": 619.0106
-        },
-        {
-            "ticker": "XLI",
-            "precio_entrada": 170.97,
-            "acciones": 229.4362
-        }
-    ],
-    "peak_flotante": 0.10962223149462759,
+    "posiciones": [],
+    "peak_flotante": 0.0,
     "historial_alertas": [],
     "ultimo_cierre_automatico": "11/11/2026",
     "historial_rendimiento": [
@@ -65,6 +49,10 @@
         {
             "Fecha": "11/11/2026",
             "Capital": 117680.11
+        },
+        {
+            "Fecha": "12/11/2026",
+            "Capital": 117809.11
         }
     ]
 }
