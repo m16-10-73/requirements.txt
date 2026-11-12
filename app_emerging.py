@@ -31,7 +31,7 @@ BITACORA_EMERGENTE = "bitacora_emerging.json"
 
 def cargar_bitacora_emergente():
     """Lee rigurosamente el JSON directamente desde el repositorio en GitHub vía API."""
-    base_default_inicial = {"Fecha": "28/10/2026", "Capital": 10000.00}
+    base_default_inicial = {"Fecha": "28/10/2026", "Capital": 100000.00}
     url = f"https://api.github.com/repos/{OWNER}/{REPO}/contents/{FILE_PATH}"
     headers = {
         "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -84,7 +84,7 @@ def cargar_bitacora_emergente():
                         lista_ordenada[-1]["Capital"]
                     )
                 else:
-                    contenido["capital_inicial"] = 10000.00
+                    contenido["capital_inicial"] = 100000.00
 
                 return contenido
     except Exception as e:
@@ -93,7 +93,7 @@ def cargar_bitacora_emergente():
         )
 
     base_data = {
-        "capital_inicial": 10000.00,
+        "capital_inicial": 100000.00,
         "ganancia_cerrada": 0.0,
         "posiciones": [],
         "peak_flotante": 0.0,
@@ -227,7 +227,7 @@ CANDIDATAS_EMERGING = [
 ]
 
 NUM_EMPRESAS_OBJETIVO = 5
-STOP_LOSS_INDIVIDUAL_PCT = -1.25
+STOP_LOSS_INDIVIDUAL_PCT = -1.00
 
 
 def seleccionar_top_emerging(n=5):
@@ -254,10 +254,10 @@ st.sidebar.markdown("*Estrategia de Impulso & Alto Crecimiento*")
 st.sidebar.markdown("---")
 
 meta_diaria_pct = st.sidebar.slider(
-    "Meta Diaria (%)", min_value=0.5, max_value=10.0, value=4.50, step=0.05
+    "Meta Diaria (%)", min_value=0.5, max_value=10.0, value=3.50, step=0.05
 )
 trailing_tolerance_pct = st.sidebar.slider(
-    "Tolerancia Retroceso (%)", min_value=0.1, max_value=5.0, value=0.80, step=0.05
+    "Tolerancia Retroceso (%)", min_value=0.1, max_value=5.0, value=0.65, step=0.05
 )
 
 st.markdown(
@@ -322,7 +322,7 @@ if hubo_cierre_individual:
     guardar_bitacora_emergente(data_bitacora)
     st.rerun()
 
-capital_base = float(data_bitacora.get("capital_inicial", 10000.00))
+capital_base = float(data_bitacora.get("capital_inicial", 100000.00))
 ganancia_cerrada = float(data_bitacora.get("ganancia_cerrada", 0.0))
 
 flotante_pct = (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
@@ -358,7 +358,7 @@ fecha_hoy_str = datetime.now().strftime("%d/%m/%Y")
 ultimo_auto = data_bitacora.get("ultimo_cierre_automatico", "")
 
 if hora_actual_str >= "18:00" and ultimo_auto != fecha_hoy_str:
-    capital_base_actual = float(data_bitacora.get("capital_inicial", 10000.00))
+    capital_base_actual = float(data_bitacora.get("capital_inicial", 100000.00))
     ganancia_dia_auto = float(data_bitacora.get("ganancia_cerrada", 0.0)) + total_flotante
     nuevo_capital = round(capital_base_actual + ganancia_dia_auto, 2)
 
@@ -418,7 +418,7 @@ if st.sidebar.button("🚀 Abrir Jornada (Emerging)"):
         st.rerun()
 
 if st.sidebar.button("🔴 Cierre Manual de Jornada"):
-    capital_base_actual = float(data_bitacora.get("capital_inicial", 10000.00))
+    capital_base_actual = float(data_bitacora.get("capital_inicial", 100000.00))
     ganancia_del_dia = total_flotante + float(data_bitacora.get("ganancia_cerrada", 0.0))
     nuevo_capital = round(capital_base_actual + ganancia_del_dia, 2)
 
@@ -546,7 +546,7 @@ if historial:
         )
 
         capital_inicial_base = (
-            float(df_hist["Capital"].iloc[0]) if len(df_hist) > 0 else 10000.0
+            float(df_hist["Capital"].iloc[0]) if len(df_hist) > 0 else 100000.0
         )
 
         df_hist["Rent_Diaria_Pct"] = df_hist["Capital"].pct_change() * 100.0
