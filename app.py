@@ -302,19 +302,6 @@ else:
 umbral_calculado = peak_actual - trailing_tolerance_pct
 umbral_salida = max(umbral_calculado, meta_diaria_pct)
 
-# 📥 NUEVO BOTÓN UBICADO CORRECTAMENTE AQUÍ (YA CALCULADO EL FLOTANTE Y CAPITAL)
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 🛠️ **Control Manual de Rescate**")
-if st.sidebar.button("💾 Forzar Guardado de Hoy en Disco"):
-  capital_actual_en_pantalla = capital_base + total_flotante
-  ejecutar_cierre_jornada(capital_actual_en_pantalla, origen="manual")
-  st.sidebar.success(
-      f"✅ ¡Guardado forzado! Capital de ${capital_actual_en_pantalla:,.2f} USD"
-      " escrito en la bitácora física."
-  )
-  time.sleep(1)
-  st.rerun()
-
 # Cierre automático por Trailing Stop Global
 if (
     peak_actual >= meta_diaria_pct
@@ -367,6 +354,11 @@ col4.metric(
 
 st.markdown("---")
 
+# ==========================================
+# ORDEN ESTRICTO DE BOTONES EN LA BARRA LATERAL
+# ==========================================
+
+# 1. Botón: Abrir Jornada
 if st.sidebar.button("🚀 Abrir Jornada"):
   st.sidebar.info("Seleccionando activos...")
   top_activos = CANDIDATAS_DINAMICO[:NUM_ACTIVOS]
@@ -390,9 +382,12 @@ if st.sidebar.button("🚀 Abrir Jornada"):
     st.sidebar.success(f"Posiciones abiertas: {', '.join(top_activos)}")
     st.rerun()
 
+# 2. Botón: Cierre Manual de Jornada
 if st.sidebar.button("🔴 Cierre Manual de Jornada"):
   capital_base_actual = float(data_bitacora.get("capital_inicial", 10000.0))
-  ganancia_del_dia = total_flotante + float(data_bitacora.get("ganancia_cerrada", 0.0))
+  ganancia_del_dia = total_flotante + float(
+      data_bitacora.get("ganancia_cerrada", 0.0)
+  )
   nuevo_capital = round(capital_base_actual + ganancia_del_dia, 2)
 
   ejecutar_cierre_jornada(nuevo_capital, origen="manual")
@@ -402,6 +397,19 @@ if st.sidebar.button("🔴 Cierre Manual de Jornada"):
       f" **${nuevo_capital:,.2f} USD**."
   )
   time.sleep(1.5)
+  st.rerun()
+
+# 3. Botón: Forzar Guardado / Copiar Cierre a Disco (Rescate)
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 🛠️ **Rescate de Cierre**")
+if st.sidebar.button("💾 Forzar Guardado de Hoy en Disco"):
+  capital_actual_en_pantalla = capital_base + total_flotante
+  ejecutar_cierre_jornada(capital_actual_en_pantalla, origen="manual")
+  st.sidebar.success(
+      f"✅ ¡Guardado forzado! Capital de ${capital_actual_en_pantalla:,.2f} USD"
+      " escrito en la bitácora física."
+  )
+  time.sleep(1)
   st.rerun()
 
 st.subheader("🟢 Posiciones en Curso")
