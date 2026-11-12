@@ -1,7 +1,33 @@
 {
     "capital_inicial": 121530.18,
     "ganancia_cerrada": 0.0,
-    "posiciones": [],
+    "posiciones": [
+        {
+            "ticker": "AMD",
+            "precio_entrada": 552.9,
+            "acciones": 43.961
+        },
+        {
+            "ticker": "MARA",
+            "precio_entrada": 7.66,
+            "acciones": 3173.1118
+        },
+        {
+            "ticker": "COIN",
+            "precio_entrada": 136.27,
+            "acciones": 178.3667
+        },
+        {
+            "ticker": "TSLA",
+            "precio_entrada": 390.84,
+            "acciones": 62.1892
+        },
+        {
+            "ticker": "NVDA",
+            "precio_entrada": 173.73,
+            "acciones": 139.907
+        }
+    ],
     "peak_flotante": 0.0,
     "historial_alertas": [],
     "ultimo_cierre_automatico": "11/11/2026",
