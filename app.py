@@ -399,17 +399,34 @@ if st.sidebar.button("🔴 Cierre Manual de Jornada"):
   time.sleep(1.5)
   st.rerun()
 
-# 3. Botón: Forzar Guardado / Copiar Cierre a Disco (Rescate)
+# 3. Botón con Auditoría en Vivo
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 🛠️ **Rescate de Cierre**")
+st.sidebar.markdown("### 🛠️ **Auditoría de Cierre**")
 if st.sidebar.button("💾 Forzar Guardado de Hoy en Disco"):
   capital_actual_en_pantalla = capital_base + total_flotante
-  ejecutar_cierre_jornada(capital_actual_en_pantalla, origen="manual")
-  st.sidebar.success(
-      f"✅ ¡Guardado forzado! Capital de ${capital_actual_en_pantalla:,.2f} USD"
-      " escrito en la bitácora física."
-  )
-  time.sleep(1)
+
+  # Auditoría 1: Verificamos qué ruta física está buscando Python
+  ruta_absoluta = os.path.abspath(BITACORA_FILE)
+  st.sidebar.write(f"📂 Ruta archivo: {ruta_absoluta}")
+  st.sidebar.write(f"💰 Capital a escribir: {capital_actual_en_pantalla}")
+
+  try:
+    # Intentamos forzar la escritura paso a paso
+    ejecutar_cierre_jornada(capital_actual_en_pantalla, origen="manual")
+    st.sidebar.success("✅ ¡La función de escritura se ejecutó!")
+
+    # Auditoría 2: Leemos inmediatamente el archivo recién guardado para confirmar
+    with open(BITACORA_FILE, "r", encoding="utf-8") as f:
+      verificacion = json.load(f)
+    st.sidebar.write(
+        "📊 Último registro en disco ahora:"
+        f" {verificacion['historial_rendimiento'][-1]}"
+    )
+
+  except Exception as e:
+    st.sidebar.error(f"❌ Error crítico al escribir: {e}")
+
+  time.sleep(3)
   st.rerun()
 
 st.subheader("🟢 Posiciones en Curso")
