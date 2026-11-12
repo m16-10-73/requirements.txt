@@ -1,7 +1,33 @@
 {
     "capital_inicial": 99420.36,
     "ganancia_cerrada": 0.0,
-    "posiciones": [],
+    "posiciones": [
+        {
+            "ticker": "CSCO",
+            "precio_entrada": 100.76,
+            "acciones": 197.3409
+        },
+        {
+            "ticker": "IBM",
+            "precio_entrada": 248.22,
+            "acciones": 80.1066
+        },
+        {
+            "ticker": "T",
+            "precio_entrada": 22.26,
+            "acciones": 893.2647
+        },
+        {
+            "ticker": "XOM",
+            "precio_entrada": 166.71,
+            "acciones": 119.2734
+        },
+        {
+            "ticker": "CVX",
+            "precio_entrada": 213.28,
+            "acciones": 93.2299
+        }
+    ],
     "peak_flotante": 0.0,
     "historial_alertas": [],
     "ultimo_cierre_automatico": "11/11/2026",
