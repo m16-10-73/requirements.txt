@@ -220,21 +220,6 @@ trailing_tolerance_pct = st.sidebar.slider(
     "Tolerancia Retroceso (%)", min_value=0.05, max_value=5.0, value=0.5, step=0.05
 )
 
-# 📥 NUEVO BOTÓN DE VOLCADO Y RESCATE FORZADO EN DISCO
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 🛠️ **Control Manual de Rescate**")
-if st.sidebar.button("💾 Forzar Guardado de Hoy en Disco"):
-  capital_actual_en_pantalla = (
-      float(data_bitacora.get("capital_inicial", 10600.0)) + total_flotante
-  )
-  ejecutar_cierre_jornada(capital_actual_en_pantalla, origen="manual")
-  st.sidebar.success(
-      f"✅ ¡Guardado forzado! Capital de ${capital_actual_en_pantalla:,.2f} USD"
-      " escrito en la bitácora física."
-  )
-  time.sleep(1)
-  st.rerun()
-
 # Encabezado principal del Bot Dinámico
 st.markdown(
     """
@@ -316,6 +301,19 @@ else:
 
 umbral_calculado = peak_actual - trailing_tolerance_pct
 umbral_salida = max(umbral_calculado, meta_diaria_pct)
+
+# 📥 NUEVO BOTÓN UBICADO CORRECTAMENTE AQUÍ (YA CALCULADO EL FLOTANTE Y CAPITAL)
+st.sidebar.markdown("---")
+st.sidebar.markdown("### 🛠️ **Control Manual de Rescate**")
+if st.sidebar.button("💾 Forzar Guardado de Hoy en Disco"):
+  capital_actual_en_pantalla = capital_base + total_flotante
+  ejecutar_cierre_jornada(capital_actual_en_pantalla, origen="manual")
+  st.sidebar.success(
+      f"✅ ¡Guardado forzado! Capital de ${capital_actual_en_pantalla:,.2f} USD"
+      " escrito en la bitácora física."
+  )
+  time.sleep(1)
+  st.rerun()
 
 # Cierre automático por Trailing Stop Global
 if (
