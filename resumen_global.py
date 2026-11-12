@@ -86,8 +86,8 @@ for bot in archivos_bots:
   nombre = bot["Nombre"]
   archivo = bot["Archivo"]
 
-  capital_inicial = 10000.0
-  capital_actual = 10000.0
+  capital_inicial = 100000.0
+  capital_actual = 100000.0
   fecha_inicio = "-"
   fecha_cierre = "-"
   dias_acumulados = 0
@@ -102,7 +102,7 @@ for bot in archivos_bots:
           primer_reg = historial[0]
           ultimo_reg = historial[-1]
 
-          capital_inicial = float(primer_reg.get("Capital", 10000.0))
+          capital_inicial = float(primer_reg.get("Capital", 100000.0))
           capital_actual = float(ultimo_reg.get("Capital", capital_inicial))
 
           fecha_inicio = primer_reg.get("Fecha", "-")
@@ -117,7 +117,7 @@ for bot in archivos_bots:
           except Exception:
             dias_acumulados = len(historial) - 1
         else:
-          capital_inicial = float(data.get("capital_inicial", 10000.0))
+          capital_inicial = float(data.get("capital_inicial", 100000.0))
           capital_actual = capital_inicial
     except Exception:
       pass
@@ -180,7 +180,7 @@ st.markdown(
 
 df_chart = pd.DataFrame(datos_grafico)
 
-# 📊 Gráfico basado en capital monetario (Eje Y en USD, con escala desde 9000 para apreciar diferencias)
+# 📊 Gráfico basado en capital monetario (Eje Y en USD, con escala desde 90000 para apreciar diferencias)
 fig = px.bar(
     df_chart,
     x="EstrategiaLabel",
@@ -197,7 +197,7 @@ fig.update_layout(
     xaxis_title="",
     yaxis_title="Capital Total (USD)",
     yaxis=dict(
-        range=[9000, 12500]
+        range=[90000, 130000]
     ),  # Rango óptimo para ver el crecimiento desde los 10k
     showlegend=False,
     xaxis=dict(tickfont=dict(size=10)),
