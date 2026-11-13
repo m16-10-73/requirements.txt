@@ -1,7 +1,23 @@
 {
     "capital_inicial": 117809.11,
     "ganancia_cerrada": 0.0,
-    "posiciones": [],
+    "posiciones": [
+        {
+            "ticker": "XLE",
+            "precio_entrada": 64.33,
+            "acciones": 610.4415
+        },
+        {
+            "ticker": "XLU",
+            "precio_entrada": 43.81,
+            "acciones": 896.3639
+        },
+        {
+            "ticker": "QQQ",
+            "precio_entrada": 688.17,
+            "acciones": 57.064
+        }
+    ],
     "peak_flotante": 0.0,
     "historial_alertas": [],
     "ultimo_cierre_automatico": "11/11/2026",
