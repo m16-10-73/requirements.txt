@@ -1,24 +1,8 @@
 {
-    "capital_inicial": 117759.89,
+    "capital_inicial": 117755.43,
     "ganancia_cerrada": 0.0,
-    "posiciones": [
-        {
-            "ticker": "XLC",
-            "precio_entrada": 108.28,
-            "acciones": 362.5166
-        },
-        {
-            "ticker": "XLF",
-            "precio_entrada": 58.53,
-            "acciones": 670.7099
-        },
-        {
-            "ticker": "XLU",
-            "precio_entrada": 44.03,
-            "acciones": 891.5126
-        }
-    ],
-    "peak_flotante": 0.010788747778125022,
+    "posiciones": [],
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:01:23] 📰 CORTE DE PÉRDIDA: Cierre en QQQ a -1.11% ($-437.68 USD)."
     ],
@@ -74,7 +58,7 @@
         },
         {
             "Fecha": "13/11/2026",
-            "Capital": 117759.89
+            "Capital": 117755.43
         }
     ]
 }
