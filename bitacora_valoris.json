@@ -1,24 +1,8 @@
 {
-    "capital_inicial": 99555.69,
-    "ganancia_cerrada": -1249.6922069147652,
-    "posiciones": [
-        {
-            "ticker": "XOM",
-            "precio_entrada": 169.78,
-            "acciones": 117.2761
-        },
-        {
-            "ticker": "CVX",
-            "precio_entrada": 216.35,
-            "acciones": 92.0321
-        },
-        {
-            "ticker": "JNJ",
-            "precio_entrada": 283.52,
-            "acciones": 70.2283
-        }
-    ],
-    "peak_flotante": 0.5992050386153255,
+    "capital_inicial": 98862.97,
+    "ganancia_cerrada": 0.0,
+    "posiciones": [],
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:10] 🛡️ STOP LOSS INDIVIDUAL: Cierre en IBM a -1.08% ($-214.69 USD). Posición liquidada a caja.",
         "[15:01:24] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CSCO a -5.44% ($-1082.59 USD). Posición liquidada a caja.",
@@ -73,6 +57,10 @@
         {
             "Fecha": "12/11/2026",
             "Capital": 99555.69
+        },
+        {
+            "Fecha": "13/11/2026",
+            "Capital": 98862.97
         }
     ]
 }
