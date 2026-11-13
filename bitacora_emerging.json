@@ -1,26 +1,11 @@
 {
     "capital_inicial": 118072.83,
-    "ganancia_cerrada": 0.0,
+    "ganancia_cerrada": -2629.4648657700795,
     "posiciones": [
-        {
-            "ticker": "AMD",
-            "precio_entrada": 585.3,
-            "acciones": 40.3461
-        },
-        {
-            "ticker": "TSLA",
-            "precio_entrada": 397.45,
-            "acciones": 59.4152
-        },
         {
             "ticker": "U",
             "precio_entrada": 50.18,
             "acciones": 470.5972
-        },
-        {
-            "ticker": "PLTR",
-            "precio_entrada": 171.58,
-            "acciones": 137.6301
         },
         {
             "ticker": "SHOP",
@@ -32,7 +17,10 @@
     "historial_alertas": [
         "[15:29:06] ⚡ STOP LOSS EMERGING: Cierre en MARA a -7.11% ($-1729.35 USD).",
         "[15:29:06] ⚡ STOP LOSS EMERGING: Cierre en COIN a -4.39% ($-1066.38 USD).",
-        "[15:29:06] ⚡ STOP LOSS EMERGING: Cierre en NVDA a -5.38% ($-1306.73 USD)."
+        "[15:29:06] ⚡ STOP LOSS EMERGING: Cierre en NVDA a -5.38% ($-1306.73 USD).",
+        "[15:01:26] ⚡ STOP LOSS EMERGING: Cierre en AMD a -7.75% ($-1829.70 USD).",
+        "[15:01:26] ⚡ STOP LOSS EMERGING: Cierre en TSLA a -1.75% ($-412.34 USD).",
+        "[15:01:26] ⚡ STOP LOSS EMERGING: Cierre en PLTR a -1.64% ($-387.43 USD)."
     ],
     "ultimo_cierre_automatico": "11/11/2026",
     "historial_rendimiento": [
