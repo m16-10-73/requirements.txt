@@ -1,19 +1,8 @@
 {
-    "capital_inicial": 117809.11,
-    "ganancia_cerrada": -437.68087999999767,
-    "posiciones": [
-        {
-            "ticker": "XLE",
-            "precio_entrada": 64.33,
-            "acciones": 610.4415
-        },
-        {
-            "ticker": "XLU",
-            "precio_entrada": 43.81,
-            "acciones": 896.3639
-        }
-    ],
-    "peak_flotante": 0.3297367157585602,
+    "capital_inicial": 117759.89,
+    "ganancia_cerrada": 0.0,
+    "posiciones": [],
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:01:23] 📰 CORTE DE PÉRDIDA: Cierre en QQQ a -1.11% ($-437.68 USD)."
     ],
@@ -66,6 +55,10 @@
         {
             "Fecha": "12/11/2026",
             "Capital": 117809.11
+        },
+        {
+            "Fecha": "13/11/2026",
+            "Capital": 117759.89
         }
     ]
 }
