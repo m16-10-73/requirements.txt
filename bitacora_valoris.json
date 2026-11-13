@@ -1,6 +1,6 @@
 {
     "capital_inicial": 99555.69,
-    "ganancia_cerrada": -1082.5912468653269,
+    "ganancia_cerrada": -1249.6922069147652,
     "posiciones": [
         {
             "ticker": "XOM",
@@ -16,17 +16,13 @@
             "ticker": "JNJ",
             "precio_entrada": 283.52,
             "acciones": 70.2283
-        },
-        {
-            "ticker": "UNH",
-            "precio_entrada": 405.13,
-            "acciones": 49.1475
         }
     ],
     "peak_flotante": 0.25054661287006136,
     "historial_alertas": [
         "[15:29:10] 🛡️ STOP LOSS INDIVIDUAL: Cierre en IBM a -1.08% ($-214.69 USD). Posición liquidada a caja.",
-        "[15:01:24] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CSCO a -5.44% ($-1082.59 USD). Posición liquidada a caja."
+        "[15:01:24] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CSCO a -5.44% ($-1082.59 USD). Posición liquidada a caja.",
+        "[15:23:24] 🛡️ STOP LOSS INDIVIDUAL: Cierre en UNH a -0.84% ($-167.10 USD). Posición liquidada a caja."
     ],
     "ultimo_cierre_automatico": "11/11/2026",
     "historial_rendimiento": [
