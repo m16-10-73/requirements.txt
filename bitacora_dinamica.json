@@ -1,7 +1,23 @@
 {
     "capital_inicial": 112704.9,
     "ganancia_cerrada": 0.0,
-    "posiciones": [],
+    "posiciones": [
+        {
+            "ticker": "AAPL",
+            "precio_entrada": 356.27,
+            "acciones": 105.449
+        },
+        {
+            "ticker": "MSFT",
+            "precio_entrada": 523.88,
+            "acciones": 71.7117
+        },
+        {
+            "ticker": "GOOGL",
+            "precio_entrada": 295.77,
+            "acciones": 127.0186
+        }
+    ],
     "peak_flotante": 0.0,
     "historial_alertas": [],
     "ultimo_cierre_automatico": "12/11/2026",
