@@ -1,16 +1,11 @@
 {
     "capital_inicial": 117818.78,
-    "ganancia_cerrada": 0.0,
+    "ganancia_cerrada": -541.0894794968225,
     "posiciones": [
         {
             "ticker": "XLC",
             "precio_entrada": 108.69,
             "acciones": 361.3297
-        },
-        {
-            "ticker": "XLE",
-            "precio_entrada": 64.96,
-            "acciones": 604.5709
         },
         {
             "ticker": "XLF",
@@ -20,7 +15,8 @@
     ],
     "peak_flotante": 4.523024700361751e-07,
     "historial_alertas": [
-        "[15:01:23] 📰 CORTE DE PÉRDIDA: Cierre en QQQ a -1.11% ($-437.68 USD)."
+        "[15:01:23] 📰 CORTE DE PÉRDIDA: Cierre en QQQ a -1.11% ($-437.68 USD).",
+        "[14:35:20] 📰 CORTE DE PÉRDIDA: Cierre en XLE a -1.38% ($-541.09 USD)."
     ],
     "ultimo_cierre_automatico": "11/11/2026",
     "historial_rendimiento": [
