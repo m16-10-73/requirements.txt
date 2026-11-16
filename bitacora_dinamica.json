@@ -1,13 +1,7 @@
 {
-    "capital_inicial": 112704.9,
-    "ganancia_cerrada": -1095.296111271236,
-    "posiciones": [
-        {
-            "ticker": "MSFT",
-            "precio_entrada": 523.88,
-            "acciones": 71.7117
-        }
-    ],
+    "capital_inicial": 111382.62,
+    "ganancia_cerrada": 0.0,
+    "posiciones": [],
     "peak_flotante": 0.0,
     "historial_alertas": [
         "[14:35:26] 🛡️ STOP LOSS: Cierre en GOOGL a -2.15% ($-808.47 USD).",
@@ -66,6 +60,10 @@
         {
             "Fecha": "13/11/2026",
             "Capital": 112704.9
+        },
+        {
+            "Fecha": "16/11/2026",
+            "Capital": 111382.62
         }
     ]
 }
