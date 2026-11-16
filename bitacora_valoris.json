@@ -1,6 +1,6 @@
 {
     "capital_inicial": 98893.71,
-    "ganancia_cerrada": 0.0,
+    "ganancia_cerrada": -242.86019039965697,
     "posiciones": [
         {
             "ticker": "PEP",
@@ -11,11 +11,6 @@
             "ticker": "KO",
             "precio_entrada": 99.25,
             "acciones": 199.282
-        },
-        {
-            "ticker": "CVX",
-            "precio_entrada": 219.89,
-            "acciones": 89.9483
         },
         {
             "ticker": "WMT",
@@ -32,7 +27,8 @@
     "historial_alertas": [
         "[15:29:10] 🛡️ STOP LOSS INDIVIDUAL: Cierre en IBM a -1.08% ($-214.69 USD). Posición liquidada a caja.",
         "[15:01:24] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CSCO a -5.44% ($-1082.59 USD). Posición liquidada a caja.",
-        "[15:23:24] 🛡️ STOP LOSS INDIVIDUAL: Cierre en UNH a -0.84% ($-167.10 USD). Posición liquidada a caja."
+        "[15:23:24] 🛡️ STOP LOSS INDIVIDUAL: Cierre en UNH a -0.84% ($-167.10 USD). Posición liquidada a caja.",
+        "[14:35:28] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CVX a -1.23% ($-242.86 USD). Posición liquidada a caja."
     ],
     "ultimo_cierre_automatico": "11/11/2026",
     "historial_rendimiento": [
