@@ -1,29 +1,8 @@
 {
-    "capital_inicial": 98893.71,
-    "ganancia_cerrada": -242.86019039965697,
-    "posiciones": [
-        {
-            "ticker": "PEP",
-            "precio_entrada": 145.44,
-            "acciones": 135.9924
-        },
-        {
-            "ticker": "KO",
-            "precio_entrada": 99.25,
-            "acciones": 199.282
-        },
-        {
-            "ticker": "WMT",
-            "precio_entrada": 128.09,
-            "acciones": 154.4129
-        },
-        {
-            "ticker": "PG",
-            "precio_entrada": 169.8,
-            "acciones": 116.4826
-        }
-    ],
-    "peak_flotante": 1.096882503267417,
+    "capital_inicial": 99572.28,
+    "ganancia_cerrada": 0.0,
+    "posiciones": [],
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:10] 🛡️ STOP LOSS INDIVIDUAL: Cierre en IBM a -1.08% ($-214.69 USD). Posición liquidada a caja.",
         "[15:01:24] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CSCO a -5.44% ($-1082.59 USD). Posición liquidada a caja.",
@@ -83,6 +62,10 @@
         {
             "Fecha": "13/11/2026",
             "Capital": 98893.71
+        },
+        {
+            "Fecha": "16/11/2026",
+            "Capital": 99572.28
         }
     ]
 }
