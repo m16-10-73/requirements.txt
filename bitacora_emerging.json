@@ -1,7 +1,33 @@
 {
     "capital_inicial": 115401.08,
     "ganancia_cerrada": 0.0,
-    "posiciones": [],
+    "posiciones": [
+        {
+            "ticker": "U",
+            "precio_entrada": 52.81,
+            "acciones": 437.0425
+        },
+        {
+            "ticker": "SHOP",
+            "precio_entrada": 147.09,
+            "acciones": 156.9122
+        },
+        {
+            "ticker": "TSLA",
+            "precio_entrada": 390.22,
+            "acciones": 59.1467
+        },
+        {
+            "ticker": "NVDA",
+            "precio_entrada": 162.85,
+            "acciones": 141.7268
+        },
+        {
+            "ticker": "PLTR",
+            "precio_entrada": 167.99,
+            "acciones": 137.3904
+        }
+    ],
     "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:06] ⚡ STOP LOSS EMERGING: Cierre en MARA a -7.11% ($-1729.35 USD).",
