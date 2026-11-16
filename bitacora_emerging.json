@@ -1,31 +1,11 @@
 {
     "capital_inicial": 115401.08,
-    "ganancia_cerrada": 0.0,
+    "ganancia_cerrada": -1914.2235476551539,
     "posiciones": [
         {
             "ticker": "U",
             "precio_entrada": 52.81,
             "acciones": 437.0425
-        },
-        {
-            "ticker": "SHOP",
-            "precio_entrada": 147.09,
-            "acciones": 156.9122
-        },
-        {
-            "ticker": "TSLA",
-            "precio_entrada": 390.22,
-            "acciones": 59.1467
-        },
-        {
-            "ticker": "NVDA",
-            "precio_entrada": 162.85,
-            "acciones": 141.7268
-        },
-        {
-            "ticker": "PLTR",
-            "precio_entrada": 167.99,
-            "acciones": 137.3904
         }
     ],
     "peak_flotante": 1.488285208470296e-06,
@@ -35,7 +15,11 @@
         "[15:29:06] ⚡ STOP LOSS EMERGING: Cierre en NVDA a -5.38% ($-1306.73 USD).",
         "[15:01:26] ⚡ STOP LOSS EMERGING: Cierre en AMD a -7.75% ($-1829.70 USD).",
         "[15:01:26] ⚡ STOP LOSS EMERGING: Cierre en TSLA a -1.75% ($-412.34 USD).",
-        "[15:01:26] ⚡ STOP LOSS EMERGING: Cierre en PLTR a -1.64% ($-387.43 USD)."
+        "[15:01:26] ⚡ STOP LOSS EMERGING: Cierre en PLTR a -1.64% ($-387.43 USD).",
+        "[14:35:31] ⚡ STOP LOSS EMERGING: Cierre en SHOP a -1.77% ($-407.97 USD).",
+        "[14:35:31] ⚡ STOP LOSS EMERGING: Cierre en TSLA a -1.78% ($-411.36 USD).",
+        "[14:35:31] ⚡ STOP LOSS EMERGING: Cierre en NVDA a -2.79% ($-642.87 USD).",
+        "[14:35:31] ⚡ STOP LOSS EMERGING: Cierre en PLTR a -1.96% ($-452.01 USD)."
     ],
     "ultimo_cierre_automatico": "11/11/2026",
     "historial_rendimiento": [
