@@ -1,33 +1,7 @@
 {
-    "capital_inicial": 99664.61,
+    "capital_inicial": 99645.48,
     "ganancia_cerrada": 0.0,
-    "posiciones": [
-        {
-            "ticker": "T",
-            "precio_entrada": 22.64,
-            "acciones": 880.6239
-        },
-        {
-            "ticker": "MCD",
-            "precio_entrada": 277.03,
-            "acciones": 71.953
-        },
-        {
-            "ticker": "VZ",
-            "precio_entrada": 46.65,
-            "acciones": 427.2866
-        },
-        {
-            "ticker": "XOM",
-            "precio_entrada": 167.84,
-            "acciones": 118.765
-        },
-        {
-            "ticker": "PG",
-            "precio_entrada": 172.85,
-            "acciones": 115.3192
-        }
-    ],
+    "posiciones": [],
     "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:10] 🛡️ STOP LOSS INDIVIDUAL: Cierre en IBM a -1.08% ($-214.69 USD). Posición liquidada a caja.",
@@ -92,6 +66,10 @@
         {
             "Fecha": "16/11/2026",
             "Capital": 99664.61
+        },
+        {
+            "Fecha": "17/11/2026",
+            "Capital": 99645.48
         }
     ]
 }
