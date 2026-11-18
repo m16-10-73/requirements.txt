@@ -1,7 +1,33 @@
 {
     "capital_inicial": 99645.48,
     "ganancia_cerrada": 0.0,
-    "posiciones": [],
+    "posiciones": [
+        {
+            "ticker": "CSCO",
+            "precio_entrada": 95.11,
+            "acciones": 209.5373
+        },
+        {
+            "ticker": "MCD",
+            "precio_entrada": 275.82,
+            "acciones": 72.254
+        },
+        {
+            "ticker": "XOM",
+            "precio_entrada": 167.21,
+            "acciones": 119.186
+        },
+        {
+            "ticker": "T",
+            "precio_entrada": 22.29,
+            "acciones": 894.0823
+        },
+        {
+            "ticker": "MMM",
+            "precio_entrada": 180.88,
+            "acciones": 110.1785
+        }
+    ],
     "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:10] 🛡️ STOP LOSS INDIVIDUAL: Cierre en IBM a -1.08% ($-214.69 USD). Posición liquidada a caja.",
