@@ -1,14 +1,8 @@
 {
-    "capital_inicial": 99645.48,
-    "ganancia_cerrada": -958.1180770615686,
-    "posiciones": [
-        {
-            "ticker": "CSCO",
-            "precio_entrada": 95.11,
-            "acciones": 209.5373
-        }
-    ],
-    "peak_flotante": 0.39743448172461016,
+    "capital_inicial": 99075.01,
+    "ganancia_cerrada": 0.0,
+    "posiciones": [],
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:10] 🛡️ STOP LOSS INDIVIDUAL: Cierre en IBM a -1.08% ($-214.69 USD). Posición liquidada a caja.",
         "[15:01:24] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CSCO a -5.44% ($-1082.59 USD). Posición liquidada a caja.",
@@ -80,6 +74,10 @@
         {
             "Fecha": "17/11/2026",
             "Capital": 99645.48
+        },
+        {
+            "Fecha": "18/11/2026",
+            "Capital": 99075.01
         }
     ]
 }
