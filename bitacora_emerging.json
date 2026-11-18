@@ -1,34 +1,8 @@
 {
-    "capital_inicial": 113362.96,
+    "capital_inicial": 114270.74,
     "ganancia_cerrada": 0.0,
-    "posiciones": [
-        {
-            "ticker": "TSLA",
-            "precio_entrada": 380.11,
-            "acciones": 59.6475
-        },
-        {
-            "ticker": "AMD",
-            "precio_entrada": 503.41,
-            "acciones": 45.038
-        },
-        {
-            "ticker": "NVDA",
-            "precio_entrada": 155.46,
-            "acciones": 145.842
-        },
-        {
-            "ticker": "PLTR",
-            "precio_entrada": 156.56,
-            "acciones": 144.8173
-        },
-        {
-            "ticker": "U",
-            "precio_entrada": 50.36,
-            "acciones": 450.2103
-        }
-    ],
-    "peak_flotante": 0.8054445512540906,
+    "posiciones": [],
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:06] ⚡ STOP LOSS EMERGING: Cierre en MARA a -7.11% ($-1729.35 USD).",
         "[15:29:06] ⚡ STOP LOSS EMERGING: Cierre en COIN a -4.39% ($-1066.38 USD).",
@@ -102,6 +76,10 @@
         {
             "Fecha": "17/11/2026",
             "Capital": 113362.96
+        },
+        {
+            "Fecha": "18/11/2026",
+            "Capital": 114270.74
         }
     ]
 }
