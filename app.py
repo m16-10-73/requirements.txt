@@ -270,13 +270,17 @@ for pos in posiciones:
     precio_entrada = float(pos.get("precio_entrada", 0.0))
     acciones = float(pos.get("acciones", 0.0))
 
-    try:
-        df = yf.Ticker(ticker).history(period="1d")
-        precio_actual = (
-            float(df["Close"].iloc[-1]) if not df.empty else precio_entrada
-        )
+   try:
+        df = yf.Ticker(ticker).history(period="1d", interval="1m")
+        if not df.empty:
+            precio_actual = float(df["Close"].iloc[-1])
+            precio_minimo = float(df["Low"].iloc[-1])
+        else:
+            precio_actual = precio_entrada
+            precio_minimo = precio_entrada
     except Exception:
         precio_actual = precio_entrada
+        precio_minimo = precio_entrada
 
     pnl_usd = (precio_actual - precio_entrada) * acciones
     pnl_pct = (
@@ -284,12 +288,24 @@ for pos in posiciones:
         if precio_entrada > 0
         else 0.0
     )
+    pnl_minimo_pct = (
+        (((precio_minimo - precio_entrada) / precio_entrada) * 100.0)
+        if precio_entrada > 0
+        else 0.0
+    )
 
-    if pnl_pct <= STOP_LOSS_INDIVIDUAL_PCT:
-        data_bitacora["ganancia_cerrada"] += pnl_usd
+    if pnl_pct <= STOP_LOSS_INDIVIDUAL_PCT or pnl_minimo_pct <= STOP_LOSS_INDIVIDUAL_PCT:
+        precio_ejecucion = min(precio_actual, precio_minimo)
+        pnl_cierre_usd = (precio_ejecucion - precio_entrada) * acciones
+        pnl_cierre_pct = (
+            (((precio_ejecucion - precio_entrada) / precio_entrada) * 100.0)
+            if precio_entrada > 0
+            else 0.0
+        )
+        data_bitacora["ganancia_cerrada"] += pnl_cierre_usd
         msg = (
             f"[{time.strftime('%H:%M:%S')}] 🛡️ STOP LOSS: Cierre en {ticker} a"
-            f" {pnl_pct:.2f}% (${pnl_usd:.2f} USD)."
+            f" {pnl_cierre_pct:.2f}% (${pnl_cierre_usd:.2f} USD)."
         )
         data_bitacora["historial_alertas"].append(msg)
         hubo_cierre_individual = True
@@ -362,8 +378,9 @@ if hora_actual_str >= "18:00" and ultimo_auto != fecha_hoy_str:
 col1, col2, col3, col4 = st.columns(4)
 col1.metric(
     "Capital Cuenta",
-    f"${capital_base + total_flotante:,.2f} USD",
+    f"${capital_base + ganancia_cerrada + total_flotante:,.2f} USD",
     f"Base Acumulada: ${capital_base:,.2f}",
+)
 )
 col2.metric(
     "Ganancia Realizada",
