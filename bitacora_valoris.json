@@ -1,16 +1,11 @@
 {
     "capital_inicial": 99645.48,
-    "ganancia_cerrada": -797.714638064987,
+    "ganancia_cerrada": -958.1180770615686,
     "posiciones": [
         {
             "ticker": "CSCO",
             "precio_entrada": 95.11,
             "acciones": 209.5373
-        },
-        {
-            "ticker": "MCD",
-            "precio_entrada": 275.82,
-            "acciones": 72.254
         }
     ],
     "peak_flotante": 2.8238433351918197e-06,
@@ -21,7 +16,8 @@
         "[14:35:28] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CVX a -1.23% ($-242.86 USD). Posición liquidada a caja.",
         "[14:58:11] 🛡️ STOP LOSS INDIVIDUAL: Cierre en XOM a -1.85% ($-368.29 USD). Posición liquidada a caja.",
         "[14:58:11] 🛡️ STOP LOSS INDIVIDUAL: Cierre en T a -1.08% ($-214.58 USD). Posición liquidada a caja.",
-        "[14:58:11] 🛡️ STOP LOSS INDIVIDUAL: Cierre en MMM a -1.08% ($-214.85 USD). Posición liquidada a caja."
+        "[14:58:11] 🛡️ STOP LOSS INDIVIDUAL: Cierre en MMM a -1.08% ($-214.85 USD). Posición liquidada a caja.",
+        "[15:04:46] 🛡️ STOP LOSS INDIVIDUAL: Cierre en MCD a -0.80% ($-160.40 USD). Posición liquidada a caja."
     ],
     "ultimo_cierre_automatico": "17/11/2026",
     "historial_rendimiento": [
