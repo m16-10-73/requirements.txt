@@ -270,7 +270,7 @@ for pos in posiciones:
     precio_entrada = float(pos.get("precio_entrada", 0.0))
     acciones = float(pos.get("acciones", 0.0))
 
-   try:
+    try:
         df = yf.Ticker(ticker).history(period="1d", interval="1m")
         if not df.empty:
             precio_actual = float(df["Close"].iloc[-1])
@@ -381,7 +381,6 @@ col1.metric(
     f"${capital_base + ganancia_cerrada + total_flotante:,.2f} USD",
     f"Base Acumulada: ${capital_base:,.2f}",
 )
-)
 col2.metric(
     "Ganancia Realizada",
     f"+${ganancia_total_dia:,.2f} USD",
@@ -449,7 +448,7 @@ if st.sidebar.button("🔴 Cierre Manual de Jornada"):
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🛠️ **Rescate de Cierre**")
 if st.sidebar.button("💾 Forzar Sincronización con GitHub"):
-    capital_actual_en_pantalla = capital_base + total_flotante
+    capital_actual_en_pantalla = capital_base + ganancia_cerrada + total_flotante
     ejecutar_cierre_jornada(capital_actual_en_pantalla, origen="manual")
     st.sidebar.success(
         f"✅ ¡Sincronizado! Capital de ${capital_actual_en_pantalla:,.2f} USD"
