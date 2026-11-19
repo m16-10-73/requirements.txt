@@ -1,24 +1,8 @@
 {
-    "capital_inicial": 116480.38,
+    "capital_inicial": 117395.73,
     "ganancia_cerrada": 0.0,
-    "posiciones": [
-        {
-            "ticker": "IWM",
-            "precio_entrada": 270.12,
-            "acciones": 143.7391
-        },
-        {
-            "ticker": "QQQ",
-            "precio_entrada": 659.51,
-            "acciones": 58.8722
-        },
-        {
-            "ticker": "XLC",
-            "precio_entrada": 105.58,
-            "acciones": 367.7476
-        }
-    ],
-    "peak_flotante": 0.7858370644818317,
+    "posiciones": [],
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:01:23] 📰 CORTE DE PÉRDIDA: Cierre en QQQ a -1.11% ($-437.68 USD).",
         "[14:35:20] 📰 CORTE DE PÉRDIDA: Cierre en XLE a -1.38% ($-541.09 USD).",
@@ -89,6 +73,10 @@
         {
             "Fecha": "18/11/2026",
             "Capital": 116480.38
+        },
+        {
+            "Fecha": "19/11/2026",
+            "Capital": 117395.73
         }
     ]
 }
