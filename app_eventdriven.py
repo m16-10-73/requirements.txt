@@ -344,6 +344,7 @@ if hubo_cierre_individual:
 
 capital_base = float(data_bitacora.get("capital_inicial", 100000.00))
 ganancia_cerrada = float(data_bitacora.get("ganancia_cerrada", 0.0))
+capital_total_actual = round(capital_base + ganancia_cerrada + total_flotante, 2)
 
 flotante_pct = (total_flotante / capital_base) * 100 if capital_base > 0 else 0.0
 ganancia_total_dia = ganancia_cerrada + total_flotante
@@ -368,8 +369,7 @@ if (
     and flotante_pct <= umbral_salida
     and len(posiciones_procesadas) > 0
 ):
-    nuevo_capital = round(capital_base + total_flotante + ganancia_cerrada, 2)
-    ejecutar_cierre_jornada_eventos(nuevo_capital, origen="automatico")
+    ejecutar_cierre_jornada_eventos(capital_total_actual, origen="automatico")
     st.rerun()
 
 # Cierre automático por Horario de Mercado (18:00 hrs)
@@ -378,14 +378,10 @@ fecha_hoy_str = datetime.now().strftime("%d/%m/%Y")
 ultimo_auto = data_bitacora.get("ultimo_cierre_automatico", "")
 
 if hora_actual_str >= "18:00" and ultimo_auto != fecha_hoy_str:
-    capital_base_actual = float(data_bitacora.get("capital_inicial", 100000.00))
-    ganancia_dia_auto = float(data_bitacora.get("ganancia_cerrada", 0.0)) + total_flotante
-    nuevo_capital = round(capital_base_actual + ganancia_dia_auto, 2)
-
-    ejecutar_cierre_jornada_eventos(nuevo_capital, origen="automatico")
+    ejecutar_cierre_jornada_eventos(capital_total_actual, origen="automatico")
     st.success(
         f"⏰ [Cierre Automático Mercado] Jornada {fecha_hoy_str} cerrada con éxito. Capital:"
-        f" ${nuevo_capital:,.2f} USD"
+        f" ${capital_total_actual:,.2f} USD"
     )
     time.sleep(1)
     st.rerun()
@@ -393,17 +389,17 @@ if hora_actual_str >= "18:00" and ultimo_auto != fecha_hoy_str:
 col1, col2, col3, col4 = st.columns(4)
 col1.metric(
     "Capital Cuenta",
-    f"${capital_base + ganancia_cerrada + total_flotante:,.2f} USD",
+    f"${capital_total_actual:,.2f} USD",
     f"Base Acumulada: ${capital_base:,.2f}",
 )
 col2.metric(
     "Ganancia Realizada",
-    f"+${ganancia_total_dia:,.2f} USD",
+    f"{'+' if ganancia_total_dia >= 0 else ''}${ganancia_total_dia:,.2f} USD",
     f"{ganancia_total_pct:.2f}% del Capital",
 )
 col3.metric(
     "Flotante Actual",
-    f"+${total_flotante:,.2f} USD",
+    f"{'+' if total_flotante >= 0 else ''}${total_flotante:,.2f} USD",
     f"Punto Alto: +{peak_actual:.2f}%",
 )
 col4.metric(
@@ -438,15 +434,11 @@ if st.sidebar.button("🚀 Abrir Jornada (Eventos)"):
         st.rerun()
 
 if st.sidebar.button("🔴 Cierre Manual de Jornada"):
-    capital_base_actual = float(data_bitacora.get("capital_inicial", 100000.00))
-    ganancia_del_dia = total_flotante + float(data_bitacora.get("ganancia_cerrada", 0.0))
-    nuevo_capital = round(capital_base_actual + ganancia_del_dia, 2)
-
-    ejecutar_cierre_jornada_eventos(nuevo_capital, origen="manual")
+    ejecutar_cierre_jornada_eventos(capital_total_actual, origen="manual")
 
     st.success(
         "✅ **¡Cierre Manual Exitoso!** Capital acumulado actualizado a"
-        f" **${nuevo_capital:,.2f} USD** como base inicial para la siguiente"
+        f" **${capital_total_actual:,.2f} USD** como base inicial para la siguiente"
         " sesión."
     )
     time.sleep(1.5)
@@ -456,10 +448,9 @@ if st.sidebar.button("🔴 Cierre Manual de Jornada"):
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🛠️ **Rescate de Cierre**")
 if st.sidebar.button("💾 Forzar Sincronización con GitHub"):
-    capital_actual_en_pantalla = capital_base + ganancia_cerrada + total_flotante
-    ejecutar_cierre_jornada_eventos(capital_actual_en_pantalla, origen="manual")
+    ejecutar_cierre_jornada_eventos(capital_total_actual, origen="manual")
     st.sidebar.success(
-        f"✅ ¡Sincronizado! Capital de ${capital_actual_en_pantalla:,.2f} USD"
+        f"✅ ¡Sincronizado! Capital de ${capital_total_actual:,.2f} USD"
         " guardado en el repositorio GitHub."
     )
     time.sleep(1)
@@ -566,7 +557,7 @@ if historial:
         )
 
         capital_inicial_base = (
-            float(df_hist["Capital"].iloc[0]) if len(df_hist) > 0 else 10000.0
+            float(df_hist["Capital"].iloc[0]) if len(df_hist) > 0 else 100000.0
         )
 
         df_hist["Rent_Diaria_Pct"] = df_hist["Capital"].pct_change() * 100.0
