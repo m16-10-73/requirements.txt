@@ -1,7 +1,33 @@
 {
     "capital_inicial": 114270.74,
     "ganancia_cerrada": 0.0,
-    "posiciones": [],
+    "posiciones": [
+        {
+            "ticker": "RBLX",
+            "precio_entrada": 47.33,
+            "acciones": 482.8681
+        },
+        {
+            "ticker": "AMD",
+            "precio_entrada": 530.14,
+            "acciones": 43.1096
+        },
+        {
+            "ticker": "MARA",
+            "precio_entrada": 6.56,
+            "acciones": 3483.8641
+        },
+        {
+            "ticker": "TSLA",
+            "precio_entrada": 383.72,
+            "acciones": 59.5594
+        },
+        {
+            "ticker": "PLTR",
+            "precio_entrada": 156.67,
+            "acciones": 145.8744
+        }
+    ],
     "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:06] ⚡ STOP LOSS EMERGING: Cierre en MARA a -7.11% ($-1729.35 USD).",
