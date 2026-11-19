@@ -1,25 +1,14 @@
 {
-    "capital_inicial": 116947.99,
-    "ganancia_cerrada": -602.9509088349454,
-    "posiciones": [
-        {
-            "ticker": "XLI",
-            "precio_entrada": 164.75,
-            "acciones": 236.6171
-        },
-        {
-            "ticker": "QQQ",
-            "precio_entrada": 656.95,
-            "acciones": 59.3389
-        }
-    ],
-    "peak_flotante": 0.4504635510815386,
+    "capital_inicial": 116480.38,
+    "ganancia_cerrada": 0.0,
+    "posiciones": [],
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:01:23] 📰 CORTE DE PÉRDIDA: Cierre en QQQ a -1.11% ($-437.68 USD).",
         "[14:35:20] 📰 CORTE DE PÉRDIDA: Cierre en XLE a -1.38% ($-541.09 USD).",
         "[14:58:08] 📰 CORTE DE PÉRDIDA: Cierre en XLE a -1.55% ($-602.95 USD)."
     ],
-    "ultimo_cierre_automatico": "17/11/2026",
+    "ultimo_cierre_automatico": "18/11/2026",
     "historial_rendimiento": [
         {
             "Fecha": "28/10/2026",
@@ -80,6 +69,10 @@
         {
             "Fecha": "17/11/2026",
             "Capital": 116947.99
+        },
+        {
+            "Fecha": "18/11/2026",
+            "Capital": 116480.38
         }
     ]
 }
