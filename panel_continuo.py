@@ -34,7 +34,7 @@ st.markdown(
         border-radius: 8px;
         color: #ffffff !important;
         box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        margin-bottom: 10px;
+        margin-bottom: 12px;
         min-height: 76px;
     }
     .bot-banner h3 {
@@ -283,6 +283,8 @@ def seleccionar_activos(cfg):
 
 def render_bot_columna(bot_key, cfg):
     data_bitacora = cargar_bitacora_gh(cfg["file_path"], cfg["msg_commit"])
+    meta_diaria_pct = float(cfg["meta_default"])
+    tolerancia_pct = float(cfg["tol_default"])
 
     st.markdown(
         f"""
@@ -292,23 +294,6 @@ def render_bot_columna(bot_key, cfg):
         </div>
         """,
         unsafe_allow_html=True,
-    )
-
-    meta_diaria_pct = st.slider(
-        "Meta Diaria (%)",
-        min_value=0.3,
-        max_value=10.0,
-        value=cfg["meta_default"],
-        step=0.05,
-        key=f"meta_{bot_key}",
-    )
-    tolerancia_pct = st.slider(
-        "Retroceso (%)",
-        min_value=0.05,
-        max_value=5.0,
-        value=cfg["tol_default"],
-        step=0.05,
-        key=f"tol_{bot_key}",
     )
 
     posiciones = data_bitacora.get("posiciones", [])
