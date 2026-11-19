@@ -1,8 +1,8 @@
 {
-    "capital_inicial": 99075.01,
-    "ganancia_cerrada": -1662.3969089615825,
+    "capital_inicial": 97412.61,
+    "ganancia_cerrada": 0.0,
     "posiciones": [],
-    "peak_flotante": 0.14177815394699736,
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:10] 🛡️ STOP LOSS INDIVIDUAL: Cierre en IBM a -1.08% ($-214.69 USD). Posición liquidada a caja.",
         "[15:01:24] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CSCO a -5.44% ($-1082.59 USD). Posición liquidada a caja.",
@@ -18,7 +18,7 @@
         "[15:23:41] 🛡️ STOP LOSS INDIVIDUAL: Cierre en MMM a -0.95% ($-188.25 USD). Posición liquidada a caja.",
         "[17:16:46] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CSCO a -1.44% ($-285.46 USD). Posición liquidada a caja."
     ],
-    "ultimo_cierre_automatico": "18/11/2026",
+    "ultimo_cierre_automatico": "19/11/2026",
     "historial_rendimiento": [
         {
             "Fecha": "28/10/2026",
@@ -83,6 +83,10 @@
         {
             "Fecha": "18/11/2026",
             "Capital": 99075.01
+        },
+        {
+            "Fecha": "19/11/2026",
+            "Capital": 97412.61
         }
     ]
 }
