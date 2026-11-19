@@ -1,6 +1,6 @@
 {
     "capital_inicial": 99075.01,
-    "ganancia_cerrada": 0.0,
+    "ganancia_cerrada": -1188.69163245981,
     "posiciones": [
         {
             "ticker": "CSCO",
@@ -8,24 +8,9 @@
             "acciones": 203.9
         },
         {
-            "ticker": "LOW",
-            "precio_entrada": 222.78,
-            "acciones": 88.9443
-        },
-        {
-            "ticker": "VZ",
-            "precio_entrada": 46.13,
-            "acciones": 429.547
-        },
-        {
             "ticker": "MMM",
             "precio_entrada": 181.05,
             "acciones": 109.4449
-        },
-        {
-            "ticker": "PEP",
-            "precio_entrada": 141.87,
-            "acciones": 139.6701
         }
     ],
     "peak_flotante": 6.507480080287891e-08,
@@ -37,7 +22,10 @@
         "[14:58:11] 🛡️ STOP LOSS INDIVIDUAL: Cierre en XOM a -1.85% ($-368.29 USD). Posición liquidada a caja.",
         "[14:58:11] 🛡️ STOP LOSS INDIVIDUAL: Cierre en T a -1.08% ($-214.58 USD). Posición liquidada a caja.",
         "[14:58:11] 🛡️ STOP LOSS INDIVIDUAL: Cierre en MMM a -1.08% ($-214.85 USD). Posición liquidada a caja.",
-        "[15:04:46] 🛡️ STOP LOSS INDIVIDUAL: Cierre en MCD a -0.80% ($-160.40 USD). Posición liquidada a caja."
+        "[15:04:46] 🛡️ STOP LOSS INDIVIDUAL: Cierre en MCD a -0.80% ($-160.40 USD). Posición liquidada a caja.",
+        "[15:01:35] 🛡️ SL (-0.75%): LOW a -1.55% ($-307.97 USD).",
+        "[15:01:35] 🛡️ SL (-0.75%): VZ a -1.75% ($-345.79 USD).",
+        "[15:01:35] 🛡️ SL (-0.75%): PEP a -2.70% ($-534.94 USD)."
     ],
     "ultimo_cierre_automatico": "18/11/2026",
     "historial_rendimiento": [
