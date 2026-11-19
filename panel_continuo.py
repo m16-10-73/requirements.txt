@@ -1,5 +1,5 @@
 import base64
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 import json
 import time
 import altair as alt
@@ -9,7 +9,7 @@ import streamlit as st
 import yfinance as yf
 
 st.set_page_config(
-    page_title="Panel Continuo — 4 Estrategias",
+    page_title="Panel Continuo — 4 Columnas",
     page_icon="📊",
     layout="wide",
 )
@@ -20,31 +20,42 @@ st.markdown(
     """
     <style>
     .block-container {
-        padding-top: 0.6rem !important;
-        padding-bottom: 1.5rem !important;
+        padding-top: 0.5rem !important;
+        padding-bottom: 1rem !important;
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        max-width: 100% !important;
     }
     .stApp {
         background-color: #f8f9fa !important;
     }
     .bot-banner {
-        padding: 12px 18px;
-        border-radius: 10px;
+        padding: 10px 12px;
+        border-radius: 8px;
         color: #ffffff !important;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-        margin-top: 8px;
-        margin-bottom: 14px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        margin-bottom: 10px;
+        min-height: 76px;
     }
-    .bot-banner h2 {
+    .bot-banner h3 {
         color: #ffffff !important;
         margin: 0;
-        font-size: 1.2rem;
+        font-size: 0.98rem;
         font-weight: 700;
+        line-height: 1.25;
     }
     .bot-banner p {
         color: #ffffff !important;
-        margin: 3px 0 0 0;
-        font-size: 0.85rem;
+        margin: 4px 0 0 0;
+        font-size: 0.74rem;
         opacity: 0.95;
+        line-height: 1.25;
+    }
+    div[data-testid="stMetricValue"] {
+        font-size: 1.05rem !important;
+    }
+    div[data-testid="stMetricDelta"] {
+        font-size: 0.72rem !important;
     }
     </style>
     """,
@@ -58,8 +69,8 @@ BRANCH = "main"
 
 CONFIG_BOTS = {
     "dinamica": {
-        "titulo": "📈 BOT DINÁMICO — MOMENTUM & TENDENCIA",
-        "subtitulo": "Impulso | Stop-Loss 1m (-0.50%) | Cierre Anticipado Disponible",
+        "titulo": "📈 DINÁMICO",
+        "subtitulo": "Momentum | SL 1m (-0.50%)",
         "gradiente": "linear-gradient(135deg, #FF512F, #DD2476)",
         "file_path": "bitacora_dinamica.json",
         "msg_commit": "Actualización automática de bitácora dinámica",
@@ -71,8 +82,8 @@ CONFIG_BOTS = {
         "modo_seleccion": "fijo",
     },
     "valoris": {
-        "titulo": "🛡️ BOT VALORIS — DIVIDENDOS & VALUE",
-        "subtitulo": "Activos Defensivos | Stop-Loss 1m (-0.75%) | Cierre Anticipado Disponible",
+        "titulo": "🛡️ VALORIS",
+        "subtitulo": "Value/Div | SL 1m (-0.75%)",
         "gradiente": "linear-gradient(135deg, #134E5E, #71B280)",
         "file_path": "bitacora_valoris.json",
         "msg_commit": "Actualización automática de bitácora Valoris",
@@ -87,8 +98,8 @@ CONFIG_BOTS = {
         "modo_seleccion": "momentum_2d_mcap",
     },
     "emergente": {
-        "titulo": "⚡ BOT EMERGING — CRECIMIENTO & MOMENTUM",
-        "subtitulo": "Alta Beta | Stop-Loss 1m (-1.00%) | Cierre Anticipado Disponible",
+        "titulo": "⚡ EMERGING",
+        "subtitulo": "Alta Beta | SL 1m (-1.00%)",
         "gradiente": "linear-gradient(135deg, #E67E22, #F1C40F)",
         "file_path": "bitacora_emerging.json",
         "msg_commit": "Actualización automática de bitácora Emerging",
@@ -100,8 +111,8 @@ CONFIG_BOTS = {
         "modo_seleccion": "momentum_2d",
     },
     "eventos": {
-        "titulo": "📰 BOT DE EVENTOS — CATALIZADORES & FLUJO",
-        "subtitulo": "ETFs & Catalizadores | Stop-Loss 1m (-1.00%) | Cierre Anticipado Disponible",
+        "titulo": "📰 EVENTOS",
+        "subtitulo": "ETFs/Flujo | SL 1m (-1.00%)",
         "gradiente": "linear-gradient(135deg, #2C3E50, #4CA1AF)",
         "file_path": "bitacora_eventos.json",
         "msg_commit": "Actualización automática de bitácora Eventos",
@@ -168,7 +179,7 @@ def cargar_bitacora_gh(file_path, msg_commit):
                 )
                 return contenido
     except Exception as e:
-        st.error(f"⚠️ Error al leer {file_path} desde GitHub: {e}")
+        st.error(f"⚠️ Error al leer {file_path}: {e}")
 
     base_data = {
         "capital_inicial": 100000.00,
@@ -270,38 +281,35 @@ def seleccionar_activos(cfg):
     return [item[0] for item in resultados[:n]]
 
 
-def render_bot(bot_key, cfg):
+def render_bot_columna(bot_key, cfg):
     data_bitacora = cargar_bitacora_gh(cfg["file_path"], cfg["msg_commit"])
 
     st.markdown(
         f"""
         <div class="bot-banner" style="background: {cfg['gradiente']};">
-            <h2>{cfg['titulo']}</h2>
+            <h3>{cfg['titulo']}</h3>
             <p>{cfg['subtitulo']}</p>
         </div>
         """,
         unsafe_allow_html=True,
     )
 
-    c_ctrl1, c_ctrl2, c_ctrl3, c_ctrl4 = st.columns([1.2, 1.2, 1.3, 1.3])
-    with c_ctrl1:
-        meta_diaria_pct = st.slider(
-            "Meta Diaria (%)",
-            min_value=0.3,
-            max_value=10.0,
-            value=cfg["meta_default"],
-            step=0.05,
-            key=f"meta_{bot_key}",
-        )
-    with c_ctrl2:
-        tolerancia_pct = st.slider(
-            "Retroceso (%)",
-            min_value=0.05,
-            max_value=5.0,
-            value=cfg["tol_default"],
-            step=0.05,
-            key=f"tol_{bot_key}",
-        )
+    meta_diaria_pct = st.slider(
+        "Meta Diaria (%)",
+        min_value=0.3,
+        max_value=10.0,
+        value=cfg["meta_default"],
+        step=0.05,
+        key=f"meta_{bot_key}",
+    )
+    tolerancia_pct = st.slider(
+        "Retroceso (%)",
+        min_value=0.05,
+        max_value=5.0,
+        value=cfg["tol_default"],
+        step=0.05,
+        key=f"tol_{bot_key}",
+    )
 
     posiciones = data_bitacora.get("posiciones", [])
     total_flotante = 0.0
@@ -357,11 +365,10 @@ def render_bot(bot_key, cfg):
             posiciones_restantes.append(pos)
             posiciones_procesadas.append({
                 "Activo": ticker,
-                "Precio Entrada": round(precio_entrada, 2),
-                "Precio Actual": round(precio_actual, 2),
-                "Acciones": round(acciones, 4),
-                "PnL (USD)": round(pnl_usd, 2),
-                "PnL (%)": round(pnl_pct, 2),
+                "Entrada": round(precio_entrada, 2),
+                "Actual": round(precio_actual, 2),
+                "PnL $": round(pnl_usd, 2),
+                "PnL %": round(pnl_pct, 2),
             })
 
     if hubo_cierre_individual:
@@ -415,64 +422,61 @@ def render_bot(bot_key, cfg):
         cerrar_jornada_bot(cfg, capital_total_actual, origen="automatico")
         st.rerun()
 
-    with c_ctrl3:
-        if st.button("🚀 Abrir Jornada", key=f"abrir_{bot_key}", use_container_width=True):
-            top_act = seleccionar_activos(cfg)
-            if top_act:
-                monto_por_accion = capital_base / len(top_act)
-                nuevas_pos = []
-                for t in top_act:
-                    try:
-                        px = float(yf.Ticker(t).history(period="1d")["Close"].iloc[-1])
-                    except Exception:
-                        px = 100.0
-                    nuevas_pos.append({
-                        "ticker": t,
-                        "precio_entrada": round(px, 2),
-                        "acciones": round(monto_por_accion / px, 4),
-                    })
-                data_bitacora["posiciones"] = nuevas_pos
-                data_bitacora["peak_flotante"] = 0.0
-                guardar_bitacora_gh(cfg["file_path"], cfg["msg_commit"], data_bitacora)
-                st.rerun()
-
-    with c_ctrl4:
-        if st.button(
-            "⏹️ Cerrar Jornada Anticipada",
-            key=f"anticipada_{bot_key}",
-            type="primary",
-            use_container_width=True,
-        ):
-            cerrar_jornada_bot(cfg, capital_total_actual, origen="anticipada")
-            st.success(f"Cierre anticipado registrado: ${capital_total_actual:,.2f} USD")
-            time.sleep(1)
+    if st.button("🚀 Abrir Jornada", key=f"abrir_{bot_key}", use_container_width=True):
+        top_act = seleccionar_activos(cfg)
+        if top_act:
+            monto_por_accion = capital_base / len(top_act)
+            nuevas_pos = []
+            for t in top_act:
+                try:
+                    px = float(yf.Ticker(t).history(period="1d")["Close"].iloc[-1])
+                except Exception:
+                    px = 100.0
+                nuevas_pos.append({
+                    "ticker": t,
+                    "precio_entrada": round(px, 2),
+                    "acciones": round(monto_por_accion / px, 4),
+                })
+            data_bitacora["posiciones"] = nuevas_pos
+            data_bitacora["peak_flotante"] = 0.0
+            guardar_bitacora_gh(cfg["file_path"], cfg["msg_commit"], data_bitacora)
             st.rerun()
 
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric(
+    if st.button(
+        "⏹️ Cerrar Jornada Anticipada",
+        key=f"anticipada_{bot_key}",
+        type="primary",
+        use_container_width=True,
+    ):
+        cerrar_jornada_bot(cfg, capital_total_actual, origen="anticipada")
+        st.success(f"Cerrado: ${capital_total_actual:,.2f}")
+        time.sleep(1)
+        st.rerun()
+
+    st.metric(
         "Capital Cuenta",
-        f"${capital_total_actual:,.2f} USD",
+        f"${capital_total_actual:,.2f}",
         f"Base: ${capital_base:,.2f}",
     )
-    col2.metric(
+    st.metric(
         "Acumulado Total",
-        f"{'+' if acumulado_usd >= 0 else ''}${acumulado_usd:,.2f} USD",
-        f"{'+' if acumulado_pct >= 0 else ''}{acumulado_pct:.2f}% Acumulado",
+        f"{'+' if acumulado_usd >= 0 else ''}${acumulado_usd:,.2f}",
+        f"{'+' if acumulado_pct >= 0 else ''}{acumulado_pct:.2f}% Acum.",
     )
-    col3.metric(
+    st.metric(
         "Ganancia / Flotante Hoy",
-        f"{'+' if ganancia_total_dia >= 0 else ''}${ganancia_total_dia:,.2f} USD",
+        f"{'+' if ganancia_total_dia >= 0 else ''}${ganancia_total_dia:,.2f}",
         f"Flot: {'+' if total_flotante >= 0 else ''}${total_flotante:,.2f} ({ganancia_total_pct:.2f}%)",
     )
-    col4.metric(
+    st.metric(
         "Meta / Umbral",
         f"Meta: {meta_diaria_pct:.2f}%",
         f"Umbral: +{umbral_salida:.2f}% | Peak: +{peak_actual:.2f}%",
     )
 
-    st.subheader("Posiciones en Curso")
+    st.caption("**Posiciones en Curso**")
     if posiciones_procesadas:
-        st.dataframe(pd.DataFrame(posiciones_procesadas), use_container_width=True)
+        st.dataframe(pd.DataFrame(posiciones_procesadas), use_container_width=True, hide_index=True)
     else:
         st.info("Sin posiciones abiertas.")
 
@@ -491,36 +495,34 @@ def render_bot(bot_key, cfg):
 
             chart = (
                 alt.Chart(df_hist)
-                .mark_line(point=True, strokeWidth=3)
+                .mark_line(point=True, strokeWidth=2.5)
                 .encode(
                     x=alt.X("Fecha_limpia:N", title="Fecha", sort=df_hist["Fecha_limpia"].tolist()),
-                    y=alt.Y("Capital:Q", title="Capital (USD)", scale=alt.Scale(zero=False)),
+                    y=alt.Y("Capital:Q", title="Capital", scale=alt.Scale(zero=False)),
                     tooltip=["Fecha_limpia", alt.Tooltip("Capital:Q", format="$,.2f")],
                 )
-                .properties(height=250)
+                .properties(height=180)
             )
             st.altair_chart(chart, use_container_width=True)
 
             df_mostrar = df_hist.sort_values(by="Fecha_obj", ascending=False).copy()
-            df_mostrar["Rent. Diaria"] = df_mostrar["Rent_Diaria_Pct"].apply(
-                lambda x: f"{'+' if x >= 0 else ''}{x:.2f}%"
-            )
-            df_mostrar["Rent. Acumulada"] = df_mostrar["Rent_Acumulada_Pct"].apply(
+            df_mostrar["Ac. %"] = df_mostrar["Rent_Acumulada_Pct"].apply(
                 lambda x: f"{'+' if x >= 0 else ''}{x:.2f}%"
             )
             df_mostrar["Capital"] = df_mostrar["Capital"].apply(
-                lambda x: f"${float(x):,.2f} USD"
+                lambda x: f"${float(x):,.0f}"
             )
-            df_mostrar = df_mostrar[["Fecha_limpia", "Capital", "Rent. Diaria", "Rent. Acumulada"]].rename(
+            df_mostrar = df_mostrar[["Fecha_limpia", "Capital", "Ac. %"]].rename(
                 columns={"Fecha_limpia": "Fecha"}
             )
-            st.dataframe(df_mostrar.head(14), use_container_width=True, hide_index=True)
+            st.dataframe(df_mostrar.head(7), use_container_width=True, hide_index=True)
 
 
-st.title("📊 Panel Continuo — 4 Bots de Estrategia")
+st.markdown("### 📊 Panel Continuo — 4 Bots en 4 Columnas")
 
-items_bots = list(CONFIG_BOTS.items())
-for idx, (bot_key, cfg) in enumerate(items_bots):
-    render_bot(bot_key, cfg)
-    if idx < len(items_bots) - 1:
-        st.markdown("---")
+cols = st.columns(4, gap="medium")
+bots_en_orden = ["dinamica", "valoris", "emergente", "eventos"]
+
+for col, bot_key in zip(cols, bots_en_orden):
+    with col:
+        render_bot_columna(bot_key, CONFIG_BOTS[bot_key])
