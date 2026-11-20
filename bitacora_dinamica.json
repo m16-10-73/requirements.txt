@@ -1,7 +1,23 @@
 {
     "capital_inicial": 114190.79,
     "ganancia_cerrada": 0.0,
-    "posiciones": [],
+    "posiciones": [
+        {
+            "ticker": "AAPL",
+            "precio_entrada": 349.21,
+            "acciones": 108.9992
+        },
+        {
+            "ticker": "MSFT",
+            "precio_entrada": 498.3,
+            "acciones": 76.3869
+        },
+        {
+            "ticker": "GOOGL",
+            "precio_entrada": 272.66,
+            "acciones": 139.601
+        }
+    ],
     "peak_flotante": 0.0,
     "historial_alertas": [
         "[14:35:26] 🛡️ STOP LOSS: Cierre en GOOGL a -2.15% ($-808.47 USD).",
