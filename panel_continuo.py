@@ -51,6 +51,13 @@ st.markdown(
         opacity: 0.95;
         line-height: 1.25;
     }
+    .nota-ref {
+        font-size: 0.74rem;
+        color: #57606a;
+        margin-top: -6px;
+        margin-bottom: 12px;
+        line-height: 1.3;
+    }
     div[data-testid="stMetricValue"] {
         font-size: 1.05rem !important;
     }
@@ -285,6 +292,7 @@ def render_bot_columna(bot_key, cfg):
     data_bitacora = cargar_bitacora_gh(cfg["file_path"], cfg["msg_commit"])
     meta_diaria_pct = float(cfg["meta_default"])
     tolerancia_pct = float(cfg["tol_default"])
+    sl_pct = float(cfg["sl_pct"])
 
     st.markdown(
         f"""
@@ -331,7 +339,7 @@ def render_bot_columna(bot_key, cfg):
             else 0.0
         )
 
-        if pnl_pct <= cfg["sl_pct"] or pnl_minimo_pct <= cfg["sl_pct"]:
+        if pnl_pct <= sl_pct or pnl_minimo_pct <= sl_pct:
             precio_ejecucion = min(precio_actual, precio_minimo)
             pnl_cierre_usd = (precio_ejecucion - precio_entrada) * acciones
             pnl_cierre_pct = (
@@ -342,7 +350,7 @@ def render_bot_columna(bot_key, cfg):
             data_bitacora["ganancia_cerrada"] += pnl_cierre_usd
             hora_act = time.strftime("%H:%M:%S")
             data_bitacora.setdefault("historial_alertas", []).append(
-                f"[{hora_act}] 🛡️ SL ({cfg['sl_pct']:.2f}%): {ticker} a {pnl_cierre_pct:.2f}% (${pnl_cierre_usd:.2f} USD)."
+                f"[{hora_act}] 🛡️ SL ({sl_pct:.2f}%): {ticker} a {pnl_cierre_pct:.2f}% (${pnl_cierre_usd:.2f} USD)."
             )
             hubo_cierre_individual = True
         else:
@@ -372,15 +380,6 @@ def render_bot_columna(bot_key, cfg):
     )
 
     historial = data_bitacora.get("historial_rendimiento", [])
-    capital_origen_hist = (
-        float(historial[0].get("Capital", capital_base)) if historial else capital_base
-    )
-    acumulado_usd = capital_total_actual - capital_origen_hist
-    acumulado_pct = (
-        ((capital_total_actual - capital_origen_hist) / capital_origen_hist) * 100.0
-        if capital_origen_hist > 0
-        else 0.0
-    )
 
     peak_previo = float(data_bitacora.get("peak_flotante", 0.0))
     if flotante_pct > peak_previo:
@@ -444,19 +443,17 @@ def render_bot_columna(bot_key, cfg):
         f"Base: ${capital_base:,.2f}",
     )
     st.metric(
-        "Acumulado Total",
-        f"{'+' if acumulado_usd >= 0 else ''}${acumulado_usd:,.2f}",
-        f"{'+' if acumulado_pct >= 0 else ''}{acumulado_pct:.2f}% Acum.",
-    )
-    st.metric(
         "Ganancia / Flotante Hoy",
         f"{'+' if ganancia_total_dia >= 0 else ''}${ganancia_total_dia:,.2f}",
         f"Flot: {'+' if total_flotante >= 0 else ''}${total_flotante:,.2f} ({ganancia_total_pct:.2f}%)",
     )
-    st.metric(
-        "Meta / Umbral",
-        f"Meta: {meta_diaria_pct:.2f}%",
-        f"Umbral: +{umbral_salida:.2f}% | Peak: +{peak_actual:.2f}%",
+    st.markdown(
+        f"""
+        <div class="nota-ref">
+            Meta: {meta_diaria_pct:.2f}% | Umbral: +{umbral_salida:.2f}% | Peak: +{peak_actual:.2f}% | SL: {sl_pct:.2f}%
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
     st.caption("**Posiciones en Curso**")
@@ -503,7 +500,7 @@ def render_bot_columna(bot_key, cfg):
             st.dataframe(df_mostrar.head(7), use_container_width=True, hide_index=True)
 
 
-st.markdown("### 📊 Panel Continuo — 4 Bots en 4 Columnas")
+st.markdown("### 📊 Panel Continuo — 4 Columnas")
 
 cols = st.columns(4, gap="medium")
 bots_en_orden = ["dinamica", "valoris", "emergente", "eventos"]
