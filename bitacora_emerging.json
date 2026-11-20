@@ -1,6 +1,6 @@
 {
     "capital_inicial": 117905.0,
-    "ganancia_cerrada": 0.0,
+    "ganancia_cerrada": -2708.4381118629162,
     "posiciones": [
         {
             "ticker": "COIN",
@@ -8,24 +8,9 @@
             "acciones": 216.5978
         },
         {
-            "ticker": "PLTR",
-            "precio_entrada": 153.68,
-            "acciones": 153.4422
-        },
-        {
             "ticker": "RBLX",
             "precio_entrada": 46.35,
             "acciones": 508.7595
-        },
-        {
-            "ticker": "TSLA",
-            "precio_entrada": 374.41,
-            "acciones": 62.9818
-        },
-        {
-            "ticker": "NVDA",
-            "precio_entrada": 145.98,
-            "acciones": 161.5358
         }
     ],
     "peak_flotante": 0.0,
@@ -39,7 +24,10 @@
         "[14:35:31] ⚡ STOP LOSS EMERGING: Cierre en SHOP a -1.77% ($-407.97 USD).",
         "[14:35:31] ⚡ STOP LOSS EMERGING: Cierre en TSLA a -1.78% ($-411.36 USD).",
         "[14:35:31] ⚡ STOP LOSS EMERGING: Cierre en NVDA a -2.79% ($-642.87 USD).",
-        "[14:35:31] ⚡ STOP LOSS EMERGING: Cierre en PLTR a -1.96% ($-452.01 USD)."
+        "[14:35:31] ⚡ STOP LOSS EMERGING: Cierre en PLTR a -1.96% ($-452.01 USD).",
+        "[15:30:45] 🛡️ SL (-1.00%): PLTR a -3.28% ($-773.47 USD).",
+        "[15:30:45] 🛡️ SL (-1.00%): TSLA a -3.10% ($-730.59 USD).",
+        "[15:30:45] 🛡️ SL (-1.00%): NVDA a -5.11% ($-1204.38 USD)."
     ],
     "ultimo_cierre_automatico": "19/11/2026",
     "historial_rendimiento": [
