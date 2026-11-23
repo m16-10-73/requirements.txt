@@ -1,34 +1,8 @@
 {
-    "capital_inicial": 115120.78,
+    "capital_inicial": 124912.19,
     "ganancia_cerrada": 0.0,
-    "posiciones": [
-        {
-            "ticker": "RBLX",
-            "precio_entrada": 46.72,
-            "acciones": 492.8115
-        },
-        {
-            "ticker": "U",
-            "precio_entrada": 44.75,
-            "acciones": 514.5063
-        },
-        {
-            "ticker": "SHOP",
-            "precio_entrada": 123.72,
-            "acciones": 186.0989
-        },
-        {
-            "ticker": "COIN",
-            "precio_entrada": 101.97,
-            "acciones": 225.7934
-        },
-        {
-            "ticker": "PLTR",
-            "precio_entrada": 143.49,
-            "acciones": 160.4583
-        }
-    ],
-    "peak_flotante": 8.54264859642692,
+    "posiciones": [],
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:06] ⚡ STOP LOSS EMERGING: Cierre en MARA a -7.11% ($-1729.35 USD).",
         "[15:29:06] ⚡ STOP LOSS EMERGING: Cierre en COIN a -4.39% ($-1066.38 USD).",
@@ -118,6 +92,10 @@
         {
             "Fecha": "20/11/2026",
             "Capital": 115120.78
+        },
+        {
+            "Fecha": "23/11/2026",
+            "Capital": 124912.19
         }
     ]
 }
