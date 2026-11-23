@@ -1,21 +1,11 @@
 {
     "capital_inicial": 99193.29,
-    "ganancia_cerrada": 0.0,
+    "ganancia_cerrada": -510.66145944079585,
     "posiciones": [
-        {
-            "ticker": "UNH",
-            "precio_entrada": 339.85,
-            "acciones": 58.3747
-        },
         {
             "ticker": "T",
             "precio_entrada": 22.31,
             "acciones": 889.2272
-        },
-        {
-            "ticker": "VZ",
-            "precio_entrada": 46.48,
-            "acciones": 426.8214
         },
         {
             "ticker": "WMT",
@@ -42,7 +32,9 @@
         "[15:01:35] 🛡️ SL (-0.75%): VZ a -1.75% ($-345.79 USD).",
         "[15:01:35] 🛡️ SL (-0.75%): PEP a -2.70% ($-534.94 USD).",
         "[15:23:41] 🛡️ STOP LOSS INDIVIDUAL: Cierre en MMM a -0.95% ($-188.25 USD). Posición liquidada a caja.",
-        "[17:16:46] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CSCO a -1.44% ($-285.46 USD). Posición liquidada a caja."
+        "[17:16:46] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CSCO a -1.44% ($-285.46 USD). Posición liquidada a caja.",
+        "[16:58:51] 🛡️ SL (-0.75%): UNH a -1.57% ($-311.72 USD).",
+        "[16:58:51] 🛡️ SL (-0.75%): VZ a -1.00% ($-198.94 USD)."
     ],
     "ultimo_cierre_automatico": "19/11/2026",
     "historial_rendimiento": [
