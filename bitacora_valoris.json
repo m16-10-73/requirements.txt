@@ -1,12 +1,7 @@
 {
     "capital_inicial": 99193.29,
-    "ganancia_cerrada": -510.66145944079585,
+    "ganancia_cerrada": -660.0514526499012,
     "posiciones": [
-        {
-            "ticker": "T",
-            "precio_entrada": 22.31,
-            "acciones": 889.2272
-        },
         {
             "ticker": "WMT",
             "precio_entrada": 127.95,
@@ -34,7 +29,8 @@
         "[15:23:41] 🛡️ STOP LOSS INDIVIDUAL: Cierre en MMM a -0.95% ($-188.25 USD). Posición liquidada a caja.",
         "[17:16:46] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CSCO a -1.44% ($-285.46 USD). Posición liquidada a caja.",
         "[16:58:51] 🛡️ SL (-0.75%): UNH a -1.57% ($-311.72 USD).",
-        "[16:58:51] 🛡️ SL (-0.75%): VZ a -1.00% ($-198.94 USD)."
+        "[16:58:51] 🛡️ SL (-0.75%): VZ a -1.00% ($-198.94 USD).",
+        "[17:21:05] 🛡️ SL (-0.75%): T a -0.75% ($-149.39 USD)."
     ],
     "ultimo_cierre_automatico": "19/11/2026",
     "historial_rendimiento": [
