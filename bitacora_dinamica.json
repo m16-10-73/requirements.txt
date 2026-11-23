@@ -1,24 +1,8 @@
 {
-    "capital_inicial": 114741.55,
+    "capital_inicial": 119003.71,
     "ganancia_cerrada": 0.0,
-    "posiciones": [
-        {
-            "ticker": "AAPL",
-            "precio_entrada": 342.56,
-            "acciones": 111.651
-        },
-        {
-            "ticker": "MSFT",
-            "precio_entrada": 484.52,
-            "acciones": 78.9383
-        },
-        {
-            "ticker": "GOOGL",
-            "precio_entrada": 265.29,
-            "acciones": 144.1712
-        }
-    ],
-    "peak_flotante": 3.7176849908265965,
+    "posiciones": [],
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[14:35:26] 🛡️ STOP LOSS: Cierre en GOOGL a -2.15% ($-808.47 USD).",
         "[15:00:38] 🛡️ STOP LOSS: Cierre en AAPL a -0.76% ($-286.82 USD).",
@@ -98,6 +82,10 @@
         {
             "Fecha": "20/11/2026",
             "Capital": 114741.55
+        },
+        {
+            "Fecha": "23/11/2026",
+            "Capital": 119003.71
         }
     ]
 }
