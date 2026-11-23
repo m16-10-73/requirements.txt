@@ -1,19 +1,8 @@
 {
-    "capital_inicial": 99193.29,
-    "ganancia_cerrada": -660.0514526499012,
-    "posiciones": [
-        {
-            "ticker": "WMT",
-            "precio_entrada": 127.95,
-            "acciones": 155.0501
-        },
-        {
-            "ticker": "JNJ",
-            "precio_entrada": 270.47,
-            "acciones": 73.3488
-        }
-    ],
-    "peak_flotante": 0.14343110751406,
+    "capital_inicial": 98674.4,
+    "ganancia_cerrada": 0.0,
+    "posiciones": [],
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:10] 🛡️ STOP LOSS INDIVIDUAL: Cierre en IBM a -1.08% ($-214.69 USD). Posición liquidada a caja.",
         "[15:01:24] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CSCO a -5.44% ($-1082.59 USD). Posición liquidada a caja.",
@@ -32,7 +21,7 @@
         "[16:58:51] 🛡️ SL (-0.75%): VZ a -1.00% ($-198.94 USD).",
         "[17:21:05] 🛡️ SL (-0.75%): T a -0.75% ($-149.39 USD)."
     ],
-    "ultimo_cierre_automatico": "19/11/2026",
+    "ultimo_cierre_automatico": "23/11/2026",
     "historial_rendimiento": [
         {
             "Fecha": "28/10/2026",
@@ -105,6 +94,10 @@
         {
             "Fecha": "20/11/2026",
             "Capital": 99193.29
+        },
+        {
+            "Fecha": "23/11/2026",
+            "Capital": 98674.4
         }
     ]
 }
