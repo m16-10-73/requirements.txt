@@ -1,6 +1,6 @@
 {
-    "capital_inicial": 118941.45,
-    "ganancia_cerrada": -2168.4839259540367,
+    "capital_inicial": 116772.97,
+    "ganancia_cerrada": 0.0,
     "posiciones": [],
     "peak_flotante": 0.0,
     "historial_alertas": [
@@ -11,7 +11,7 @@
         "[16:09:37] 🛡️ SL (-1.00%): SPY a -1.18% ($-467.12 USD).",
         "[16:09:37] 🛡️ SL (-1.00%): XLI a -1.51% ($-600.31 USD)."
     ],
-    "ultimo_cierre_automatico": "23/11/2026",
+    "ultimo_cierre_automatico": "24/11/2026",
     "historial_rendimiento": [
         {
             "Fecha": "28/10/2026",
@@ -88,6 +88,10 @@
         {
             "Fecha": "23/11/2026",
             "Capital": 118941.45
+        },
+        {
+            "Fecha": "24/11/2026",
+            "Capital": 116772.97
         }
     ]
 }
