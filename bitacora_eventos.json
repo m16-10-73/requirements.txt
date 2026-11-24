@@ -1,7 +1,23 @@
 {
     "capital_inicial": 118941.45,
     "ganancia_cerrada": 0.0,
-    "posiciones": [],
+    "posiciones": [
+        {
+            "ticker": "QQQ",
+            "precio_entrada": 651.03,
+            "acciones": 60.8991
+        },
+        {
+            "ticker": "SPY",
+            "precio_entrada": 722.29,
+            "acciones": 54.8909
+        },
+        {
+            "ticker": "XLI",
+            "precio_entrada": 162.47,
+            "acciones": 244.0275
+        }
+    ],
     "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:01:23] 📰 CORTE DE PÉRDIDA: Cierre en QQQ a -1.11% ($-437.68 USD).",
