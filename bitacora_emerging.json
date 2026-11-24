@@ -1,17 +1,7 @@
 {
     "capital_inicial": 124912.19,
-    "ganancia_cerrada": 0.0,
+    "ganancia_cerrada": -4717.859443239851,
     "posiciones": [
-        {
-            "ticker": "NVDA",
-            "precio_entrada": 165.05,
-            "acciones": 151.3628
-        },
-        {
-            "ticker": "TSLA",
-            "precio_entrada": 385.46,
-            "acciones": 64.812
-        },
         {
             "ticker": "PLTR",
             "precio_entrada": 159.36,
@@ -21,11 +11,6 @@
             "ticker": "RBLX",
             "precio_entrada": 51.65,
             "acciones": 483.6871
-        },
-        {
-            "ticker": "MARA",
-            "precio_entrada": 5.58,
-            "acciones": 4477.1395
         }
     ],
     "peak_flotante": 0.027348810860305835,
@@ -43,7 +28,10 @@
         "[15:30:45] 🛡️ SL (-1.00%): PLTR a -3.28% ($-773.47 USD).",
         "[15:30:45] 🛡️ SL (-1.00%): TSLA a -3.10% ($-730.59 USD).",
         "[15:30:45] 🛡️ SL (-1.00%): NVDA a -5.11% ($-1204.38 USD).",
-        "[15:31:30] 🛡️ SL (-1.00%): COIN a -1.03% ($-243.67 USD)."
+        "[15:31:30] 🛡️ SL (-1.00%): COIN a -1.03% ($-243.67 USD).",
+        "[16:09:31] 🛡️ SL (-1.00%): NVDA a -7.98% ($-1993.45 USD).",
+        "[16:09:31] 🛡️ SL (-1.00%): TSLA a -1.68% ($-418.69 USD).",
+        "[16:09:31] 🛡️ SL (-1.00%): MARA a -9.23% ($-2305.73 USD)."
     ],
     "ultimo_cierre_automatico": "23/11/2026",
     "historial_rendimiento": [
