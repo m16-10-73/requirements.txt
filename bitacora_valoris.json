@@ -1,12 +1,7 @@
 {
     "capital_inicial": 98674.4,
-    "ganancia_cerrada": 0.0,
+    "ganancia_cerrada": -753.308942112884,
     "posiciones": [
-        {
-            "ticker": "CSCO",
-            "precio_entrada": 96.8,
-            "acciones": 203.8727
-        },
         {
             "ticker": "IBM",
             "precio_entrada": 233.0,
@@ -45,7 +40,8 @@
         "[17:16:46] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CSCO a -1.44% ($-285.46 USD). Posición liquidada a caja.",
         "[16:58:51] 🛡️ SL (-0.75%): UNH a -1.57% ($-311.72 USD).",
         "[16:58:51] 🛡️ SL (-0.75%): VZ a -1.00% ($-198.94 USD).",
-        "[17:21:05] 🛡️ SL (-0.75%): T a -0.75% ($-149.39 USD)."
+        "[17:21:05] 🛡️ SL (-0.75%): T a -0.75% ($-149.39 USD).",
+        "[16:09:26] 🛡️ SL (-0.75%): CSCO a -3.82% ($-753.31 USD)."
     ],
     "ultimo_cierre_automatico": "23/11/2026",
     "historial_rendimiento": [
