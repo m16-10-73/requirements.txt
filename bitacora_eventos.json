@@ -1,28 +1,15 @@
 {
     "capital_inicial": 118941.45,
-    "ganancia_cerrada": 0.0,
-    "posiciones": [
-        {
-            "ticker": "QQQ",
-            "precio_entrada": 651.03,
-            "acciones": 60.8991
-        },
-        {
-            "ticker": "SPY",
-            "precio_entrada": 722.29,
-            "acciones": 54.8909
-        },
-        {
-            "ticker": "XLI",
-            "precio_entrada": 162.47,
-            "acciones": 244.0275
-        }
-    ],
+    "ganancia_cerrada": -2168.4839259540367,
+    "posiciones": [],
     "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:01:23] 📰 CORTE DE PÉRDIDA: Cierre en QQQ a -1.11% ($-437.68 USD).",
         "[14:35:20] 📰 CORTE DE PÉRDIDA: Cierre en XLE a -1.38% ($-541.09 USD).",
-        "[14:58:08] 📰 CORTE DE PÉRDIDA: Cierre en XLE a -1.55% ($-602.95 USD)."
+        "[14:58:08] 📰 CORTE DE PÉRDIDA: Cierre en XLE a -1.55% ($-602.95 USD).",
+        "[16:09:37] 🛡️ SL (-1.00%): QQQ a -2.78% ($-1101.05 USD).",
+        "[16:09:37] 🛡️ SL (-1.00%): SPY a -1.18% ($-467.12 USD).",
+        "[16:09:37] 🛡️ SL (-1.00%): XLI a -1.51% ($-600.31 USD)."
     ],
     "ultimo_cierre_automatico": "23/11/2026",
     "historial_rendimiento": [
