@@ -1,29 +1,8 @@
 {
-    "capital_inicial": 98674.4,
-    "ganancia_cerrada": -753.308942112884,
-    "posiciones": [
-        {
-            "ticker": "IBM",
-            "precio_entrada": 233.0,
-            "acciones": 84.6991
-        },
-        {
-            "ticker": "MMM",
-            "precio_entrada": 184.44,
-            "acciones": 106.9989
-        },
-        {
-            "ticker": "AMGN",
-            "precio_entrada": 449.04,
-            "acciones": 43.949
-        },
-        {
-            "ticker": "LOW",
-            "precio_entrada": 226.14,
-            "acciones": 87.2684
-        }
-    ],
-    "peak_flotante": 1.0436122420527711,
+    "capital_inicial": 98942.96,
+    "ganancia_cerrada": 0.0,
+    "posiciones": [],
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:10] 🛡️ STOP LOSS INDIVIDUAL: Cierre en IBM a -1.08% ($-214.69 USD). Posición liquidada a caja.",
         "[15:01:24] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CSCO a -5.44% ($-1082.59 USD). Posición liquidada a caja.",
@@ -120,6 +99,10 @@
         {
             "Fecha": "23/11/2026",
             "Capital": 98674.4
+        },
+        {
+            "Fecha": "24/11/2026",
+            "Capital": 98942.96
         }
     ]
 }
