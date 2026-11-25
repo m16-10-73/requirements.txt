@@ -1,7 +1,33 @@
 {
     "capital_inicial": 98942.96,
     "ganancia_cerrada": 0.0,
-    "posiciones": [],
+    "posiciones": [
+        {
+            "ticker": "AMGN",
+            "precio_entrada": 473.94,
+            "acciones": 41.7534
+        },
+        {
+            "ticker": "MRK",
+            "precio_entrada": 141.57,
+            "acciones": 139.7796
+        },
+        {
+            "ticker": "ABBV",
+            "precio_entrada": 300.28,
+            "acciones": 65.9005
+        },
+        {
+            "ticker": "PFE",
+            "precio_entrada": 28.46,
+            "acciones": 695.3125
+        },
+        {
+            "ticker": "JNJ",
+            "precio_entrada": 276.46,
+            "acciones": 71.5785
+        }
+    ],
     "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:10] 🛡️ STOP LOSS INDIVIDUAL: Cierre en IBM a -1.08% ($-214.69 USD). Posición liquidada a caja.",
