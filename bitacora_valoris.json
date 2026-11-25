@@ -1,12 +1,7 @@
 {
     "capital_inicial": 98942.96,
-    "ganancia_cerrada": -758.0008710816626,
+    "ganancia_cerrada": -937.5802162513385,
     "posiciones": [
-        {
-            "ticker": "ABBV",
-            "precio_entrada": 300.28,
-            "acciones": 65.9005
-        },
         {
             "ticker": "PFE",
             "precio_entrada": 28.46,
@@ -34,7 +29,8 @@
         "[16:09:26] 🛡️ SL (-0.75%): CSCO a -3.82% ($-753.31 USD).",
         "[14:37:41] 🛡️ SL (-0.75%): AMGN a -1.65% ($-326.51 USD).",
         "[14:37:41] 🛡️ SL (-0.75%): MRK a -1.25% ($-248.25 USD).",
-        "[14:37:41] 🛡️ SL (-0.75%): JNJ a -0.93% ($-183.24 USD)."
+        "[14:37:41] 🛡️ SL (-0.75%): JNJ a -0.93% ($-183.24 USD).",
+        "[15:52:06] 🛡️ SL (-0.75%): ABBV a -0.91% ($-179.58 USD)."
     ],
     "ultimo_cierre_automatico": "24/11/2026",
     "historial_rendimiento": [
