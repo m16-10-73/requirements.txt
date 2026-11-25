@@ -1,14 +1,8 @@
 {
-    "capital_inicial": 98942.96,
-    "ganancia_cerrada": -937.5802162513385,
-    "posiciones": [
-        {
-            "ticker": "PFE",
-            "precio_entrada": 28.46,
-            "acciones": 695.3125
-        }
-    ],
-    "peak_flotante": 0.03553546983001722,
+    "capital_inicial": 98005.38,
+    "ganancia_cerrada": 0.0,
+    "posiciones": [],
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:10] 🛡️ STOP LOSS INDIVIDUAL: Cierre en IBM a -1.08% ($-214.69 USD). Posición liquidada a caja.",
         "[15:01:24] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CSCO a -5.44% ($-1082.59 USD). Posición liquidada a caja.",
@@ -32,7 +26,7 @@
         "[14:37:41] 🛡️ SL (-0.75%): JNJ a -0.93% ($-183.24 USD).",
         "[15:52:06] 🛡️ SL (-0.75%): ABBV a -0.91% ($-179.58 USD)."
     ],
-    "ultimo_cierre_automatico": "24/11/2026",
+    "ultimo_cierre_automatico": "25/11/2026",
     "historial_rendimiento": [
         {
             "Fecha": "28/10/2026",
@@ -113,6 +107,10 @@
         {
             "Fecha": "24/11/2026",
             "Capital": 98942.96
+        },
+        {
+            "Fecha": "25/11/2026",
+            "Capital": 98005.38
         }
     ]
 }
