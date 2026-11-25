@@ -1,8 +1,8 @@
 {
-    "capital_inicial": 121385.72,
-    "ganancia_cerrada": -5778.750089428865,
+    "capital_inicial": 115606.97,
+    "ganancia_cerrada": 0.0,
     "posiciones": [],
-    "peak_flotante": 0.014214828788406441,
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:06] ⚡ STOP LOSS EMERGING: Cierre en MARA a -7.11% ($-1729.35 USD).",
         "[15:29:06] ⚡ STOP LOSS EMERGING: Cierre en COIN a -4.39% ($-1066.38 USD).",
@@ -27,7 +27,7 @@
         "[14:37:43] 🛡️ SL (-1.00%): TSLA a -5.37% ($-1303.22 USD).",
         "[14:37:43] 🛡️ SL (-1.00%): SHOP a -5.29% ($-1283.95 USD)."
     ],
-    "ultimo_cierre_automatico": "24/11/2026",
+    "ultimo_cierre_automatico": "25/11/2026",
     "historial_rendimiento": [
         {
             "Fecha": "28/10/2026",
@@ -108,6 +108,10 @@
         {
             "Fecha": "24/11/2026",
             "Capital": 121385.72
+        },
+        {
+            "Fecha": "25/11/2026",
+            "Capital": 115606.97
         }
     ]
 }
