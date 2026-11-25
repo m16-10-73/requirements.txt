@@ -1,17 +1,7 @@
 {
     "capital_inicial": 98942.96,
-    "ganancia_cerrada": 0.0,
+    "ganancia_cerrada": -758.0008710816626,
     "posiciones": [
-        {
-            "ticker": "AMGN",
-            "precio_entrada": 473.94,
-            "acciones": 41.7534
-        },
-        {
-            "ticker": "MRK",
-            "precio_entrada": 141.57,
-            "acciones": 139.7796
-        },
         {
             "ticker": "ABBV",
             "precio_entrada": 300.28,
@@ -21,11 +11,6 @@
             "ticker": "PFE",
             "precio_entrada": 28.46,
             "acciones": 695.3125
-        },
-        {
-            "ticker": "JNJ",
-            "precio_entrada": 276.46,
-            "acciones": 71.5785
         }
     ],
     "peak_flotante": 0.03553546983001722,
@@ -46,7 +31,10 @@
         "[16:58:51] 🛡️ SL (-0.75%): UNH a -1.57% ($-311.72 USD).",
         "[16:58:51] 🛡️ SL (-0.75%): VZ a -1.00% ($-198.94 USD).",
         "[17:21:05] 🛡️ SL (-0.75%): T a -0.75% ($-149.39 USD).",
-        "[16:09:26] 🛡️ SL (-0.75%): CSCO a -3.82% ($-753.31 USD)."
+        "[16:09:26] 🛡️ SL (-0.75%): CSCO a -3.82% ($-753.31 USD).",
+        "[14:37:41] 🛡️ SL (-0.75%): AMGN a -1.65% ($-326.51 USD).",
+        "[14:37:41] 🛡️ SL (-0.75%): MRK a -1.25% ($-248.25 USD).",
+        "[14:37:41] 🛡️ SL (-0.75%): JNJ a -0.93% ($-183.24 USD)."
     ],
     "ultimo_cierre_automatico": "24/11/2026",
     "historial_rendimiento": [
