@@ -1,21 +1,11 @@
 {
     "capital_inicial": 116772.97,
-    "ganancia_cerrada": 0.0,
+    "ganancia_cerrada": -962.1241861345513,
     "posiciones": [
-        {
-            "ticker": "XLV",
-            "precio_entrada": 184.72,
-            "acciones": 210.7207
-        },
         {
             "ticker": "XLE",
             "precio_entrada": 60.45,
             "acciones": 643.9094
-        },
-        {
-            "ticker": "XLF",
-            "precio_entrada": 56.11,
-            "acciones": 693.7145
         }
     ],
     "peak_flotante": 0.01173180499589071,
@@ -25,7 +15,9 @@
         "[14:58:08] 📰 CORTE DE PÉRDIDA: Cierre en XLE a -1.55% ($-602.95 USD).",
         "[16:09:37] 🛡️ SL (-1.00%): QQQ a -2.78% ($-1101.05 USD).",
         "[16:09:37] 🛡️ SL (-1.00%): SPY a -1.18% ($-467.12 USD).",
-        "[16:09:37] 🛡️ SL (-1.00%): XLI a -1.51% ($-600.31 USD)."
+        "[16:09:37] 🛡️ SL (-1.00%): XLI a -1.51% ($-600.31 USD).",
+        "[14:37:46] 🛡️ SL (-1.00%): XLV a -1.43% ($-556.30 USD).",
+        "[14:37:46] 🛡️ SL (-1.00%): XLF a -1.04% ($-405.82 USD)."
     ],
     "ultimo_cierre_automatico": "24/11/2026",
     "historial_rendimiento": [
