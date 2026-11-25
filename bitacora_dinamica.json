@@ -1,8 +1,8 @@
 {
-    "capital_inicial": 118636.58,
-    "ganancia_cerrada": -3810.755614032715,
+    "capital_inicial": 114825.82,
+    "ganancia_cerrada": 0.0,
     "posiciones": [],
-    "peak_flotante": 0.031757933742033326,
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[14:35:26] 🛡️ STOP LOSS: Cierre en GOOGL a -2.15% ($-808.47 USD).",
         "[15:00:38] 🛡️ STOP LOSS: Cierre en AAPL a -0.76% ($-286.82 USD).",
@@ -13,7 +13,7 @@
         "[14:37:39] 🛡️ SL (-0.50%): MSFT a -2.73% ($-1078.05 USD).",
         "[14:37:39] 🛡️ SL (-0.50%): GOOGL a -5.70% ($-2254.68 USD)."
     ],
-    "ultimo_cierre_automatico": "24/11/2026",
+    "ultimo_cierre_automatico": "25/11/2026",
     "historial_rendimiento": [
         {
             "Fecha": "28/10/2026",
@@ -94,6 +94,10 @@
         {
             "Fecha": "24/11/2026",
             "Capital": 118636.58
+        },
+        {
+            "Fecha": "25/11/2026",
+            "Capital": 114825.82
         }
     ]
 }
