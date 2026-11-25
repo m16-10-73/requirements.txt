@@ -1,33 +1,7 @@
 {
     "capital_inicial": 121385.72,
-    "ganancia_cerrada": 0.0,
-    "posiciones": [
-        {
-            "ticker": "RBLX",
-            "precio_entrada": 53.49,
-            "acciones": 453.8632
-        },
-        {
-            "ticker": "U",
-            "precio_entrada": 48.37,
-            "acciones": 501.905
-        },
-        {
-            "ticker": "PLTR",
-            "precio_entrada": 161.18,
-            "acciones": 150.6213
-        },
-        {
-            "ticker": "TSLA",
-            "precio_entrada": 384.68,
-            "acciones": 63.11
-        },
-        {
-            "ticker": "SHOP",
-            "precio_entrada": 132.31,
-            "acciones": 183.4868
-        }
-    ],
+    "ganancia_cerrada": -5778.750089428865,
+    "posiciones": [],
     "peak_flotante": 0.014214828788406441,
     "historial_alertas": [
         "[15:29:06] ⚡ STOP LOSS EMERGING: Cierre en MARA a -7.11% ($-1729.35 USD).",
@@ -46,7 +20,12 @@
         "[15:31:30] 🛡️ SL (-1.00%): COIN a -1.03% ($-243.67 USD).",
         "[16:09:32] 🛡️ SL (-1.00%): NVDA a -7.96% ($-1988.91 USD).",
         "[16:09:32] 🛡️ SL (-1.00%): TSLA a -1.67% ($-417.39 USD).",
-        "[16:09:33] 🛡️ SL (-1.00%): MARA a -9.23% ($-2305.73 USD)."
+        "[16:09:33] 🛡️ SL (-1.00%): MARA a -9.23% ($-2305.73 USD).",
+        "[14:37:43] 🛡️ SL (-1.00%): RBLX a -2.27% ($-551.90 USD).",
+        "[14:37:43] 🛡️ SL (-1.00%): U a -5.70% ($-1385.01 USD).",
+        "[14:37:43] 🛡️ SL (-1.00%): PLTR a -5.17% ($-1254.67 USD).",
+        "[14:37:43] 🛡️ SL (-1.00%): TSLA a -5.37% ($-1303.22 USD).",
+        "[14:37:43] 🛡️ SL (-1.00%): SHOP a -5.29% ($-1283.95 USD)."
     ],
     "ultimo_cierre_automatico": "24/11/2026",
     "historial_rendimiento": [
