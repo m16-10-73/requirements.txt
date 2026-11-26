@@ -1,34 +1,8 @@
 {
-    "capital_inicial": 98005.38,
+    "capital_inicial": 98013.56,
     "ganancia_cerrada": 0.0,
-    "posiciones": [
-        {
-            "ticker": "IBM",
-            "precio_entrada": 243.47,
-            "acciones": 80.5072
-        },
-        {
-            "ticker": "LOW",
-            "precio_entrada": 235.65,
-            "acciones": 83.1788
-        },
-        {
-            "ticker": "MMM",
-            "precio_entrada": 189.83,
-            "acciones": 103.2559
-        },
-        {
-            "ticker": "UNH",
-            "precio_entrada": 346.19,
-            "acciones": 56.6194
-        },
-        {
-            "ticker": "CVX",
-            "precio_entrada": 210.95,
-            "acciones": 92.9181
-        }
-    ],
-    "peak_flotante": 0.008347026525920514,
+    "posiciones": [],
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:10] 🛡️ STOP LOSS INDIVIDUAL: Cierre en IBM a -1.08% ($-214.69 USD). Posición liquidada a caja.",
         "[15:01:24] 🛡️ STOP LOSS INDIVIDUAL: Cierre en CSCO a -5.44% ($-1082.59 USD). Posición liquidada a caja.",
@@ -137,6 +111,10 @@
         {
             "Fecha": "25/11/2026",
             "Capital": 98005.38
+        },
+        {
+            "Fecha": "26/11/2026",
+            "Capital": 98013.56
         }
     ]
 }
