@@ -1,7 +1,33 @@
 {
     "capital_inicial": 98013.56,
     "ganancia_cerrada": 0.0,
-    "posiciones": [],
+    "posiciones": [
+        {
+            "ticker": "IBM",
+            "precio_entrada": 243.47,
+            "acciones": 80.5139
+        },
+        {
+            "ticker": "LOW",
+            "precio_entrada": 235.65,
+            "acciones": 83.1857
+        },
+        {
+            "ticker": "MMM",
+            "precio_entrada": 189.83,
+            "acciones": 103.2646
+        },
+        {
+            "ticker": "UNH",
+            "precio_entrada": 346.19,
+            "acciones": 56.6241
+        },
+        {
+            "ticker": "CVX",
+            "precio_entrada": 210.95,
+            "acciones": 92.9259
+        }
+    ],
     "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:29:10] 🛡️ STOP LOSS INDIVIDUAL: Cierre en IBM a -1.08% ($-214.69 USD). Posición liquidada a caja.",
