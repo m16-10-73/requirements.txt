@@ -1,24 +1,8 @@
 {
-    "capital_inicial": 116030.78,
+    "capital_inicial": 117961.04,
     "ganancia_cerrada": 0.0,
-    "posiciones": [
-        {
-            "ticker": "XLC",
-            "precio_entrada": 105.38,
-            "acciones": 367.0234
-        },
-        {
-            "ticker": "XLI",
-            "precio_entrada": 162.95,
-            "acciones": 237.3546
-        },
-        {
-            "ticker": "XLE",
-            "precio_entrada": 60.9,
-            "acciones": 635.0891
-        }
-    ],
-    "peak_flotante": 1.6695429272090112,
+    "posiciones": [],
+    "peak_flotante": 0.0,
     "historial_alertas": [
         "[15:01:23] 📰 CORTE DE PÉRDIDA: Cierre en QQQ a -1.11% ($-437.68 USD).",
         "[14:35:20] 📰 CORTE DE PÉRDIDA: Cierre en XLE a -1.38% ($-541.09 USD).",
@@ -118,6 +102,10 @@
         {
             "Fecha": "26/11/2026",
             "Capital": 116030.78
+        },
+        {
+            "Fecha": "27/11/2026",
+            "Capital": 117961.04
         }
     ]
 }
